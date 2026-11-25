@@ -2,6 +2,17 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versionado semántico.
 
+## [0.5.1] — 2026-11-25
+### Cambiado (petición del usuario: estética de la referencia, en naranja, más holográfica)
+- Núcleo rediseñado: esfera de ~3600 partículas en 3D (superficie + volumen) con destellos, anillos de datos,
+  corona-ecualizador, órbita punteada, satélites, etiquetas técnicas y barrido radar; flota en el espacio.
+- Fondo espacial: estrellas en 3 capas con paralaje, centelleo, estrellas fugaces y nebulosas.
+- Capa holográfica: borde de luz que recorre cada panel, esquinas de HUD, entrada con destello, líneas de
+  barrido, texto con brillo, haz en el menú activo, transición entre secciones.
+- Inicio estilo HUD: núcleo central, subtítulo en directo de la respuesta y barra de órdenes (voz o texto).
+- Selector rápido de modelo (Opus / Sonnet / Haiku) en Inicio y Conversación.
+- `POST /api/chat` con una conversación inexistente responde 404.
+
 ## [0.5.0] — 2026-11-25
 ### Añadido
 - App de escritorio (Electron 45): núcleo integrado, conexión automática, DPAPI, bandeja, Ctrl+Alt+J, inicio con

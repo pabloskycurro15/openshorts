@@ -77,6 +77,10 @@ Sustituye a la paleta azul/cian del prompt original. Tokens previstos:
 
 Será configurable (sistema de temas, Fase 2).
 
+**Actualización (0.5.1, referencia visual del usuario):** núcleo como esfera de partículas flotando en el
+espacio con anillos de HUD, en naranja; capa holográfica global. Todo respeta «reducir movimiento» y la
+intensidad de animación; el fondo se limita a ~30 fps y todo se pausa con la pestaña oculta.
+
 ## ADR-013 · Motor de conversación ✅
 - **Bucle de herramientas propio** (no el Tool Runner del SDK): cada acción debe pasar por `ToolRegistry`
   (permisos, confirmaciones que pueden tardar minutos, auditoría) y el motor no debe depender de un proveedor.

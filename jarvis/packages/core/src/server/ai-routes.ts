@@ -55,6 +55,7 @@ export function registerAiRoutes(app: FastifyInstance, j: Jarvis) {
   /** Respuesta en streaming: una línea JSON (ChatEvent) por evento. */
   app.post('/api/chat', async (req, reply) => {
     const body = ChatRequest.parse(req.body);
+    if (body.conversationId && !j.ai.store.exists(body.conversationId)) return reply.code(404).send({ error: 'Conversación inexistente' });
     if (body.conversationId && j.ai.engine.activeConversations().includes(body.conversationId)) {
       return reply.code(409).send({ error: 'Esta conversación ya está respondiendo' });
     }

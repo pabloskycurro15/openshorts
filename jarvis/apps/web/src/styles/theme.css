@@ -70,7 +70,7 @@ body {
 /* Panel de cristal con filo iluminado */
 .panel {
   position: relative;
-  background: linear-gradient(180deg, #0f2040cc, #0a1628e6);
+  background: linear-gradient(180deg, #0f2040a8, #0a1628c7);
   border: 1px solid #1c3866;
   border-radius: 16px;
   box-shadow: 0 0 0 1px #00000040, 0 20px 40px -24px #000;
@@ -115,4 +115,159 @@ body {
 }
 .pulse-dot {
   animation: pulse-dot 1.6s ease-in-out infinite;
+}
+
+/* ═════════════════════════ Capa holográfica ═════════════════════════ */
+
+@property --holo-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+/* Líneas de barrido sobre toda la interfaz (muy sutiles) */
+.holo-scanlines::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 60;
+  background: repeating-linear-gradient(to bottom, rgb(255 255 255 / 0.018) 0 1px, transparent 1px 3px);
+  mix-blend-mode: overlay;
+}
+.holo-scanlines::before {
+  content: '';
+  position: fixed;
+  left: 0;
+  right: 0;
+  height: 22vh;
+  top: -22vh;
+  pointer-events: none;
+  z-index: 60;
+  background: linear-gradient(to bottom, transparent, rgb(var(--accent-rgb) / 0.045), transparent);
+  animation: holo-sweep 9s linear infinite;
+}
+@keyframes holo-sweep {
+  to { transform: translateY(130vh); }
+}
+
+/* Panel holográfico: borde de luz que recorre el contorno, esquinas de HUD y entrada con destello */
+.panel {
+  isolation: isolate;
+  animation: holo-in 0.65s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  transition: box-shadow 0.3s, transform 0.3s;
+}
+.panel::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events: none;
+  background: conic-gradient(from var(--holo-angle), transparent 0 70%, rgb(var(--accent-rgb) / 0.75) 82%, transparent 92%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: holo-border 6s linear infinite;
+  opacity: 0.85;
+}
+.panel:hover {
+  box-shadow: 0 0 0 1px rgb(var(--accent-rgb) / 0.25), 0 0 32px -8px rgb(var(--accent-rgb) / 0.45), 0 20px 40px -24px #000;
+}
+@keyframes holo-border {
+  to { --holo-angle: 360deg; }
+}
+@keyframes holo-in {
+  0% { opacity: 0; transform: translateY(10px) scale(0.985); filter: brightness(2.2) saturate(0.2); clip-path: inset(0 0 100% 0); }
+  35% { opacity: 1; clip-path: inset(0 0 40% 0); }
+  55% { filter: brightness(1.5); }
+  62% { opacity: 0.55; }
+  70% { opacity: 1; }
+  100% { opacity: 1; transform: none; filter: none; clip-path: inset(0 0 0 0); }
+}
+
+/* Esquinas de HUD */
+.hud-corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+  border-color: rgb(var(--accent-rgb) / 0.8);
+  filter: drop-shadow(0 0 4px rgb(var(--accent-rgb) / 0.8));
+}
+.hud-corner.tl { top: 6px; left: 6px; border-top: 1.5px solid; border-left: 1.5px solid; border-top-left-radius: 6px; }
+.hud-corner.tr { top: 6px; right: 6px; border-top: 1.5px solid; border-right: 1.5px solid; border-top-right-radius: 6px; }
+.hud-corner.bl { bottom: 6px; left: 6px; border-bottom: 1.5px solid; border-left: 1.5px solid; border-bottom-left-radius: 6px; }
+.hud-corner.br { bottom: 6px; right: 6px; border-bottom: 1.5px solid; border-right: 1.5px solid; border-bottom-right-radius: 6px; }
+
+/* Texto con brillo holográfico que recorre las letras */
+.holo-text {
+  background: linear-gradient(100deg, var(--color-ink) 0%, var(--color-ink) 40%, var(--accent-soft) 50%, var(--color-ink) 60%, var(--color-ink) 100%);
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: holo-shimmer 5s ease-in-out infinite;
+}
+@keyframes holo-shimmer {
+  0% { background-position: 100% 0; }
+  60%, 100% { background-position: -50% 0; }
+}
+
+/* Parpadeo de señal */
+.holo-flicker { animation: holo-flicker 7s infinite; }
+@keyframes holo-flicker {
+  0%, 92%, 100% { opacity: 1; }
+  93% { opacity: 0.4; }
+  94% { opacity: 1; }
+  96% { opacity: 0.7; }
+}
+
+/* Entrada de sección: barrido de escaneo */
+.section-enter { animation: section-enter 0.5s ease-out both; position: relative; }
+@keyframes section-enter {
+  from { opacity: 0; transform: translateY(6px); filter: blur(3px); }
+  to { opacity: 1; transform: none; filter: none; }
+}
+
+/* Barra de comandos estilo HUD (pastilla luminosa) */
+.holo-pill {
+  position: relative;
+  background: linear-gradient(180deg, #0f2040cc, #070e1ce6);
+  border: 1px solid rgb(var(--accent-rgb) / 0.45);
+  box-shadow: 0 0 24px -6px rgb(var(--accent-rgb) / 0.55), inset 0 0 18px -10px rgb(var(--accent-rgb) / 0.6);
+  backdrop-filter: blur(12px);
+}
+.holo-pill:focus-within { box-shadow: 0 0 36px -4px rgb(var(--accent-rgb) / 0.8), inset 0 0 18px -8px rgb(var(--accent-rgb) / 0.8); }
+
+/* Elemento activo del menú: haz de luz */
+.nav-active { position: relative; overflow: hidden; }
+.nav-active::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgb(var(--accent-rgb) / 0.18), transparent);
+  transform: translateX(-100%);
+  animation: nav-beam 3.2s ease-in-out infinite;
+}
+@keyframes nav-beam { 60%, 100% { transform: translateX(100%); } }
+
+/* Subtítulo que se escribe con cursor */
+.typing-caret::after {
+  content: '▍';
+  margin-left: 2px;
+  color: var(--accent);
+  animation: caret 1s steps(1) infinite;
+}
+@keyframes caret { 50% { opacity: 0; } }
+
+/* Indicadores de datos que laten */
+.data-blip { animation: blip 2.4s ease-in-out infinite; }
+@keyframes blip { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+
+[data-motion='off'] .holo-scanlines::before,
+[data-motion='off'] .panel::after,
+[data-motion='off'] .nav-active::after { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  .holo-scanlines::before, .panel::after, .nav-active::after, .holo-text { animation: none !important; }
 }

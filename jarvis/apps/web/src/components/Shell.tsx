@@ -34,7 +34,7 @@ function NavItem({ s, active, onSelect, badge }: { s: SectionDef; active: boolea
         onClick={onSelect}
         aria-current={active ? 'page' : undefined}
         className={`group flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition-colors ${
-          active ? 'bg-accent/12 text-ink shadow-[inset_2px_0_0_var(--accent)]' : 'text-muted hover:bg-navy-800 hover:text-ink'
+          active ? 'nav-active bg-accent/12 text-ink shadow-[inset_2px_0_0_var(--accent),0_0_18px_-6px_var(--accent)]' : 'text-muted hover:bg-navy-800/70 hover:text-ink'
         }`}
       >
         <Icon size={16} aria-hidden className={active ? 'text-accent' : 'text-dim group-hover:text-accent-soft'} />
@@ -60,11 +60,11 @@ export function Shell({ route, navigate, children }: { route: string; navigate: 
     <nav aria-label="Secciones" className="flex h-full flex-col">
       <div className="flex items-center gap-3 px-3 pt-5 pb-6">
         <div className="relative h-9 w-9">
-          <span className="absolute inset-0 rounded-full border-2 border-accent/70" />
+          <span className="absolute inset-0 animate-spin rounded-full border-2 border-accent/70 border-t-transparent [animation-duration:6s]" />
           <span className="absolute inset-[9px] rounded-full bg-accent shadow-[0_0_14px_var(--accent)]" />
         </div>
         <div>
-          <div className="font-display text-lg font-bold tracking-[0.3em] text-ink glow-text">JARVIS</div>
+          <div className="holo-text holo-flicker font-display text-lg font-bold tracking-[0.3em]">JARVIS</div>
           <div className="text-[10px] tracking-widest text-dim uppercase">v0.5 · Fase 5</div>
         </div>
       </div>
@@ -82,7 +82,7 @@ export function Shell({ route, navigate, children }: { route: string; navigate: 
 
   return (
     <div className="flex h-full">
-      <aside className="hidden w-60 shrink-0 border-r border-navy-700 bg-navy-950/80 backdrop-blur lg:block">{nav}</aside>
+      <aside className="hidden w-60 shrink-0 border-r border-navy-700/70 bg-navy-950/55 backdrop-blur-md lg:block">{nav}</aside>
 
       {open && (
         <div className="fixed inset-0 z-40 lg:hidden" role="dialog" aria-modal="true" aria-label="Menú">
@@ -95,10 +95,10 @@ export function Shell({ route, navigate, children }: { route: string; navigate: 
       )}
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center gap-3 border-b border-navy-700 bg-navy-950/60 px-4 py-3 backdrop-blur sm:px-6">
+        <header className="flex items-center gap-3 border-b border-navy-700/70 bg-navy-950/40 px-4 py-3 backdrop-blur-md sm:px-6">
           <button type="button" className="text-muted hover:text-ink lg:hidden" onClick={() => setOpen(true)} aria-label="Abrir menú"><Menu size={20} /></button>
           <div className="min-w-0 flex-1">
-            <h1 className="truncate font-display text-sm font-semibold tracking-[0.18em] text-ink uppercase">{current?.label ?? 'JARVIS'}</h1>
+            <h1 className="holo-text truncate font-display text-sm font-semibold tracking-[0.18em] uppercase">{current?.label ?? 'JARVIS'}</h1>
             <p className="truncate text-xs text-muted">{current?.summary}</p>
           </div>
           {lockdown && (

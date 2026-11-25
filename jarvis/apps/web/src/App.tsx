@@ -2,7 +2,8 @@ import { Shell } from './components/Shell';
 import { ConnectScreen } from './components/ConnectScreen';
 import { useConnection } from './lib/connection';
 import { useHashRoute } from './lib/router';
-import { useSettings } from './lib/settings';
+import { ACCENTS, useSettings } from './lib/settings';
+import { Starfield } from './components/Starfield';
 import { SECTIONS, sectionById } from './sections/registry';
 import { HomeSection } from './sections/Home';
 import { MonitorSection } from './sections/Monitor';
@@ -39,12 +40,15 @@ export function App() {
   })();
 
   return (
-    <div className="jarvis-bg h-full" data-grid={appearance.grid}>
-      {status === 'no-token' || status === 'unauthorized' ? (
-        <ConnectScreen />
-      ) : (
-        <Shell route={section.id} navigate={navigate}>{content}</Shell>
-      )}
+    <div className="jarvis-bg holo-scanlines relative h-full" data-grid={appearance.grid}>
+      <Starfield accent={ACCENTS[appearance.accent].hex} motion={appearance.motion} />
+      <div className="relative z-10 h-full">
+        {status === 'no-token' || status === 'unauthorized' ? (
+          <ConnectScreen />
+        ) : (
+          <Shell route={section.id} navigate={navigate}><div key={section.id} className="section-enter h-full">{content}</div></Shell>
+        )}
+      </div>
     </div>
   );
 }

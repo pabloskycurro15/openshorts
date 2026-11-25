@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { CircleStop, Headphones, KeyRound, MessageSquarePlus, Mic, PanelLeft, Send, Trash2, Volume2, VolumeX, Wrench, ShieldQuestion } from 'lucide-react';
 import { useVoice } from '../voice/VoiceProvider';
+import { ModelSwitch } from '../components/ModelSwitch';
 import type { AiStatus, ChatEvent, ChatMessageView, ConversationSummary, RiskLevel } from '@jarvis/shared';
 import { Badge, Button, ErrorNote, Meter } from '../components/ui';
 import { Markdown } from '../components/Markdown';
@@ -248,7 +249,6 @@ export function ConversationSection({ navigate }: { navigate: (id: string) => vo
   };
 
   if (status && !status.configured) return <NotConfigured goSettings={() => navigate('configuracion')} />;
-  const model = status?.models.find((m) => m.id === status.settings.model);
 
   const sidebar = (
     <div className="flex h-full flex-col">
@@ -286,7 +286,7 @@ export function ConversationSection({ navigate }: { navigate: (id: string) => vo
       <section className="panel flex min-h-[70vh] flex-col overflow-hidden lg:min-h-0">
         <header className="flex flex-wrap items-center gap-3 border-b border-navy-700 px-4 py-3">
           <button type="button" className="text-muted hover:text-ink lg:hidden" onClick={() => setShowList((v) => !v)} aria-label="Conversaciones"><PanelLeft size={18} /></button>
-          <Badge tone="accent">{model?.label ?? '…'}</Badge>
+          <ModelSwitch onChange={(s) => setStatus(s)} />
           {voice.synthesisSupported && (
             <button type="button" onClick={() => { if (!voice.settings.muted) voice.cancelSpeech(); voice.update({ muted: !voice.settings.muted }); }}
               aria-pressed={!voice.settings.muted} title={voice.settings.muted ? 'Modo discreto: voz silenciada' : 'Respuestas habladas activas'}

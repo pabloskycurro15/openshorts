@@ -65,6 +65,11 @@ autorizar una carpeta, explorarla y previsualizar un archivo → Monitor con uso
 aviso honesto de voz local → 0 errores → cierre limpio. Además: `JARVIS.exe` (PE32+ x86-64) generado para Windows;
 el instalador NSIS no se pudo generar aquí (requiere Wine o Windows).
 
+### Rediseño holográfico (0.5.1, navegador real)
+Inicio a 1600×1000 y 390×844: núcleo animado, órden escrita en la barra → confirmación en la barra → «Siempre» →
+subtítulo con la respuesta (sin marcas de formato) → guardada en Conversación; sin desbordamiento en móvil;
+0 errores. Rendimiento con renderizado por software (sin GPU): 21–26 fps; con GPU será mayor.
+
 ## No probado todavía
 - **Windows 11 real**: instalador, DPAPI, control de ventanas (PowerShell + user32), cierre por nombre de proceso,
   apertura de URLs con `rundll32`, inicio con Windows. Solo hay pruebas de la lógica y del análisis de salidas.

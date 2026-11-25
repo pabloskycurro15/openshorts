@@ -10,10 +10,12 @@ export function Panel({ title, icon: Icon, actions, children, className = '' }: 
 }) {
   return (
     <section className={`panel p-4 sm:p-5 ${className}`}>
+      <span aria-hidden className="hud-corner tl" /><span aria-hidden className="hud-corner tr" />
+      <span aria-hidden className="hud-corner bl" /><span aria-hidden className="hud-corner br" />
       {(title || actions) && (
         <header className="mb-4 flex items-center justify-between gap-3">
           <h2 className="flex items-center gap-2 font-display text-[11px] font-semibold tracking-[0.2em] text-muted uppercase">
-            {Icon && <Icon size={14} className="text-accent" aria-hidden />}
+            {Icon && <Icon size={14} className="text-accent drop-shadow-[0_0_6px_var(--accent)]" aria-hidden />}
             {title}
           </h2>
           {actions}
