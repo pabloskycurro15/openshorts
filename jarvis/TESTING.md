@@ -8,7 +8,7 @@
 
 ## Resultados reales (2026-11-25, Linux x64, Node 22.23)
 
-`npm run check` → typecheck OK (núcleo, web y escritorio), lint OK (0 avisos), **126/126 pruebas superadas**.
+`npm run check` → typecheck OK (núcleo, web y escritorio), lint OK (0 avisos), **139/139 pruebas superadas**.
 
 | Archivo | Pruebas | Cubre |
 |---|---|---|
@@ -25,6 +25,7 @@
 | `control.test.ts` | 16 | Config solo por el usuario, rutas absolutas, existentes, sin raíz de disco, ids únicos; rutas: `..`, absolutas externas, enlaces simbólicos; archivos: listar, leer, crear (sin sobrescribir), sobrescribir con copia y confirmación, borrar a papelera, solo lectura, rechazo sin preguntar, «aprobar siempre» = carpeta, binarios y tamaño; apps autorizadas sin shell y cierre; URLs solo http(s) con `rundll32`; comandos de lista blanca ejecutados de verdad; tiempo máximo; procesos reales; análisis de PowerShell/ps/ventanas; scripts sin inyección; ventanas solo Windows; CPU real |
 | `server.test.ts` (ampliado) | +2 | API de control; servido de la interfaz con CSP y API protegida |
 | `apps/desktop/test/master-key.test.ts` | 2 | Clave maestra cifrada por el sistema, recuperable y nunca en claro; rechazo de archivos no cifrados por el sistema |
+| `apps/web/test/vad.test.ts` | 13 | Detector de voz (silencio, frase con margen, ruidos cortos, frases largas, adaptación a ruido constante); palabra de activación (9 casos, incluidas variantes y falsos positivos) |
 | `apps/web/test/voice.test.tsx` | 9 | Texto para voz; troceado por frases (abreviaturas, código); reconocimiento (sin soporte, parciales y final es-ES, permiso denegado, silencio); síntesis (cola, ajustes, fin, cancelación); voz por defecto |
 | `apps/web/test/web.test.tsx` | 13 | 15 secciones con ids únicos y plan para las futuras; 8 estados del núcleo visual; utilidades; almacenamiento tolerante a fallos; App con núcleo simulado: pantalla de vinculación, panel con 15 secciones, reacción a eventos (estado y emergencia), secciones futuras honestas, token caducado |
 
@@ -70,10 +71,23 @@ Inicio a 1600×1000 y 390×844: núcleo animado, órden escrita en la barra → 
 subtítulo con la respuesta (sin marcas de formato) → guardada en Conversación; sin desbordamiento en móvil;
 0 errores. Rendimiento con renderizado por software (sin GPU): 21–26 fps; con GPU será mayor.
 
+### Voz local (Fase 5B) — audio real en español, micrófono simulado
+Audio generado en local con un modelo TTS español (MMS) e inyectado como micrófono de Chromium
+(`--use-file-for-fake-audio-capture`):
+- Node: Whisper base transcribe «¿Qué hora es?» exacto (~0,6 s); con «Jarvis…» → «Jarvis que horas».
+- Navegador: pulsar el micrófono → Whisper en WebAssembly → «¿Qué hora es?» enviado → confirmación (~16 s con modelo en caché).
+- Navegador, sin tocar nada: escucha local activa (indicador) → «Yarvis, qué hora es» → orden enviada → confirmación
+  (~20 s, incluye carga del modelo) → `voice.wake_on` y `voice.wake_detected` auditados → 0 errores.
+- App de escritorio (Electron): reconocimiento local por defecto, descarga del modelo con la CSP del núcleo,
+  «¿Qué hora es?» transcrito (17 s incluida la descarga).
+- Fallos encontrados y corregidos gracias a estas pruebas: variantes del motor ONNX no copiadas; Vite no veía los
+  ficheros copiados; detector de voz engañado por ruido constante.
+
 ## No probado todavía
 - **Windows 11 real**: instalador, DPAPI, control de ventanas (PowerShell + user32), cierre por nombre de proceso,
   apertura de URLs con `rundll32`, inicio con Windows. Solo hay pruebas de la lógica y del análisis de salidas.
-- **Voz con micrófono y altavoces reales** (Chrome/Edge en tu equipo): el entorno de pruebas no tiene audio.
+- **Voz con micrófono y altavoces reales** (Chrome/Edge o la app en tu equipo): el entorno de pruebas no tiene audio;
+  la voz se ha probado con audio sintetizado. Rendimiento de Whisper en tu CPU.
 - **Conversación con la API real de Anthropic**: requiere la clave del usuario. Al configurarla, «Probar conexión»
   hace una consulta gratuita y el primer mensaje confirmará el flujo completo.
 - Ejecución en Windows 11 (se validará en la Fase 5 en un equipo Windows; este entorno es Linux).

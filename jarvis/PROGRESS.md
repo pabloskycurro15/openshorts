@@ -48,6 +48,12 @@
 - [ ] Prueba en Windows 11 real — pendiente del usuario.
 - Decisión técnica: Fase 5 dividida en 5A/5B porque Electron no tiene reconocimiento de voz en la nube.
 
+## 2026-11-25 — Rediseño holográfico y Fase 5B
+- [x] Núcleo de partículas flotando en el espacio (referencia del usuario, en naranja) y capa holográfica.
+- [x] Selector rápido de modelo (Opus/Sonnet/Haiku).
+- [x] Whisper local y palabra de activación; verificados con audio en español sintetizado en local.
+- [ ] Pendiente de decisión del usuario: activar la búsqueda web (coste: ~10 $ por 1.000 búsquedas + tokens).
+
 ## Decisiones tomadas por el usuario
 - Cerebro: Claude Opus 5.5 (API de Anthropic, prepago de 5 $, sin recarga automática). Límite en JARVIS: 5 $/mes.
 

@@ -4,8 +4,8 @@ Asistente personal inteligente multimodal: núcleo local seguro, voz, memoria, a
 conectores, automatizaciones y control autorizado del ordenador, con clientes de
 escritorio (Windows 11), iOS y PWA.
 
-> **Estado actual: Fases 1–5A completadas (núcleo, interfaz, cerebro IA, voz, control del equipo y app de
-> escritorio).** Pendiente: voz local y palabra de activación (5B), memoria, agentes… ver [ROADMAP.md](ROADMAP.md) y [PROGRESS.md](PROGRESS.md).
+> **Estado actual: Fases 1–5B completadas (núcleo, interfaz holográfica, cerebro IA, voz local con palabra de
+> activación, control del equipo y app de escritorio).** Siguiente: memoria (Fase 6). ver [ROADMAP.md](ROADMAP.md) y [PROGRESS.md](PROGRESS.md).
 > Este documento solo describe lo que existe y está probado.
 
 ## Qué funciona hoy
@@ -45,7 +45,8 @@ escritorio (Windows 11), iOS y PWA.
 - App de escritorio (Electron): núcleo integrado, conexión automática, clave maestra protegida con DPAPI,
   bandeja del sistema, Ctrl+Alt+J, inicio con Windows, ventana aislada.
 - Sin módulos nativos: SQLite integrado de Node (se instala en Windows sin herramientas de compilación).
-- 126 pruebas automatizadas (ver [TESTING.md](TESTING.md)).
+- Voz 100 % local (Fase 5B): Whisper en tu equipo (el audio no sale) y palabra de activación «Jarvis».
+- 139 pruebas automatizadas (ver [TESTING.md](TESTING.md)).
 
 ## Instalar la app de escritorio en Windows 11
 
@@ -59,7 +60,7 @@ escritorio (Windows 11), iOS y PWA.
    npm install
    npm run dist:win
    ```
-3. Ejecuta `jarvis\apps\desktop\release\JARVIS-Setup-0.5.0.exe`. Windows SmartScreen avisará de que el
+3. Ejecuta `jarvis\apps\desktop\release\JARVIS-Setup-0.6.0.exe`. Windows SmartScreen avisará de que el
    instalador no está firmado: «Más información» → «Ejecutar de todas formas» (firmarlo requiere un certificado de pago).
 
 Para probar sin instalar: `npm run desktop` (desde `jarvis/`).

@@ -2,6 +2,18 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versionado semántico.
 
+## [0.6.0] — 2026-11-25
+### Añadido
+- Voz 100 % local: Whisper base (transformers.js + ONNX WebAssembly en un Web Worker), motor servido por JARVIS,
+  descarga del modelo con progreso; elegible frente al reconocimiento del navegador; por defecto en escritorio.
+- Palabra de activación «Jarvis» local (detector de voz + Whisper), con orden en la misma frase, pitido,
+  pausa mientras JARVIS habla y enrutado desde cualquier sección. Indicador naranja y auditoría.
+- 13 pruebas nuevas (139 en total) y pruebas reales con micrófono simulado (navegador y escritorio).
+
+### Corregido
+- Detector de voz: un ruido constante ya no se toma por voz (suelo de ruido adaptativo siempre).
+- Motor ONNX: se copian todas sus variantes y antes de que Vite indexe `public/`.
+
 ## [0.5.1] — 2026-11-25
 ### Cambiado (petición del usuario: estética de la referencia, en naranja, más holográfica)
 - Núcleo rediseñado: esfera de ~3600 partículas en 3D (superficie + volumen) con destellos, anillos de datos,

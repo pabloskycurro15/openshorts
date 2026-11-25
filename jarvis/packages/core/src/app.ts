@@ -16,7 +16,7 @@ import { ControlConfigStore } from './control/config';
 import { controlModule } from './control/module';
 import type { Platform } from './control/platform';
 
-export const VERSION = '0.5.0';
+export const VERSION = '0.6.0';
 
 export interface Jarvis {
   version: string;
