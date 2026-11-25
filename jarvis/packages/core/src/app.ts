@@ -27,6 +27,9 @@ import { netlifyConnector } from './connectors/netlify';
 import { openshortsConnector } from './connectors/openshorts';
 import { whatsappConnector } from './connectors/whatsapp';
 import { googleConnector } from './connectors/google';
+import { spotifyConnector } from './connectors/spotify';
+import { vintedConnector } from './connectors/vinted';
+import { AdobeBridge } from './connectors/adobe';
 import { resolveAuthorized } from './control/paths';
 import { getSetting, setSetting } from './storage/db';
 import { ConversationBusyError } from './ai/engine';
@@ -37,8 +40,10 @@ import { PushService, type PushSender } from './notify/push';
 import type { RemoteAccess } from './server/remote';
 import { BackupManager, applyPendingRestore } from './maintenance/backup';
 import { SecurityMonitor } from './security/monitor';
+import { VideoStudio, createProgramTools } from './video/studio';
+import { nodePlatform } from './control/platform';
 
-export const VERSION = '0.14.0';
+export const VERSION = '0.15.0';
 
 export interface Jarvis {
   version: string;
@@ -62,6 +67,8 @@ export interface Jarvis {
   push: PushService;
   backups: BackupManager;
   monitor: SecurityMonitor;
+  video: VideoStudio;
+  adobe: AdobeBridge;
   /** true si al arrancar se aplicó una restauración de copia de seguridad. */
   restored: boolean;
   /** Lo crea el servidor al escuchar (no existe en pruebas sin servidor). */
@@ -144,6 +151,11 @@ export function createJarvis(config: JarvisConfig, opts: { dbFile?: string; extr
     secret: (name) => vault.get(name),
     lockdown: () => permissions.isLockdown(),
     resolvePath: (p, folderId) => resolveAuthorized(control.get().folders, p, folderId).abs,
+    resolveWritable: (p, folderId) => {
+      const r = resolveAuthorized(control.get().folders, p, folderId);
+      if (r.folder.access !== 'readwrite') throw new Error(`La carpeta «${r.folder.label}» es de solo lectura`);
+      return r.abs;
+    },
     fetch: opts.fetch ?? ((...a) => fetch(...a)),
   });
   const automations = new AutomationManager(db, tools, permissions, audit, bus, ai, { budget: ai.budget, tools, audit, bus, markUnavailable: (c) => ai.markUnavailable(c) }, logger);
@@ -156,11 +168,14 @@ export function createJarvis(config: JarvisConfig, opts: { dbFile?: string; extr
   bus.on('approval.requested', (a) => { void push.sendAll({ title: 'JARVIS necesita tu confirmación', body: `${a.tool} (riesgo ${a.risk})`, url: '/#/seguridad', tag: `aprobacion-${a.id}` }).catch(() => undefined); });
   const backups = new BackupManager(db, vault, keys, audit, bus, logger, config.dataDir, VERSION, opts.fetch);
   const monitor = new SecurityMonitor(db, bus, audit, permissions, tools);
-  for (const c of opts.connectors ?? [googleConnector(), whatsappConnector(), telegramConnector(), githubConnector(), netlifyConnector(), openshortsConnector()]) connectors.register(c);
+  const video = new VideoStudio(db, () => control.get(), opts.platform ?? nodePlatform);
+  for (const t of [...video.tools(), ...createProgramTools(video, opts.platform ?? nodePlatform)]) tools.register(t);
+  const adobe = new AdobeBridge();
+  for (const c of opts.connectors ?? [googleConnector(), spotifyConnector(), whatsappConnector(), telegramConnector(), githubConnector(), netlifyConnector(), openshortsConnector(), vintedConnector(), adobe.def()]) connectors.register(c);
 
   const core = { kind: 'core', id: 'kernel' } as const;
   return {
-    version: VERSION, config, logger, bus, db, audit, permissions, tools, modules, vault, ai, voice, control, memory, tasks, connectors, automations, devices, push, backups, monitor, restored, converse,
+    version: VERSION, config, logger, bus, db, audit, permissions, tools, modules, vault, ai, voice, control, memory, tasks, connectors, automations, devices, push, backups, monitor, video, adobe, restored, converse,
     async start() {
       audit.append({ principal: core, action: 'core.start', outcome: 'success', details: { version: VERSION } });
       await modules.startAll({ config, logger, bus, db, tools, permissions, audit });

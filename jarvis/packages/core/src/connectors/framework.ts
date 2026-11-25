@@ -31,6 +31,8 @@ export interface ConnectorCtx {
   emit(event: string, data: Record<string, unknown>): void;
   /** Resolver una ruta dentro de las carpetas autorizadas. */
   resolvePath(path: string, folderId?: string): string;
+  /** Igual, pero exige una carpeta con escritura. */
+  resolveWritable(path: string, folderId?: string): string;
   fetch: typeof fetch;
 }
 

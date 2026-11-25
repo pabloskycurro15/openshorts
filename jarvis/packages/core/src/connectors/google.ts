@@ -1,6 +1,7 @@
 import { createHash, randomBytes } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import { Readable } from 'node:stream';
 import { z } from 'zod';
 import { defineTool } from '../tools/registry';
 import type { ConnectorCtx, ConnectorDef } from './framework';
@@ -13,7 +14,10 @@ export const GOOGLE_SCOPES = [
   'https://www.googleapis.com/auth/calendar.events',
   'https://www.googleapis.com/auth/drive.readonly',
   'https://www.googleapis.com/auth/drive.file',
+  'https://www.googleapis.com/auth/youtube.upload',
+  'https://www.googleapis.com/auth/youtube.readonly',
 ];
+const YT = 'https://www.googleapis.com/youtube/v3';
 const AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const GMAIL = 'https://gmail.googleapis.com/gmail/v1/users/me';
@@ -114,10 +118,10 @@ export function googleConnector(): ConnectorDef {
 
   return {
     id: 'google',
-    name: 'Google (Gmail, Calendar, Drive)',
-    description: 'Lee y busca tu correo, prepara borradores y envía con confirmación; consulta y crea eventos; busca, lee y sube archivos de Drive.',
+    name: 'Google (Gmail, Calendar, Drive, YouTube)',
+    description: 'Lee y busca tu correo, prepara borradores y envía con confirmación; consulta y crea eventos; busca, lee y sube archivos de Drive; publica vídeos en tu canal de YouTube.',
     official: true,
-    warning: 'Usa tu propio cliente OAuth de Google Cloud (gratis). Mientras la app esté en modo «prueba», Google mostrará un aviso de «app no verificada» y pedirá autorizar de nuevo cada 7 días.',
+    warning: 'Usa tu propio cliente OAuth de Google Cloud (gratis). Mientras la app esté en modo «prueba», Google mostrará un aviso de «app no verificada» y pedirá autorizar de nuevo cada 7 días. YouTube: los vídeos subidos desde un proyecto sin auditar quedan como PRIVADOS hasta que Google apruebe la auditoría de la API (gratuita); cuota gratis ≈ 6 subidas al día.',
     docsUrl: 'https://console.cloud.google.com/apis/credentials',
     fields: [
       { key: 'clientId', label: 'ID de cliente OAuth', secret: false, required: true, placeholder: '1234…apps.googleusercontent.com', help: 'Google Cloud → APIs y servicios → Credenciales → Crear ID de cliente OAuth → «App de escritorio».' },
@@ -325,6 +329,77 @@ export function googleConnector(): ConnectorDef {
             method: 'POST', headers: { 'content-type': `multipart/related; boundary=${boundary}` }, body: new Uint8Array(body), timeoutMs: 120_000,
           });
           return { id: r.id, name: r.name, url: r.webViewLink ?? null };
+        },
+      }),
+      // ── YouTube ──
+      defineTool({
+        name: 'youtube.channel', description: 'Datos de tu canal de YouTube (nombre, suscriptores, vídeos).',
+        parameters: z.object({}), permissions: ['connector.google.youtube.read'], risk: 'low', sideEffects: false, risks: [], returns: 'Canal, suscriptores, vídeos y visualizaciones.',
+        async execute() {
+          const r = await g<{ items?: { id: string; snippet: { title: string; customUrl?: string }; statistics: { subscriberCount?: string; videoCount?: string; viewCount?: string } }[] }>(ctx, `${YT}/channels?part=snippet,statistics&mine=true`);
+          const c = r.items?.[0];
+          if (!c) throw new Error('Esta cuenta de Google no tiene canal de YouTube. Créalo en youtube.com antes de publicar.');
+          return { id: c.id, title: c.snippet.title, handle: c.snippet.customUrl ?? null, subscribers: Number(c.statistics.subscriberCount ?? 0), videos: Number(c.statistics.videoCount ?? 0), views: Number(c.statistics.viewCount ?? 0) };
+        },
+      }),
+      defineTool({
+        name: 'youtube.my_videos', description: 'Tus últimos vídeos de YouTube con su estado y visualizaciones.',
+        parameters: z.object({ limit: z.number().int().min(1).max(50).default(10) }),
+        permissions: ['connector.google.youtube.read'], risk: 'low', sideEffects: false, risks: [], returns: 'Id, título, privacidad, fecha y visualizaciones.',
+        async execute({ limit }) {
+          const s = await g<{ items: { id: { videoId: string } }[] }>(ctx, `${YT}/search?part=id&forMine=true&type=video&order=date&maxResults=${limit}`);
+          const ids = s.items.map((i) => i.id.videoId).join(',');
+          if (!ids) return [];
+          const v = await g<{ items: { id: string; snippet: { title: string; publishedAt: string }; status: { privacyStatus: string; uploadStatus: string }; statistics?: { viewCount?: string } }[] }>(ctx, `${YT}/videos?part=snippet,status,statistics&id=${ids}`);
+          return v.items.map((x) => ({ id: x.id, title: x.snippet.title, privacy: x.status.privacyStatus, upload: x.status.uploadStatus, published: x.snippet.publishedAt, views: Number(x.statistics?.viewCount ?? 0), url: `https://youtu.be/${x.id}` }));
+        },
+      }),
+      defineTool({
+        name: 'youtube.upload',
+        description: 'Publica en tu canal de YouTube un vídeo de una carpeta autorizada (p. ej. uno creado con video.* u OpenShorts). Por defecto PRIVADO. Pide confirmación SIEMPRE.',
+        parameters: z.object({
+          path: z.string().min(1), folder: z.string().optional(),
+          title: z.string().min(1).max(100), description: z.string().max(5000).default(''), tags: z.array(z.string().max(60)).max(30).default([]),
+          privacy: z.enum(['private', 'unlisted', 'public']).default('private'), madeForKids: z.boolean().default(false),
+          shorts: z.boolean().default(false).describe('Añade #Shorts al título si es un vídeo vertical corto'),
+        }),
+        permissions: (a) => { ctx.resolvePath(a.path, a.folder); return ['connector.google.youtube.upload']; },
+        risk: 'critical', sideEffects: true,
+        risks: ['Publica en tu canal con tu nombre', 'Si es público, cualquiera podrá verlo', 'Gasta cuota de la API de YouTube (≈6 subidas/día gratis)'],
+        returns: 'Id y enlace del vídeo, y su privacidad.',
+        async execute(a) {
+          const abs = ctx.resolvePath(a.path, a.folder);
+          const st = fs.statSync(abs);
+          if (!st.isFile()) throw new Error('No es un archivo');
+          if (!/\.(mp4|mov|webm|mkv|avi|m4v)$/i.test(abs)) throw new Error('Formato de vídeo no admitido');
+          if (st.size > 4 * 1024 * 1024 * 1024) throw new Error('El vídeo supera 4 GB');
+          const title = a.shorts && !/#shorts/i.test(a.title) ? `${a.title.slice(0, 91)} #Shorts` : a.title;
+          const meta = { snippet: { title, description: a.description, tags: a.tags, categoryId: '22' }, status: { privacyStatus: a.privacy, selfDeclaredMadeForKids: a.madeForKids } };
+          const init = await ctx.fetch('https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status', {
+            method: 'POST',
+            headers: { authorization: `Bearer ${await token(ctx)}`, 'content-type': 'application/json; charset=UTF-8', 'x-upload-content-length': String(st.size), 'x-upload-content-type': 'video/*' },
+            body: JSON.stringify(meta),
+          });
+          if (!init.ok) throw new Error(`YouTube rechazó la subida: HTTP ${init.status} ${(await init.text()).slice(0, 300)}`);
+          const location = init.headers.get('location');
+          if (!location) throw new Error('YouTube no devolvió la dirección de subida');
+          const up = await ctx.fetch(location, { method: 'PUT', headers: { 'content-type': 'video/*', 'content-length': String(st.size) }, body: Readable.toWeb(fs.createReadStream(abs)) as ReadableStream, duplex: 'half' } as RequestInit);
+          if (!up.ok) throw new Error(`Falló la subida: HTTP ${up.status} ${(await up.text()).slice(0, 300)}`);
+          const v = (await up.json()) as { id: string; status?: { privacyStatus?: string; uploadStatus?: string } };
+          return { id: v.id, url: `https://youtu.be/${v.id}`, privacy: v.status?.privacyStatus ?? a.privacy, note: a.privacy !== 'private' ? 'Si tu proyecto de Google no ha pasado la auditoría de la API, YouTube lo dejará como privado.' : 'Subido como privado: revísalo en YouTube Studio antes de publicarlo.' };
+        },
+      }),
+      defineTool({
+        name: 'youtube.set_thumbnail', description: 'Pone una miniatura (JPG/PNG de una carpeta autorizada) a uno de tus vídeos. Requiere canal verificado.',
+        parameters: z.object({ videoId: z.string().regex(/^[A-Za-z0-9_-]{11}$/), path: z.string().min(1), folder: z.string().optional() }),
+        permissions: (a) => { ctx.resolvePath(a.path, a.folder); return ['connector.google.youtube.upload']; },
+        risk: 'high', sideEffects: true, risks: ['Cambia la miniatura pública del vídeo'], returns: 'Confirmación.',
+        async execute(a) {
+          const abs = ctx.resolvePath(a.path, a.folder);
+          if (!/\.(jpe?g|png)$/i.test(abs)) throw new Error('La miniatura debe ser JPG o PNG');
+          if (fs.statSync(abs).size > 2 * 1024 * 1024) throw new Error('La miniatura supera 2 MB');
+          await g(ctx, `https://www.googleapis.com/upload/youtube/v3/thumbnails/set?videoId=${a.videoId}`, { method: 'POST', headers: { 'content-type': /png$/i.test(abs) ? 'image/png' : 'image/jpeg' }, body: new Uint8Array(fs.readFileSync(abs)) });
+          return { ok: true };
         },
       }),
     ],

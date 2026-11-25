@@ -32,7 +32,7 @@ function fakeGoogle() {
       const p = new URLSearchParams(body);
       if (p.get('grant_type') === 'authorization_code') {
         if (createHash('sha256').update(p.get('code_verifier')!).digest('base64url') !== challenge) return json({ error: 'invalid_grant' }, 400);
-        return json({ access_token: `at${++tokenN}`, expires_in: state.expiresIn, refresh_token: 'rt-secreto', scope: 'openid email https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.compose https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/drive.file' });
+        return json({ access_token: `at${++tokenN}`, expires_in: state.expiresIn, refresh_token: 'rt-secreto', scope: 'openid email https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.compose https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly' });
       }
       if (!state.refreshValid) return json({ error: 'invalid_grant', error_description: 'Token has been expired or revoked.' }, 400);
       return json({ access_token: `at${++tokenN}`, expires_in: 3600 });

@@ -103,7 +103,15 @@
       su permiso; la copia externa queda lista para conectarla al final (pausar uno o usar un contenedor en un
       proyecto existente).
 
+## 2026-11-25 — Conectores añadidos a petición del usuario (0.15)
+- [x] YouTube (Google), estudio de vídeo con FFmpeg (probado con FFmpeg real), programas instalables (winget),
+      Spotify, Vinted (experimental), Adobe Express; pruebas con APIs simuladas.
+- [ ] Con cuentas reales al final: Spotify (Client ID), YouTube (canal; auditoría de la API para publicar en
+      público), Vinted (cookie; puede fallar por su protección anti-robots), Adobe (Client ID + localhost).
+
 ## Decisiones tomadas por el usuario
+- Añadir Adobe Express, Spotify, YouTube (publicar vídeos que haga JARVIS, con programas instalables) y mensajes
+  de Vinted.
 - Supabase permitido para lo que haga falta (fase 11: destino externo de copias cifradas).
 - Los conectores (WhatsApp, Telegram, Google…) se vinculan con las cuentas reales al terminar todas las fases.
 - WhatsApp con su número personal mediante conexión no oficial, aceptando el riesgo de bloqueo («da igual las

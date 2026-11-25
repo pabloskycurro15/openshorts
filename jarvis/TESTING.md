@@ -8,7 +8,7 @@
 
 ## Resultados reales (2026-11-25, Linux x64, Node 22.23)
 
-`npm run check` → typecheck OK (núcleo, web y escritorio), lint OK (0 avisos), **236/236 pruebas superadas**.
+`npm run check` → typecheck OK (núcleo, web y escritorio), lint OK (0 avisos), **242/242 pruebas superadas**.
 
 | Archivo | Pruebas | Cubre |
 |---|---|---|
@@ -35,6 +35,9 @@
 | `automations.test.ts` | 14 | Próxima ejecución (diaria por días, intervalo, una vez); plantillas; solo el usuario activa y JARVIS propone; permisos exactos concedidos y revocados; validaciones (herramientas, 30 min con IA, sin automatizaciones encadenadas); riesgo alto espera confirmación y avisa; sin permiso → pregunta → denegada; programador diario y «una vez»; WhatsApp con filtros y plantillas del evento; condición de CPU sostenida con rearme; Gmail con línea base y sondeo cada 5 min; reintento seguro y sin reintento tras efectos; límite diario, emergencia; modo IA con herramientas acotadas, identidad, coste; API HTTP |
 | `devices.test.ts` | 7 | Código de un solo uso → token propio (solo su huella en la BD), `/api/me`, revocación; 5 códigos erróneos invalidan y fallos repetidos → 429; CORS solo para la app nativa; VAPID persistente, avisos y confirmaciones por push, caducadas borradas; solo servicios push reales; cifrado Web Push real contra servicio local HTTPS; red local apagada por defecto, segundo puerto con la misma autenticación (HTTP y WebSocket), QR con la dirección HTTPS |
 | `maintenance.test.ts` | 10 | Formato de copia (cifrado, frase incorrecta, alteración, archivo ajeno); ciclo completo: crear verificada, retención y restauración en otro equipo con clave maestra distinta (conversación y secreto vuelven, auditoría íntegra, datos previos guardados); copia diaria automática; Supabase Storage simulado (contenedor privado, subida cifrada, descarga y verificación, retención remota, clave nunca expuesta); ráfaga → crítica + emergencia; sin bloqueo automático, denegaciones y escalada; accesos fallidos, dispositivo nuevo, auditoría manipulada; diagnóstico sin secretos y limpieza; actualizaciones; API |
+| `video.test.ts` | 3 | FFmpeg real: presentación vertical con música, recorte, unión horizontal, miniatura; solo lectura y no sobrescribir; permisos de carpeta; programas: sin FFmpeg, catálogo cerrado, winget crítico; YouTube: subida reanudable privada con #Shorts y confirmación |
+| `spotify.test.ts` | 1 | PKCE sin secreto, token rotado, poner lista por búsqueda, errores de Premium y sin dispositivo |
+| `connectors-extra.test.ts` | 2 | Vinted (cookie, bandeja, conversación, respuesta con CSRF y confirmación, sesión caducada); Adobe (ticket en localhost, CSP con nonce, solo tipos permitidos en la carpeta elegida) |
 | `apps/web/test/web.test.tsx` | 17 | 15 secciones con ids únicos y plan para las futuras; 8 estados del núcleo visual; utilidades; almacenamiento tolerante a fallos; App con núcleo simulado: pantalla de vinculación, panel con 15 secciones, reacción a eventos (estado y emergencia), secciones futuras honestas, token caducado |
 
 ### Conectores con servicios reales (Fase 8A)

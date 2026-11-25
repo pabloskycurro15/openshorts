@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { AppWindow, ChevronRight, File, Folder, FolderPlus, Play, TerminalSquare, Trash2 } from 'lucide-react';
+import { AppWindow, ChevronRight, File, Folder, FolderPlus, Package, Play, TerminalSquare, Trash2 } from 'lucide-react';
 import type { ToolResult } from '@jarvis/shared';
 import { Badge, Button, Empty, ErrorNote, Panel } from '../components/ui';
 import { core, formatBytes } from '../lib/api';
@@ -222,6 +222,50 @@ export function FilesSection() {
           <p className="text-[11px] text-dim">Se ejecutan sin intérprete de comandos y con argumentos fijos: JARVIS no puede añadir ni cambiar nada. Para scripts .bat usa «cmd.exe» con argumentos «/c» y la ruta del script.</p>
         </form>
       </Panel>
+      <ProgramsPanel />
     </div>
+  );
+}
+
+type ProgramRow = { id: string; name: string; purpose: string; installed: boolean | null; detail: string };
+
+/** Programas que JARVIS puede usar o instalar (catálogo cerrado; instalar siempre se confirma). */
+function ProgramsPanel() {
+  const [rows, setRows] = useState<ProgramRow[] | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const load = async () => {
+    const r = await core.invoke('programs.list', {});
+    if (r.status === 'ok') setRows(r.output as ProgramRow[]);
+  };
+  useEffect(() => { void load(); }, []);
+  return (
+    <Panel title="Programas" icon={Package} className="lg:col-span-2">
+      <p className="mb-3 text-xs text-muted">Programas que JARVIS sabe usar para crear vídeos y contenido. En Windows puede instalarlos por ti con winget (repositorio oficial de Microsoft), siempre con tu confirmación.</p>
+      {rows ? (
+        <ul className="grid gap-2 sm:grid-cols-2">
+          {rows.map((p) => (
+            <li key={p.id} className="flex items-center gap-3 rounded-lg border border-navy-700 bg-navy-900/50 p-3 text-sm">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 text-ink">{p.name} {p.installed ? <Badge tone="ok">Instalado</Badge> : p.installed === false ? <Badge tone="warn">No instalado</Badge> : <Badge>—</Badge>}</div>
+                <div className="text-xs text-dim">{p.purpose}</div>
+                {p.installed && p.detail && <div className="truncate font-mono text-[10px] text-dim">{p.detail}</div>}
+              </div>
+              {p.installed === false && (
+                <Button disabled={!!busy} onClick={() => void (async () => {
+                  setBusy(p.id);
+                  setMsg(null);
+                  const r = await runTool('programs.install', { id: p.id }).catch((err: Error) => ({ status: 'error' as const, error: err.message }));
+                  setMsg(r.status === 'ok' ? { ok: true, text: `${p.name} instalado.` } : { ok: false, text: r.status === 'error' ? r.error : r.status === 'denied' ? r.reason : 'Sin resultado' });
+                  setBusy(null);
+                  void load();
+                })()}>{busy === p.id ? 'Instalando…' : 'Instalar'}</Button>
+              )}
+            </li>
+          ))}
+        </ul>
+      ) : <p className="text-sm text-dim">Comprobando…</p>}
+      {msg && <p role="status" className={`mt-2 text-xs ${msg.ok ? 'text-emerald-300' : 'text-red-300'}`}>{msg.text}</p>}
+    </Panel>
   );
 }

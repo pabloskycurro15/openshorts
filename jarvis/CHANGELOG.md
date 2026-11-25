@@ -2,6 +2,19 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versionado semántico.
 
+## [0.15.0] — 2026-11-25
+### Añadido
+- YouTube (dentro del conector de Google): canal, tus vídeos, subida reanudable (privada por defecto, siempre con
+  confirmación) y miniaturas.
+- Estudio de vídeo con FFmpeg (`video.probe/trim/concat/slideshow/thumbnail`) sobre carpetas autorizadas, sin
+  sobrescribir; programas instalables con winget (FFmpeg, VLC, OBS, HandBrake; catálogo cerrado, crítico);
+  `openshorts.download` para traer clips y publicarlos.
+- Spotify (OAuth PKCE sin secreto): qué suena, buscar, poner música, controles, listas.
+- Vinted (EXPERIMENTAL, no oficial, con la cookie de tu sesión): bandeja, conversaciones y respuesta con
+  confirmación; plantilla alternativa estable por correo.
+- Adobe Express (Embed SDK): editor en una página aislada (origen localhost, CSP con nonce) que solo puede guardar
+  diseños en tu carpeta con un ticket de 30 min. 9 pruebas nuevas (242 en total; FFmpeg real).
+
 ## [0.14.0] — 2026-11-25
 ### Añadido
 - Copias de seguridad (Fase 11): base de datos (copia en caliente), clave maestra y opcionalmente la sesión de

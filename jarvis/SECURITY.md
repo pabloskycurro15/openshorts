@@ -108,6 +108,14 @@ El logger censura campos `token`, `apiKey`, `password`, `secret` y la cabecera `
   memoria; «Desconectar» lo revoca en Google. Enviar correo = crítico (siempre confirma, 20/h); por defecto JARVIS
   prepara borradores.
 
+### Conectores añadidos (0.15)
+- YouTube: subir es crítico (confirma siempre), privado por defecto; solo archivos de carpetas autorizadas.
+- Programas: solo un catálogo cerrado (FFmpeg, VLC, OBS, HandBrake) desde winget; instalar es crítico.
+- Vídeo: FFmpeg sin shell, entradas y salidas dentro de carpetas autorizadas, nunca sobrescribe.
+- Vinted: no oficial; la cookie de sesión se guarda cifrada; responder es crítico.
+- Adobe Express: el SDK de Adobe se ejecuta en otro origen (localhost) sin acceso al token de JARVIS; la página
+  solo puede guardar exportaciones (PNG/JPG/PDF/MP4) en la carpeta elegida con un ticket temporal.
+
 ### Copias de seguridad y vigilancia (Fase 11)
 - Copias cifradas con la frase del usuario (scrypt N=2^15 + AES-256-GCM autenticado); la frase se guarda en el
   almacén cifrado para las copias automáticas. Incluyen la clave maestra (protegida por la frase) para poder

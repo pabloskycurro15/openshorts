@@ -1,7 +1,9 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import type { Principal } from '@jarvis/shared';
+import { randomBytes } from 'node:crypto';
 import type { Jarvis } from '../app';
+import { ADOBE_CSP, ADOBE_PAGE } from '../connectors/adobe';
 
 const USER: Principal = { kind: 'user', id: 'owner' };
 const id = (req: { params: unknown }) => (req.params as { id: string }).id;
@@ -11,6 +13,16 @@ export function registerConnectorRoutes(app: FastifyInstance, j: Jarvis) {
   const c = j.connectors;
   const fail = (reply: { code(n: number): { send(b: unknown): unknown } }, err: unknown) => reply.code(400).send({ error: (err as Error).message });
   app.get('/api/connectors', async () => c.list());
+  // Editor de Adobe Express: página aislada (otro origen: localhost) con su propia CSP y nonce.
+  app.get('/adobe-express', async (_req, reply) => {
+    const nonce = randomBytes(16).toString('base64');
+    void reply.header('content-security-policy', ADOBE_CSP.replace("'unsafe-inline' https://cc-embed", `'nonce-${nonce}' https://cc-embed`)).header('cache-control', 'no-store').header('referrer-policy', 'no-referrer').type('text/html; charset=utf-8');
+    return ADOBE_PAGE.replace('<script type="module">', `<script type="module" nonce="${nonce}">`);
+  });
+  app.post('/adobe-express/upload', { bodyLimit: 60 * 1024 * 1024 }, async (req, reply) => {
+    const b = z.object({ ticket: z.string().min(20).max(100), data: z.string().max(80 * 1024 * 1024), name: z.string().max(100).optional() }).parse(req.body);
+    try { return j.adobe.saveExport(b.ticket, b.data, b.name); } catch (err) { return reply.code(400).send({ error: (err as Error).message }); }
+  });
   // Vuelta de OAuth desde el navegador (sin token de JARVIS; la protege el «state» de un solo uso).
   app.get('/oauth/:id/callback', async (req, reply) => {
     const q = z.record(z.string(), z.string()).parse(req.query);

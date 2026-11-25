@@ -40,6 +40,9 @@ const TEMPLATES: { title: string; hint: string; draft: Draft }[] = [
   { title: 'Reserva por WhatsApp', hint: 'Sin IA · WhatsApp → aviso', draft: { name: 'Reservas por WhatsApp', description: '', retries: 0, maxRunsPerDay: 50,
     trigger: { type: 'whatsapp', contains: 'reserva' },
     action: { mode: 'steps', steps: [{ tool: 'notify.send', args: { title: 'Reserva de {{event.name}}', body: '{{event.text}}' } }] } } },
+  { title: 'Mensaje en Vinted', hint: 'Sin IA · correo de Vinted → aviso', draft: { name: 'Mensajes de Vinted', description: 'Vinted avisa por correo de cada mensaje nuevo.', retries: 1, maxRunsPerDay: 50,
+    trigger: { type: 'gmail', query: 'from:vinted is:unread' },
+    action: { mode: 'steps', steps: [{ tool: 'notify.send', args: { title: 'Vinted: {{event.subject}}', body: '{{event.snippet}}' } }] } } },
   { title: 'Alerta del equipo', hint: 'Sin IA · CPU alta → aviso', draft: { name: 'CPU alta', description: '', retries: 0, maxRunsPerDay: 10,
     trigger: { type: 'condition', metric: 'cpu', above: 90, forMinutes: 5 },
     action: { mode: 'steps', steps: [{ tool: 'notify.send', args: { title: 'CPU al {{event.value}} %', body: 'Lleva 5 minutos por encima del 90 %.' } }] } } },
@@ -82,7 +85,7 @@ export function AutomationsSection() {
         <Editor initial={editing.draft} id={editing.id} tools={tools ?? []} onClose={() => { setEditing(null); void refresh(); }} />
       ) : (
         <Panel title="Nueva automatización" icon={Sparkles} actions={<Button tone="accent" onClick={() => setEditing({ id: null, draft: structuredClone(EMPTY) })}><Plus size={14} aria-hidden /> Crear desde cero</Button>}>
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
             {TEMPLATES.map((t) => (
               <button key={t.title} type="button" onClick={() => setEditing({ id: null, draft: structuredClone(t.draft) })}
                 className="group rounded-lg border border-navy-600 bg-navy-900/60 p-3 text-left transition hover:border-accent hover:shadow-[0_0_18px_rgb(var(--accent-rgb)/0.3)]">

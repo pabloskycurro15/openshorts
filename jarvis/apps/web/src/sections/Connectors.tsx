@@ -1,12 +1,12 @@
 import { useState, type FormEvent } from 'react';
-import { AlertTriangle, CheckCircle2, ExternalLink, GitBranch, Globe, Mail, KeyRound, MessageCircle, Send, Smartphone, Clapperboard, Cable } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, ExternalLink, GitBranch, Globe, Mail, Music, Palette, ShoppingBag, KeyRound, MessageCircle, Send, Smartphone, Clapperboard, Cable } from 'lucide-react';
 import type { ConnectorInfo } from '@jarvis/shared';
 import { Badge, Button, Dot, Empty, ErrorNote, Panel } from '../components/ui';
 import { core } from '../lib/api';
 import { useCoreData } from '../lib/connection';
 import { timeAgo } from '../lib/labels';
 
-const ICON: Record<string, typeof Cable> = { google: Mail, whatsapp: MessageCircle, telegram: Send, github: GitBranch, netlify: Globe, openshorts: Clapperboard };
+const ICON: Record<string, typeof Cable> = { google: Mail, spotify: Music, vinted: ShoppingBag, adobe: Palette, whatsapp: MessageCircle, telegram: Send, github: GitBranch, netlify: Globe, openshorts: Clapperboard };
 const RISK: Record<string, { label: string; tone: 'ok' | 'muted' | 'warn' | 'danger' }> = {
   low: { label: 'Lectura', tone: 'ok' }, medium: { label: 'Pide permiso', tone: 'muted' }, high: { label: 'Confirma', tone: 'warn' }, critical: { label: 'Confirma siempre', tone: 'danger' },
 };
@@ -117,7 +117,7 @@ function ConnectorCard({ c, refresh }: { c: ConnectorInfo; refresh: () => Promis
       <div className="mt-3 flex flex-wrap gap-2">
         {c.enabled
           ? <Button onClick={() => run(async () => { await core.disableConnector(c.id); return 'Desactivado.'; })} disabled={busy}>Desactivar</Button>
-          : <Button tone="accent" onClick={enable} disabled={busy || !accepted || (c.id === 'google' && !c.status.authorized)}>Activar</Button>}
+          : <Button tone="accent" onClick={enable} disabled={busy || !accepted || ((c.id === 'google' || c.id === 'spotify') && !c.status.authorized)}>Activar</Button>}
         {c.enabled && <Button tone="ghost" onClick={() => run(async () => { const r = await core.testConnector(c.id); if (!r.ok) throw new Error(r.detail); return r.detail; })} disabled={busy}>Probar</Button>}
         {c.fields.some((f) => f.secret && f.configured) && (
           <Button tone="ghost" onClick={() => { if (confirm(`¿Borrar las credenciales de ${c.name}? Se desactivará.`)) void run(async () => { await core.deleteConnectorCredentials(c.id); return 'Credenciales borradas.'; }); }} disabled={busy}>Borrar credenciales</Button>
@@ -126,6 +126,8 @@ function ConnectorCard({ c, refresh }: { c: ConnectorInfo; refresh: () => Promis
       {msg && <p role="status" className={`mt-2 text-xs ${msg.ok ? 'text-emerald-300' : 'text-red-300'}`}>{msg.text}</p>}
 
       {c.id === 'google' && <GoogleStatus c={c} run={run} busy={busy} />}
+      {c.id === 'spotify' && <SpotifyStatus c={c} run={run} busy={busy} />}
+      {c.enabled && c.id === 'adobe' && <AdobeStatus c={c} run={run} busy={busy} />}
       {c.enabled && c.id === 'whatsapp' && <WhatsAppStatus c={c} run={run} busy={busy} />}
       {c.enabled && c.id === 'telegram' && <TelegramStatus c={c} run={run} busy={busy} />}
 
@@ -247,6 +249,46 @@ function GoogleStatus({ c, run, busy }: { c: ConnectorInfo; run: RunFn; busy: bo
           {s.redirectUri && <p className="text-dim">Google te devolverá a <span className="font-mono">{s.redirectUri}</span> (este equipo).</p>}
         </>
       )}
+    </div>
+  );
+}
+
+function SpotifyStatus({ c, run, busy }: { c: ConnectorInfo; run: RunFn; busy: boolean }) {
+  const s = c.status as { authorized?: boolean; account?: string | null; redirectUri?: string };
+  const ready = c.fields.every((f) => !f.required || f.configured);
+  return (
+    <div className="mt-3 space-y-2 rounded-lg border border-navy-600 bg-navy-950/50 p-3 text-xs">
+      {s.authorized ? (
+        <>
+          <div className="flex items-center gap-2 text-emerald-300"><Dot tone="ok" pulse={c.enabled} />Autorizado{s.account ? ` como ${s.account}` : ''}{!c.enabled && ' · pulsa «Activar»'}</div>
+          <Button tone="ghost" disabled={busy} onClick={() => void run(async () => { await core.connectorAction(c.id, 'disconnect'); return 'Desconectado.'; })}>Desconectar Spotify</Button>
+        </>
+      ) : (
+        <>
+          <ol className="list-decimal space-y-0.5 pl-4 text-muted">
+            <li>En developer.spotify.com → Dashboard → <b>Create app</b> (marca «Web API»).</li>
+            <li>En «Redirect URIs» añade exactamente: <span className="font-mono text-amber-200">{s.redirectUri}</span></li>
+            <li>Copia aquí el <b>Client ID</b> y pulsa Conectar.</li>
+          </ol>
+          <Button tone="accent" disabled={busy || !ready} onClick={() => run(async () => { const r = await core.connectorAction(c.id, 'authorize'); window.open(String(r.url), '_blank', 'noopener'); return 'Se ha abierto Spotify en el navegador. Autoriza y vuelve aquí.'; })}>Conectar con Spotify</Button>
+        </>
+      )}
+    </div>
+  );
+}
+
+function AdobeStatus({ c, run, busy }: { c: ConnectorInfo; run: RunFn; busy: boolean }) {
+  const presets = (c.status.presets as { id: string; label: string }[] | undefined) ?? [];
+  const [preset, setPreset] = useState(presets[0]?.id ?? 'thumbnail');
+  return (
+    <div className="mt-3 flex flex-wrap items-center gap-2 rounded-lg border border-navy-600 bg-navy-950/50 p-3 text-xs">
+      <label htmlFor="adobe-preset" className="text-muted">Formato</label>
+      <select id="adobe-preset" value={preset} onChange={(e) => setPreset(e.target.value)} className="rounded-lg border border-navy-600 bg-navy-950/60 px-2 py-1.5 text-sm outline-none focus:border-accent">
+        {presets.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
+      </select>
+      <Button tone="accent" disabled={busy} onClick={() => run(async () => { const r = await core.connectorAction(c.id, 'open', { preset }); window.open(String(r.url), '_blank', 'noopener'); return 'Adobe Express se ha abierto en el navegador. Al pulsar «Guardar en JARVIS» el diseño aparecerá en tu carpeta.'; })}>
+        <Palette size={13} aria-hidden /> Abrir Adobe Express
+      </Button>
     </div>
   );
 }
