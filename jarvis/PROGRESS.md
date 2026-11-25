@@ -21,8 +21,18 @@
 - [x] Endpoints de revocación de permisos.
 - [x] 49 pruebas; prueba en Chromium real (escritorio 1440×900 y móvil 390×844) con capturas.
 
+## 2026-11-25 — Fase 3
+- [x] Almacén cifrado, migración 2 (secretos, conversaciones, mensajes, consumo).
+- [x] Interfaz de proveedores neutra + adaptador Anthropic con el SDK oficial 1.14.
+- [x] Motor de conversación con herramientas, permisos interactivos y espera de confirmaciones.
+- [x] Control de gasto (5 $/mes por defecto) y coste por respuesta.
+- [x] API de IA y chat en streaming (NDJSON).
+- [x] Interfaz: Conversación, Cerebro IA, gasto en Inicio.
+- [x] 91 pruebas; prueba en navegador: interfaz → núcleo → SDK real → API de Anthropic simulada.
+- [ ] Prueba con la API real — **pendiente de que el usuario cargue crédito y pegue su clave**.
+
 ## Decisiones tomadas por el usuario
-- Cerebro: Claude Opus 5.5 (API de Anthropic, prepago de 5 $, sin recarga automática).
+- Cerebro: Claude Opus 5.5 (API de Anthropic, prepago de 5 $, sin recarga automática). Límite en JARVIS: 5 $/mes.
 
 ## Decisiones pendientes del usuario
 - Voz premium (ElevenLabs) o solo voces gratuitas del sistema (Fase 4).

@@ -11,6 +11,7 @@ import {
 } from '@jarvis/shared';
 import { tokensEqual } from '../security/auth';
 import type { Jarvis } from '../app';
+import { registerAiRoutes } from './ai-routes';
 
 const USER: Principal = { kind: 'user', id: 'owner' };
 
@@ -73,6 +74,7 @@ export async function buildServer(j: Jarvis, token: string): Promise<FastifyInst
   });
   app.post('/api/approvals/:id', async (req, reply) => {
     const { decision } = ResolveApprovalRequest.parse(req.body);
+    // (approved_always concede el permiso de forma permanente; ver ToolRegistry.resolveApproval)
     try {
       return await j.tools.resolveApproval(USER, (req.params as { id: string }).id, decision);
     } catch (err) {
@@ -99,6 +101,8 @@ export async function buildServer(j: Jarvis, token: string): Promise<FastifyInst
     const cancelled = lockdown ? j.tools.expireAllPending() : 0;
     return { lockdown, cancelledApprovals: cancelled };
   });
+
+  registerAiRoutes(app, j);
 
   app.get('/api/events', { websocket: true }, (socket) => {
     const off = j.bus.onAny((env) => {

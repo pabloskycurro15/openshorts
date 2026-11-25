@@ -1,4 +1,9 @@
 import type {
+  AiSettings,
+  AiStatus,
+  ChatEvent,
+  ChatMessageView,
+  ConversationSummary,
   ApprovalRequest,
   AuditEntry,
   GrantInfo,
@@ -68,7 +73,7 @@ export class CoreClient {
     this.req<ToolResult>('/api/tools/invoke', { method: 'POST', body: JSON.stringify({ tool, args }) });
   approvals = (status?: ApprovalRequest['status']) =>
     this.req<ApprovalRequest[]>(`/api/approvals${status ? `?status=${status}` : ''}`);
-  resolveApproval = (id: string, decision: 'approved' | 'denied') =>
+  resolveApproval = (id: string, decision: 'approved' | 'approved_always' | 'denied') =>
     this.req<ToolResult>(`/api/approvals/${id}`, { method: 'POST', body: JSON.stringify({ decision }) });
   grants = () => this.req<GrantInfo[]>('/api/permissions');
   revoke = (principal: Principal, scope?: string) =>
@@ -82,6 +87,51 @@ export class CoreClient {
       method: 'POST',
       body: JSON.stringify({ lockdown }),
     });
+
+  // ── Cerebro IA ──
+  aiStatus = () => this.req<AiStatus>('/api/ai/status');
+  aiSettings = (patch: Partial<AiSettings>) => this.req<AiSettings>('/api/ai/settings', { method: 'PUT', body: JSON.stringify(patch) });
+  setApiKey = (apiKey: string) => this.req<{ configured: boolean }>('/api/ai/key', { method: 'PUT', body: JSON.stringify({ apiKey }) });
+  deleteApiKey = () => this.req<{ deleted: boolean }>('/api/ai/key', { method: 'DELETE' });
+  testAi = () => this.req<{ ok: boolean; detail: string }>('/api/ai/test', { method: 'POST', body: '{}' });
+  conversations = () => this.req<ConversationSummary[]>('/api/conversations');
+  conversation = (id: string) =>
+    this.req<{ conversation: ConversationSummary; messages: ChatMessageView[]; active: boolean }>(`/api/conversations/${id}`);
+  deleteConversation = (id: string) => this.req<{ deleted: boolean }>(`/api/conversations/${id}`, { method: 'DELETE' });
+  stopChat = (id: string) => this.req<{ stopped: boolean }>(`/api/chat/${id}/stop`, { method: 'POST', body: '{}' });
+
+  /** Envía un mensaje y entrega cada evento de la respuesta según llega (NDJSON). */
+  async chat(body: { conversationId?: string; message: string }, onEvent: (e: ChatEvent) => void, signal?: AbortSignal): Promise<void> {
+    const res = await fetch(`${this.base}/api/chat`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', ...(this.token ? { authorization: `Bearer ${this.token}` } : {}) },
+      body: JSON.stringify(body),
+      signal,
+    });
+    if (!res.ok || !res.body) {
+      let msg = res.statusText;
+      try { msg = ((await res.json()) as { error?: string }).error ?? msg; } catch { /* vacío */ }
+      throw new ApiError(res.status, msg);
+    }
+    const reader = res.body.getReader();
+    const dec = new TextDecoder();
+    let buf = '';
+    for (;;) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      let nl: number;
+      while ((nl = buf.indexOf('\n')) >= 0) {
+        const line = buf.slice(0, nl).trim();
+        buf = buf.slice(nl + 1);
+        if (line) onEvent(JSON.parse(line) as ChatEvent);
+      }
+    }
+  }
+}
+
+export function formatUsd(n: number): string {
+  return n < 0.01 && n > 0 ? `${n.toFixed(4)} $` : `${n.toFixed(2)} $`;
 }
 
 export const core = new CoreClient();

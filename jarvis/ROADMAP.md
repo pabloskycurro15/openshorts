@@ -2,12 +2,15 @@
 
 Cada fase solo se da por terminada cuando cumple sus criterios de aceptación **verificados**.
 
+\* Fase 3: todo verificado contra el SDK oficial y una API simulada; falta la primera prueba con la API real de
+Anthropic, que requiere la clave del usuario (ver TESTING.md).
+
 | Fase | Contenido | Estado |
 |---|---|---|
 | 1 | Arquitectura, núcleo, seguridad base, API, documentación | ✅ Completada |
 | 2 | Interfaz: identidad naranja/azul oscuro, núcleo visual, navegación, 15 secciones, temas | ✅ Completada |
-| 3 | Cerebro IA: proveedores, conversación, contexto, uso de herramientas, control de presupuesto | ⏳ Siguiente |
-| 4 | Voz: STT, TTS, palabra de activación local, interrupción, conversación continua | Pendiente |
+| 3 | Cerebro IA: proveedores, conversación, contexto, uso de herramientas, control de presupuesto | ✅ Completada* |
+| 4 | Voz: STT, TTS, palabra de activación local, interrupción, conversación continua | ⏳ Siguiente |
 | 5 | Control de Windows (Electron + PowerShell/UI Automation) | Pendiente |
 | 6 | Memoria: categorías, búsqueda híbrida FTS5 + vectores, administración | Pendiente |
 | 7 | Multiagente: coordinador, agentes especializados, supervisión | Pendiente |
@@ -41,9 +44,22 @@ Cada fase solo se da por terminada cuando cumple sus criterios de aceptación **
       pausa en segundo plano y fuera de pantalla.
 - [x] Pruebas de componentes y prueba en navegador real con capturas.
 
-### Fase 3 (propuesta)
-- Adaptador Anthropic (Claude Opus 5.5 por defecto) tras la interfaz `AIProvider`; Sonnet/Haiku seleccionables.
-- Almacén de credenciales cifrado para la clave API (nunca en el código ni en texto plano).
-- Conversación en streaming en la sección Conversación, con contexto y uso de herramientas vía `ToolRegistry`.
-- Control de presupuesto: contador de gasto, aviso al 80 %, bloqueo al 100 % del límite mensual.
-- Estados del núcleo visual dirigidos por la IA (pensando, respondiendo, ejecutando).
+### Fase 3 ✅*
+- [x] Adaptador Anthropic (Claude Opus 5.5 por defecto) tras la interfaz `AIProvider`; Sonnet/Haiku seleccionables.
+- [x] Almacén de credenciales cifrado para la clave API (nunca en el código ni en texto plano).
+- [x] Conversación en streaming con contexto e historial persistente; uso de herramientas vía `ToolRegistry`.
+- [x] Confirmaciones en el chat (Aprobar / Aprobar siempre / Denegar); el asistente nunca actúa como usuario.
+- [x] Control de presupuesto: coste por respuesta, aviso al 80 %, bloqueo al 100 % del límite mensual.
+- [x] Estados del núcleo visual dirigidos por la IA (pensando, respondiendo, ejecutando).
+- [x] Límite de 15 pasos por respuesta; cancelación; emergencia corta respuestas en curso.
+- [ ] Primera conversación con la API real (pendiente de la clave del usuario).
+
+### Fase 4 (propuesta)
+- Reconocimiento de voz: Web Speech API (gratis) con botón de micrófono e indicador visible; arquitectura
+  intercambiable para Whisper (local o API) más adelante.
+- Síntesis de voz: voces del sistema en español de España (gratis); adaptador ElevenLabs opcional (de pago,
+  solo con aprobación) para la voz masculina, grave y cinematográfica.
+- Interrupción: hablar o pulsar detiene la respuesta en curso.
+- Conversación continua (manos libres) con detección de turnos.
+- Palabra de activación local ("Jarvis") con openWakeWord en el navegador/escritorio; sin enviar audio fuera.
+- Ajustes: voz, velocidad, tono, volumen, modo discreto.

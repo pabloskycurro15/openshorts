@@ -57,6 +57,47 @@ const MIGRATIONS: string[] = [
     value TEXT NOT NULL
   );
   `,
+  // 2 — secretos cifrados, conversaciones, mensajes y consumo de IA
+  `
+  CREATE TABLE secrets (
+    name TEXT PRIMARY KEY,
+    iv BLOB NOT NULL,
+    tag BLOB NOT NULL,
+    ciphertext BLOB NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+
+  CREATE TABLE conversations (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+
+  CREATE TABLE messages (
+    seq INTEGER PRIMARY KEY AUTOINCREMENT,
+    conversation_id TEXT NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+    role TEXT NOT NULL CHECK (role IN ('user','assistant')),
+    content TEXT NOT NULL,
+    raw TEXT,
+    created_at TEXT NOT NULL
+  );
+  CREATE INDEX messages_conv ON messages(conversation_id, seq);
+
+  CREATE TABLE ai_usage (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ts TEXT NOT NULL,
+    conversation_id TEXT,
+    provider TEXT NOT NULL,
+    model TEXT NOT NULL,
+    input_tokens INTEGER NOT NULL,
+    output_tokens INTEGER NOT NULL,
+    cache_read_tokens INTEGER NOT NULL,
+    cache_write_tokens INTEGER NOT NULL,
+    cost_usd REAL NOT NULL
+  );
+  CREATE INDEX ai_usage_ts ON ai_usage(ts);
+  `,
 ];
 
 export function openDatabase(file: string): Database {

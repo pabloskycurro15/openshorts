@@ -7,3 +7,6 @@ export { PermissionEngine, scopeMatches, type Grant } from './security/permissio
 export { AuditLog } from './security/audit';
 export { buildServer } from './server/http';
 export type * from './ai/provider';
+export { AnthropicProvider } from './ai/anthropic';
+export { AIService } from './ai/service';
+export { SecretVault, FileMasterKey } from './security/vault';

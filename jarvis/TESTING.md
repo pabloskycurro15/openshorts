@@ -8,7 +8,7 @@
 
 ## Resultados reales (2026-11-25, Linux x64, Node 22.23)
 
-`npm run check` → typecheck OK (núcleo y web), lint OK (0 avisos), **49/49 pruebas superadas**.
+`npm run check` → typecheck OK (núcleo y web), lint OK (0 avisos), **91/91 pruebas superadas**.
 
 | Archivo | Pruebas | Cubre |
 |---|---|---|
@@ -16,7 +16,12 @@
 | `security.test.ts` | 17 | Coincidencia de ámbitos (9 casos); reglas del motor de permisos; no escalada; emergencia; auditoría (cadena, solo inserción, detección de manipulación) |
 | `tools.test.ts` | 8 | `system.info` real; validación; denegación; flujo de aprobación; denegar; emergencia frente a aprobaciones; permisos por recurso; auditoría |
 | `server.test.ts` | 8 | Token obligatorio; health; listado e invocación; 400 ante cuerpo no válido; emergencia; revocación de permisos; WebSocket con y sin token; token local 0600 |
-| `apps/web/test/web.test.tsx` | 9 | 15 secciones con ids únicos y plan para las futuras; 8 estados del núcleo visual; utilidades; almacenamiento tolerante a fallos; App con núcleo simulado: pantalla de vinculación, panel con 15 secciones, reacción a eventos (estado y emergencia), secciones futuras honestas, token caducado |
+| `vault-budget.test.ts` | 8 | Cifrado/descifrado; el secreto no aparece en claro en los archivos de la base de datos; clave maestra 0600; otra clave no descifra; dato autenticado; ajustes por defecto y validación; aviso 80 % y bloqueo 100 %; reinicio mensual |
+| `anthropic.test.ts` | 9 | Traducción de nombres y esquemas; reenvío intacto del razonamiento; cálculo de coste; **SDK real contra un servidor SSE local que imita la API**: petición (modelo, esfuerzo, caché, respaldo y cabecera beta, herramientas), streaming de texto, razonamiento y herramienta, uso de tokens; Haiku sin respaldo; errores traducidos; verificación sin coste |
+| `engine.test.ts` | 13 | Sin clave; respuesta simple (streaming, coste, persistencia, estados); confirmación + «aprobar siempre»; denegación; herramienta inexistente y argumentos no válidos; cancelar durante la espera; presupuesto agotado; aviso 80 %; negativa del modelo; error del proveedor; límite de pasos; emergencia; respuestas simultáneas |
+| `ai-routes.test.ts` | 6 | Estado inicial; la clave nunca sale por la API y se guarda cifrada; validación de ajustes; chat NDJSON por HTTP real, listado y borrado; chat sin clave; mensaje vacío |
+| `tools.test.ts` (ampliado) | +3 | Espera de confirmación con carrera; caducidad; agente interactivo pregunta / en segundo plano se deniega |
+| `apps/web/test/web.test.tsx` | 12 | 15 secciones con ids únicos y plan para las futuras; 8 estados del núcleo visual; utilidades; almacenamiento tolerante a fallos; App con núcleo simulado: pantalla de vinculación, panel con 15 secciones, reacción a eventos (estado y emergencia), secciones futuras honestas, token caducado |
 
 ### Prueba en navegador real (Playwright + Chromium, núcleo y web arrancados)
 - Token incorrecto → mensaje «Token incorrecto»; token correcto → panel «Núcleo en línea».
@@ -29,6 +34,20 @@
 Prueba manual con el servidor real: `/api/ping` 200, sin token 401, `/api/health` ok, `system.info` con datos
 reales del equipo, `/api/audit/verify` → `{"ok":true}`.
 
+### Prueba de extremo a extremo de la Fase 3 (navegador real)
+Interfaz → núcleo → SDK oficial de Anthropic → **API simulada local** (servidor SSE en `127.0.0.1:7890` mediante
+`ANTHROPIC_BASE_URL`), sin coste:
+- Sin clave: la Conversación explica cómo configurarla. Clave mal formada → rechazada. Clave con formato válido →
+  guardada y «verificada» (contra la API simulada).
+- «¿Qué hora es?» → texto en streaming → herramienta `system.datetime` → confirmación en el chat →
+  «Aprobar siempre» → respuesta con la hora real del equipo. Segunda pregunta: sin confirmación.
+- Historial persistente tras recargar; el permiso concedido aparece en Seguridad; gasto visible en Inicio.
+- Peticiones recibidas: modelo `claude-opus-5-5`, esfuerzo `medium`, cabecera de respaldo, herramientas
+  `system__info` y `system__datetime`, historial de 1 → 3 → 5 → 7 mensajes.
+- Móvil sin desbordamiento. Único error de consola: el 400 esperado al rechazar la clave mal formada.
+
 ## No probado todavía
+- **Conversación con la API real de Anthropic**: requiere la clave del usuario. Al configurarla, «Probar conexión»
+  hace una consulta gratuita y el primer mensaje confirmará el flujo completo.
 - Ejecución en Windows 11 (se validará en la Fase 5 en un equipo Windows; este entorno es Linux).
 - Safari/iOS (Fase 10).

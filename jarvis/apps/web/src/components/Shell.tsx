@@ -3,7 +3,7 @@ import { Mic, MicOff, CameraOff, Menu, MonitorOff, Wifi, WifiOff, X, Siren, Cpu 
 import { useConnection, useCoreData, type LinkStatus } from '../lib/connection';
 import { core } from '../lib/api';
 import { STATE_LABEL } from '../lib/labels';
-import { SECTIONS, type SectionDef } from '../sections/registry';
+import { CURRENT_PHASE, SECTIONS, type SectionDef } from '../sections/registry';
 import { Dot } from './ui';
 
 const LINK: Record<LinkStatus, { label: string; tone: 'ok' | 'warn' | 'danger' | 'muted' }> = {
@@ -25,7 +25,7 @@ function Indicator({ icon: Icon, label, active, tone }: { icon: typeof Mic; labe
 
 function NavItem({ s, active, onSelect, badge }: { s: SectionDef; active: boolean; onSelect: () => void; badge?: number }) {
   const Icon = s.icon;
-  const ready = s.phase <= 2;
+  const ready = s.phase <= CURRENT_PHASE;
   return (
     <li>
       <button
@@ -62,7 +62,7 @@ export function Shell({ route, navigate, children }: { route: string; navigate: 
         </div>
         <div>
           <div className="font-display text-lg font-bold tracking-[0.3em] text-ink glow-text">JARVIS</div>
-          <div className="text-[10px] tracking-widest text-dim uppercase">v0.2 · Fase 2</div>
+          <div className="text-[10px] tracking-widest text-dim uppercase">v0.3 · Fase 3</div>
         </div>
       </div>
       <ul className="flex-1 space-y-0.5 overflow-y-auto px-2 pb-4">

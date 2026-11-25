@@ -53,7 +53,7 @@ jarvis/
 │       │   ├── security/    permissions, audit, auth
 │       │   ├── tools/       registry + builtin/ (system)
 │       │   ├── storage/     SQLite y migraciones
-│       │   ├── ai/          interfaz de proveedores (Fase 3)
+│       │   ├── ai/          provider, anthropic, pricing, budget, conversations, engine, prompt, service
 │       │   ├── server/      API REST + WebSocket
 │       │   ├── app.ts       composición del núcleo
 │       │   └── main.ts      punto de entrada
@@ -85,6 +85,13 @@ Todas las rutas salvo `/api/ping` requieren `Authorization: Bearer <token>`.
 | GET | `/api/audit?limit=&before=` | Auditoría paginada |
 | GET | `/api/audit/verify` | Verifica la cadena de hashes |
 | POST | `/api/emergency` | `{lockdown: bool}` — bloqueo total de operaciones con efectos |
+| GET | `/api/ai/status` | Configurado, modelo, gasto del mes, límite, avisos |
+| PUT | `/api/ai/settings` | `{model?, effort?, monthlyLimitUsd?}` |
+| PUT / DELETE | `/api/ai/key` | Guardar (cifrada) o borrar la clave API. Nunca se devuelve |
+| POST | `/api/ai/test` | Verifica la clave sin coste (consulta el modelo) |
+| GET / DELETE | `/api/conversations[/:id]` | Lista, detalle (sin contenido interno) y borrado |
+| POST | `/api/chat` | `{conversationId?, message}` → flujo NDJSON de `ChatEvent` |
+| POST | `/api/chat/:id/stop` | Detiene la respuesta en curso |
 | WS | `/api/events?token=` | Flujo de eventos (`assistant.state`, `approval.*`, `tool.invoked`...) |
 
 ## Modelo de datos (migración 1)
@@ -95,6 +102,26 @@ Todas las rutas salvo `/api/ping` requieren `Authorization: Bearer <token>`.
 - `settings` — clave/valor (p. ej. `security.lockdown`).
 
 Las migraciones se versionan con `PRAGMA user_version` y nunca se editan una vez publicadas.
+
+## Migración 2 (Fase 3)
+- `secrets` — secretos cifrados (iv, tag, ciphertext).
+- `conversations`, `messages` — historial de solo inserción; `raw` guarda el contenido original del proveedor.
+- `ai_usage` — tokens y coste por llamada (base del control de gasto).
+
+## Flujo de una respuesta (Fase 3)
+
+```
+POST /api/chat → ChatEngine.run
+  bucle (máx. 15 pasos):
+    presupuesto agotado? → error y fin
+    estado "pensando" → provider.runTurn (streaming → eventos "text", estado "respondiendo")
+    registrar coste → evento "usage" (aviso al cruzar el 80 %)
+    negativa? → descartar parcial, informar, fin
+    guardar mensaje; ¿herramientas? → estado "ejecutando"
+      ToolRegistry.invoke(agent:jarvis, interactive) → ok | pregunta (espera al usuario) | denegado | error
+      guardar tool_result de TODAS → siguiente paso
+    sin herramientas → fin
+```
 
 ## Flujo de una invocación
 

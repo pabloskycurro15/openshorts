@@ -2,6 +2,19 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versionado semántico.
 
+## [0.3.0] — 2026-11-25
+### Añadido
+- Cerebro IA: capa de proveedores, adaptador Anthropic (SDK oficial, streaming, respaldo automático, caché),
+  Opus 5.5 por defecto, Sonnet 5.5 y Haiku 5.5 seleccionables, nivel de razonamiento configurable.
+- Motor de conversación con herramientas, confirmaciones en el chat, límite de pasos y cancelación.
+- Almacén de credenciales cifrado; control de gasto mensual con aviso y bloqueo.
+- Herramienta `system.datetime`.
+- Interfaz: sección Conversación, panel Cerebro IA en Configuración, gasto del mes en Inicio, «Aprobar siempre».
+- 42 pruebas nuevas (91 en total) y prueba en navegador contra API simulada.
+
+### Corregido
+- Carrera en la espera de confirmaciones: una decisión muy rápida podía darse por perdida.
+
 ## [0.2.0] — 2026-11-25
 ### Añadido
 - Interfaz `@jarvis/web`: identidad naranja/azul oscuro, núcleo visual animado con 8 estados, 15 secciones,

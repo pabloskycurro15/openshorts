@@ -1,5 +1,6 @@
-import { Brain, Link2, Mic, Palette } from 'lucide-react';
-import { Badge, Button, Panel } from '../components/ui';
+import { Link2, Mic, Palette } from 'lucide-react';
+import { AiSettingsPanel } from './AiSettings';
+import { Button, Panel } from '../components/ui';
 import { ACCENTS, useSettings, type AccentId, type Appearance } from '../lib/settings';
 import { useConnection, type LinkStatus } from '../lib/connection';
 
@@ -60,13 +61,7 @@ export function SettingsSection() {
           <p className="text-sm text-muted">Estado: <span className="text-ink">{LINK_LABEL[status]}</span>. El token se guarda solo en este navegador.</p>
           <div className="mt-3"><Button tone="danger" onClick={disconnect}>Desvincular este navegador</Button></div>
         </Panel>
-        <Panel title="Cerebro IA" icon={Brain}>
-          <ul className="space-y-2 text-sm">
-            <li className="flex justify-between"><span className="text-muted">Modelo por defecto</span><span>Claude Opus 5.5</span></li>
-            <li className="flex justify-between"><span className="text-muted">Límite de gasto mensual</span><Badge>Fase 3</Badge></li>
-            <li className="flex justify-between"><span className="text-muted">Clave API</span><Badge>Fase 3 · almacén cifrado</Badge></li>
-          </ul>
-        </Panel>
+        <AiSettingsPanel />
         <Panel title="Voz y sonidos" icon={Mic}>
           <p className="text-sm text-muted">Voz, velocidad, tono, volumen, palabra de activación y sonidos se configurarán aquí en la Fase 4.</p>
         </Panel>

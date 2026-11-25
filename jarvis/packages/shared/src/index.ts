@@ -159,7 +159,8 @@ export const InvokeToolRequest = z.object({
 export type InvokeToolRequest = z.infer<typeof InvokeToolRequest>;
 
 export const ResolveApprovalRequest = z.object({
-  decision: z.enum(['approved', 'denied']),
+  /** approved_always concede además el permiso de forma permanente. */
+  decision: z.enum(['approved', 'approved_always', 'denied']),
 });
 
 export const EmergencyRequest = z.object({ lockdown: z.boolean() });
@@ -179,3 +180,77 @@ export const GrantInfo = z.object({
 export type GrantInfo = z.infer<typeof GrantInfo>;
 
 export const API_VERSION = 'v1';
+
+// ───────────────────────── IA y conversación (Fase 3) ─────────────────────────
+
+export const Effort = z.enum(['low', 'medium', 'high']);
+export type Effort = z.infer<typeof Effort>;
+
+export const AiSettings = z.object({
+  model: z.string().min(1),
+  effort: Effort,
+  /** Límite de gasto mensual en USD. JARVIS se detiene al alcanzarlo. */
+  monthlyLimitUsd: z.number().min(0).max(10_000),
+});
+export type AiSettings = z.infer<typeof AiSettings>;
+
+export interface AiModelView {
+  id: string;
+  label: string;
+  description: string;
+  price: { input: number; output: number; cacheRead: number; cacheWrite: number };
+}
+
+export interface AiStatus {
+  provider: string;
+  configured: boolean;
+  keyUpdatedAt: string | null;
+  settings: AiSettings;
+  models: AiModelView[];
+  spentMonthUsd: number;
+  /** 0-1+ fracción del límite consumida. */
+  budgetRatio: number;
+  warn: boolean;
+  blocked: boolean;
+  activeConversations: string[];
+}
+
+export const SetApiKeyRequest = z.object({ apiKey: z.string().trim().min(20).max(400) });
+
+export const ChatRequest = z.object({
+  conversationId: z.string().uuid().optional(),
+  message: z.string().trim().min(1).max(20_000),
+});
+
+export interface ConversationSummary {
+  id: string;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+  costUsd: number;
+}
+
+export type ChatBlockView =
+  | { type: 'text'; text: string }
+  | { type: 'tool_use'; id: string; name: string; input: unknown }
+  | { type: 'tool_result'; toolUseId: string; content: string; isError?: boolean };
+
+export interface ChatMessageView {
+  seq: number;
+  role: 'user' | 'assistant';
+  content: ChatBlockView[];
+  createdAt: string;
+}
+
+/** Eventos del flujo de una respuesta (NDJSON en POST /api/chat). */
+export type ChatEvent =
+  | { type: 'start'; conversationId: string; title: string }
+  | { type: 'text'; delta: string }
+  | { type: 'message_end' }
+  | { type: 'tool_call'; id: string; tool: string; input: unknown }
+  | { type: 'approval_required'; id: string; approvalId: string; tool: string; reason: string; risk: RiskLevel }
+  | { type: 'tool_result'; id: string; tool: string; status: ToolResult['status']; summary: string }
+  | { type: 'usage'; model: string; costUsd: number; monthUsd: number; limitUsd: number }
+  | { type: 'warning'; message: string }
+  | { type: 'error'; message: string }
+  | { type: 'done'; stopReason: string };

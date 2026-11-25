@@ -2,6 +2,7 @@ import os from 'node:os';
 import { z } from 'zod';
 import { defineTool } from '../registry';
 import type { JarvisModule } from '../../kernel/modules';
+import { datetimeTool } from './datetime';
 
 /** Información real del equipo donde corre el núcleo. Solo lectura. */
 export const systemInfoTool = defineTool({
@@ -32,9 +33,10 @@ export const systemModule: JarvisModule = {
     id: 'system',
     name: 'Sistema',
     version: '0.1.0',
-    description: 'Información y supervisión básica del equipo anfitrión.',
+    description: 'Información del equipo anfitrión: sistema, rendimiento, fecha y hora.',
   },
   start(ctx) {
     ctx.tools.register(systemInfoTool);
+    ctx.tools.register(datetimeTool);
   },
 };

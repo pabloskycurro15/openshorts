@@ -77,6 +77,30 @@ Sustituye a la paleta azul/cian del prompt original. Tokens previstos:
 
 Será configurable (sistema de temas, Fase 2).
 
+## ADR-013 · Motor de conversación ✅
+- **Bucle de herramientas propio** (no el Tool Runner del SDK): cada acción debe pasar por `ToolRegistry`
+  (permisos, confirmaciones que pueden tardar minutos, auditoría) y el motor no debe depender de un proveedor.
+- **Identidad del asistente:** principal `agent:jarvis`, nunca `user`. Como el usuario está presente en la
+  conversación, una concesión ausente se convierte en **pregunta** (no en denegación). «Aprobar siempre» crea una
+  concesión permanente; el riesgo alto y crítico siempre vuelve a preguntar. Los procesos en segundo plano
+  (Fases 8–9) no son interactivos: sin concesión, se deniega.
+- **Historial de solo inserción** y contenido original del proveedor reenviado sin cambios (Claude verifica que no
+  se edite su razonamiento). Todo `tool_use` recibe su `tool_result`, también al cancelar o denegar.
+- **Respaldo automático** `fallbacks: "default"` (beta `server-side-fallback-2026-07-01`) en Opus y Sonnet: si
+  los filtros de seguridad declinan una petición legítima, Anthropic la reintenta con otro modelo. Haiku no lo admite.
+- **Caché automática** del prefijo (`cache_control` en la petición): instrucciones, herramientas e historial se
+  cobran al 10 % en turnos posteriores. Las instrucciones de sistema son texto fijo (sin fechas) para no romperla;
+  la fecha se obtiene con la herramienta `system.datetime`.
+- **Esfuerzo por defecto: medio** (es el valor por defecto de Opus 5.5); configurable (bajo/medio/alto).
+- **Coste:** tokens reales devueltos por la API × precios públicos (`ai/pricing.ts`). Es una estimación local;
+  la factura oficial está en la consola de Anthropic.
+- **Límite de 15 pasos** por respuesta para evitar bucles costosos.
+
+## ADR-014 · Almacén de credenciales ✅
+AES-256-GCM con el nombre del secreto como dato autenticado; clave maestra en archivo 0600 separado de la base de
+datos (`MasterKeyProvider` intercambiable: en la Fase 5, Electron `safeStorage`/DPAPI). Protege frente a
+filtraciones de la base de datos o de copias; no frente a quien controle por completo la cuenta del usuario.
+
 ## ADR-011 · Voz 🔶
 - Base gratuita: Web Speech API (reconocimiento y síntesis del sistema).
 - Voz premium masculina, profunda y cinematográfica: ElevenLabs (ya usado en OpenShorts; de pago).

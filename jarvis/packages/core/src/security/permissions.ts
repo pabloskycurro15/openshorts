@@ -19,6 +19,12 @@ export interface PermissionCheck {
   scopes: PermissionScope[];
   risk: RiskLevel;
   sideEffects: boolean;
+  /**
+   * El usuario está presente (p. ej. conversando con JARVIS) y puede confirmar en el acto.
+   * Entonces, una concesión ausente se convierte en pregunta en lugar de denegación.
+   * Los procesos en segundo plano (automatizaciones, conectores) nunca son interactivos.
+   */
+  interactive?: boolean;
 }
 
 export interface PermissionVerdict {
@@ -58,7 +64,8 @@ const LOCKDOWN_KEY = 'security.lockdown';
  *  2. El usuario, actuando directamente, puede todo, pero lo de riesgo alto o
  *     crítico requiere confirmación explícita.
  *  3. Cualquier otro principal (agente, módulo, conector, automatización)
- *     necesita una concesión explícita para CADA ámbito; si falta alguna, se deniega.
+ *     necesita una concesión explícita para CADA ámbito; si falta alguna, se deniega
+ *     (o, si el usuario está presente —interactive—, se le pregunta).
  *  4. Aunque exista concesión "allow", el riesgo alto o crítico siempre pide confirmación.
  *  5. Solo el usuario puede conceder o revocar: nadie amplía sus propios permisos.
  */
@@ -77,10 +84,21 @@ export class PermissionEngine {
     const grants = this.listGrants(req.principal);
     const highRisk = req.risk === 'high' || req.risk === 'critical';
     let needsAsk = highRisk;
+    const missing: string[] = [];
     for (const scope of req.scopes) {
       const g = grants.find((gr) => scopeMatches(gr.scope, scope));
-      if (!g) return { decision: 'deny', reason: `Sin permiso para "${scope}"` };
+      if (!g) {
+        if (req.interactive) {
+          needsAsk = true;
+          missing.push(scope);
+          continue;
+        }
+        return { decision: 'deny', reason: `Sin permiso para "${scope}"` };
+      }
       if (g.mode === 'ask') needsAsk = true;
+    }
+    if (missing.length) {
+      return { decision: 'ask', reason: `${req.principal.id} pide permiso para: ${missing.join(', ')}` };
     }
     return needsAsk
       ? { decision: 'ask', reason: highRisk ? `Operación de riesgo ${req.risk}: requiere confirmación` : 'Concesión en modo "preguntar"' }

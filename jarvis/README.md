@@ -4,8 +4,8 @@ Asistente personal inteligente multimodal: núcleo local seguro, voz, memoria, a
 conectores, automatizaciones y control autorizado del ordenador, con clientes de
 escritorio (Windows 11), iOS y PWA.
 
-> **Estado actual: Fases 1 y 2 completadas (núcleo + interfaz).** Todavía no hay
-> IA ni voz: ver [ROADMAP.md](ROADMAP.md) y [PROGRESS.md](PROGRESS.md).
+> **Estado actual: Fases 1–3 completadas (núcleo, interfaz y cerebro IA).** Todavía no hay
+> voz ni control de Windows: ver [ROADMAP.md](ROADMAP.md) y [PROGRESS.md](PROGRESS.md).
 > Este documento solo describe lo que existe y está probado.
 
 ## Qué funciona hoy
@@ -26,7 +26,20 @@ escritorio (Windows 11), iOS y PWA.
     (confirmaciones, permisos, emergencia, verificación), Historial, Notificaciones, Laboratorio,
     Centro de comandos y Configuración (apariencia). El resto indica claramente su fase.
   - Diseño adaptable (escritorio y móvil), respeta «reducir movimiento», pausa animaciones en segundo plano.
-- 49 pruebas automatizadas (ver [TESTING.md](TESTING.md)).
+- Cerebro IA (Fase 3):
+  - Conversación con Claude Opus 5.5 (Sonnet 5.5 y Haiku 5.5 seleccionables) con respuestas en streaming.
+  - Uso de herramientas a través del sistema de permisos: JARVIS pide confirmación en el propio chat
+    (Aprobar / Aprobar siempre / Denegar).
+  - Clave API guardada cifrada (AES-256-GCM); ninguna ruta de la API la devuelve.
+  - Control de gasto: coste por respuesta, gasto del mes, aviso al 80 % y bloqueo al 100 % del límite (5 $ por defecto).
+  - Conversaciones persistentes; cancelación; el modo emergencia corta cualquier respuesta en curso.
+- 91 pruebas automatizadas (ver [TESTING.md](TESTING.md)).
+
+## Activar el cerebro
+
+1. Carga crédito en https://platform.claude.com/settings/billing (desactiva la recarga automática).
+2. Crea una clave en https://platform.claude.com/settings/keys.
+3. En JARVIS: **Configuración → Cerebro IA**, pega la clave y pulsa Guardar (se verifica sola, sin coste).
 
 ## Inicio rápido
 

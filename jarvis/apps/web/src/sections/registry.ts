@@ -7,7 +7,7 @@ export interface SectionDef {
   id: string;
   label: string;
   icon: LucideIcon;
-  /** Fase en la que la sección queda operativa; 2 = disponible ya. */
+  /** Fase en la que la sección queda operativa (≤ CURRENT_PHASE = disponible ya). */
   phase: number;
   summary: string;
   /** Qué hará la sección cuando su fase esté completa (se muestra mientras tanto). */
@@ -17,8 +17,7 @@ export interface SectionDef {
 /** Las 15 secciones de JARVIS, en el orden del documento de requisitos. */
 export const SECTIONS: SectionDef[] = [
   { id: 'inicio', label: 'Inicio', icon: Home, phase: 2, summary: 'Núcleo, estado del sistema y resumen.' },
-  { id: 'conversacion', label: 'Conversación', icon: MessageSquare, phase: 3, summary: 'Habla o escribe a JARVIS.',
-    planned: ['Chat en streaming con Claude Opus 5.5 (proveedor intercambiable)', 'Uso de herramientas con confirmaciones', 'Voz (Fase 4): escuchar, responder hablando, interrumpir', 'Contador de coste por respuesta y límite mensual'] },
+  { id: 'conversacion', label: 'Conversación', icon: MessageSquare, phase: 3, summary: 'Escribe a JARVIS (la voz llega en la Fase 4).' },
   { id: 'tareas', label: 'Centro de tareas', icon: ListChecks, phase: 7, summary: 'Objetivos, planes y progreso.',
     planned: ['Tareas descompuestas por el agente coordinador', 'Progreso, errores y resultados en tiempo real', 'Detener o reanudar tareas'] },
   { id: 'automatizaciones', label: 'Automatizaciones', icon: Workflow, phase: 9, summary: 'Rutinas y tareas programadas.',
@@ -39,5 +38,8 @@ export const SECTIONS: SectionDef[] = [
     planned: ['Coordinador + investigación, programación, documentos, productividad, automatización, análisis, sistema, integraciones', 'Permisos independientes por agente', 'Estado, progreso y consumo de cada uno'] },
   { id: 'seguridad', label: 'Seguridad y permisos', icon: ShieldCheck, phase: 2, summary: 'Confirmaciones, permisos y emergencia.' },
 ];
+
+/** Última fase completada y verificada. */
+export const CURRENT_PHASE = 3;
 
 export const sectionById = (id: string) => SECTIONS.find((s) => s.id === id);

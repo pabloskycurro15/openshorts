@@ -104,3 +104,30 @@ describe('ToolRegistry', () => {
     expect(j.audit.verify().ok).toBe(true);
   });
 });
+
+describe('ToolRegistry — espera de aprobaciones', () => {
+  it('waitForApproval obtiene el resultado aunque la decisión llegue antes de empezar a esperar', async () => {
+    const j = await makeJarvis([testModule]);
+    const r = await j.tools.invoke(USER, 'test.delete_thing', { id: 'w1' });
+    if (r.status !== 'pending_approval') throw new Error('esperaba pendiente');
+    const resolving = j.tools.resolveApproval(USER, r.approvalId, 'approved'); // sin await: carrera
+    const waited = await j.tools.waitForApproval(r.approvalId);
+    expect(waited).toEqual({ status: 'ok', output: { deleted: 'w1' } });
+    await resolving;
+  });
+
+  it('una aprobación caducada resuelve la espera como denegada', async () => {
+    const j = await makeJarvis([testModule]);
+    const r = await j.tools.invoke(USER, 'test.delete_thing', { id: 'w2' });
+    if (r.status !== 'pending_approval') throw new Error('esperaba pendiente');
+    const p = j.tools.waitForApproval(r.approvalId);
+    j.tools.expireAllPending();
+    expect(await p).toMatchObject({ status: 'denied' });
+  });
+
+  it('un agente interactivo sin permiso recibe una pregunta (no una denegación); en segundo plano se deniega', async () => {
+    const j = await makeJarvis();
+    expect((await j.tools.invoke(AGENT, 'system.info', {}, { interactive: true })).status).toBe('pending_approval');
+    expect((await j.tools.invoke(AGENT, 'system.info', {})).status).toBe('denied');
+  });
+});

@@ -10,7 +10,7 @@ const RISK_TONE = { low: 'ok', medium: 'warn', high: 'danger', critical: 'danger
 
 function ApprovalCard({ a, onDone }: { a: ApprovalRequest; onDone: (msg: string) => void }) {
   const [busy, setBusy] = useState(false);
-  const decide = async (d: 'approved' | 'denied') => {
+  const decide = async (d: 'approved' | 'approved_always' | 'denied') => {
     setBusy(true);
     try {
       const r = await core.resolveApproval(a.id, d);
@@ -32,6 +32,7 @@ function ApprovalCard({ a, onDone }: { a: ApprovalRequest; onDone: (msg: string)
       <pre className="mt-2 max-h-32 overflow-auto rounded bg-bg/70 p-2 font-mono text-xs text-ink">{JSON.stringify(a.args, null, 2)}</pre>
       <div className="mt-2 flex gap-2">
         <Button tone="accent" disabled={busy} onClick={() => decide('approved')}>Aprobar</Button>
+        {a.principal.kind !== 'user' && (a.risk === 'low' || a.risk === 'medium') && <Button disabled={busy} onClick={() => decide('approved_always')}>Aprobar siempre</Button>}
         <Button tone="danger" disabled={busy} onClick={() => decide('denied')}>Denegar</Button>
       </div>
     </li>
@@ -101,7 +102,7 @@ export function SecuritySection() {
               </li>
             ))}
           </ul>
-        ) : <Empty>Ningún agente, conector ni automatización tiene permisos todavía. Se concederán uno a uno cuando existan (Fases 7–9).</Empty>}
+        ) : <Empty>Nadie tiene permisos permanentes todavía. Se conceden con «Aprobar siempre» cuando JARVIS pide usar una herramienta.</Empty>}
       </Panel>
 
       <Panel title="Integridad del registro" icon={BadgeCheck}>

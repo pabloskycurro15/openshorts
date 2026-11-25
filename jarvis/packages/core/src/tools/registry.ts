@@ -35,9 +35,18 @@ export function defineTool<S extends z.ZodType>(def: ToolDefinition<S>): ToolDef
 interface PendingCall {
   tool: ToolDefinition;
   args: unknown;
+  scopes: string[];
   principal: Principal;
   timer: NodeJS.Timeout;
 }
+
+export interface InvokeOptions {
+  signal?: AbortSignal;
+  /** El usuario está presente y puede confirmar (conversación). Ver PermissionEngine. */
+  interactive?: boolean;
+}
+
+export type ApprovalDecision = 'approved' | 'approved_always' | 'denied';
 
 type ApprovalRow = {
   id: string; principal_kind: Principal['kind']; principal_id: string; tool: string; args: string; scopes: string;
@@ -66,6 +75,9 @@ export class ToolRegistry {
   private tools = new Map<string, ToolDefinition>();
   private pending = new Map<string, PendingCall>();
   private results = new Map<string, ToolResult>();
+  private waiters = new Map<string, ((r: ToolResult) => void)[]>();
+  /** Aprobaciones ya decididas cuya ejecución aún no ha terminado. */
+  private inflight = new Set<string>();
 
   constructor(
     private db: Database,
@@ -97,7 +109,13 @@ export class ToolRegistry {
     }));
   }
 
-  async invoke(principal: Principal, name: string, rawArgs: unknown, signal = new AbortController().signal): Promise<ToolResult> {
+  /** Busca una herramienta por nombre (para adaptadores de IA que necesitan su esquema). */
+  get(name: string): ToolDefinition | undefined {
+    return this.tools.get(name);
+  }
+
+  async invoke(principal: Principal, name: string, rawArgs: unknown, opts: InvokeOptions = {}): Promise<ToolResult> {
+    const signal = opts.signal ?? new AbortController().signal;
     const tool = this.tools.get(name);
     if (!tool) return this.finish(principal, name, null, { status: 'error', error: `Herramienta desconocida: ${name}` });
 
@@ -107,7 +125,7 @@ export class ToolRegistry {
     }
     const args = parsed.data;
     const scopes = typeof tool.permissions === 'function' ? tool.permissions(args) : tool.permissions;
-    const verdict = this.permissions.check({ principal, scopes, risk: tool.risk, sideEffects: tool.sideEffects });
+    const verdict = this.permissions.check({ principal, scopes, risk: tool.risk, sideEffects: tool.sideEffects, interactive: opts.interactive });
 
     if (verdict.decision === 'deny') return this.finish(principal, name, args, { status: 'denied', reason: verdict.reason });
     if (verdict.decision === 'ask') return this.requestApproval(principal, tool, args, scopes, verdict.reason);
@@ -126,15 +144,38 @@ export class ToolRegistry {
     return row ? { ...toApproval(row), result: this.results.get(id) ?? null } : undefined;
   }
 
-  /** Solo el usuario resuelve aprobaciones. Si se aprueba, la herramienta se ejecuta. */
-  async resolveApproval(by: Principal, id: string, decision: 'approved' | 'denied'): Promise<ToolResult> {
+  /**
+   * Espera a que una aprobación se resuelva (aprobada y ejecutada, denegada o caducada).
+   * La usa la conversación para quedarse esperando mientras el usuario decide.
+   */
+  waitForApproval(id: string): Promise<ToolResult> {
+    const done = this.results.get(id);
+    if (done) return Promise.resolve(done);
+    if (!this.pending.has(id) && !this.inflight.has(id)) return Promise.resolve({ status: 'denied', reason: 'Aprobación inexistente o caducada' });
+    return new Promise((resolve) => {
+      const list = this.waiters.get(id) ?? [];
+      list.push(resolve);
+      this.waiters.set(id, list);
+    });
+  }
+
+  /**
+   * Solo el usuario resuelve aprobaciones. Si se aprueba, la herramienta se ejecuta.
+   * "approved_always" además concede permanentemente los ámbitos al principal
+   * (las operaciones de riesgo alto o crítico seguirán pidiendo confirmación).
+   */
+  async resolveApproval(by: Principal, id: string, decision: ApprovalDecision): Promise<ToolResult> {
     if (by.kind !== 'user') throw new Error('Solo el usuario puede resolver aprobaciones');
     const call = this.pending.get(id);
     if (!call) throw new Error('Aprobación inexistente, ya resuelta o caducada');
     clearTimeout(call.timer);
     this.pending.delete(id);
-    const approval = this.setApprovalStatus(id, decision);
+    this.inflight.add(id);
+    const approval = this.setApprovalStatus(id, decision === 'denied' ? 'denied' : 'approved');
     this.audit.append({ principal: by, action: `approval.${decision}`, target: call.tool.name, outcome: 'success', details: { approvalId: id } });
+    if (decision === 'approved_always' && call.principal.kind !== 'user') {
+      for (const scope of call.scopes) this.permissions.grant(by, call.principal, scope, 'allow');
+    }
     this.bus.emit('approval.resolved', approval);
 
     let result: ToolResult;
@@ -148,8 +189,15 @@ export class ToolRegistry {
         result = await this.run(call.principal, call.tool, call.args, new AbortController().signal);
       }
     }
-    this.results.set(id, result);
+    this.settle(id, result);
     return result;
+  }
+
+  private settle(id: string, result: ToolResult) {
+    this.inflight.delete(id);
+    this.results.set(id, result);
+    for (const w of this.waiters.get(id) ?? []) w(result);
+    this.waiters.delete(id);
   }
 
   /** Cancela todas las aprobaciones pendientes (panel de emergencia). */
@@ -169,7 +217,7 @@ export class ToolRegistry {
       .run(id, principal.kind, principal.id, tool.name, JSON.stringify(args), JSON.stringify(scopes), tool.risk, reason, new Date().toISOString());
     const timer = setTimeout(() => this.expire(id), this.approvalTtlMs);
     timer.unref();
-    this.pending.set(id, { tool, args, principal, timer });
+    this.pending.set(id, { tool, args, scopes, principal, timer });
     this.bus.emit('approval.requested', this.getApproval(id)!);
     return this.finish(principal, tool.name, args, { status: 'pending_approval', approvalId: id });
   }
@@ -180,6 +228,7 @@ export class ToolRegistry {
     clearTimeout(call.timer);
     this.pending.delete(id);
     this.bus.emit('approval.resolved', this.setApprovalStatus(id, 'expired'));
+    this.settle(id, { status: 'denied', reason: 'La confirmación caducó o fue cancelada' });
   }
 
   private setApprovalStatus(id: string, status: ApprovalRequest['status']): ApprovalRequest {

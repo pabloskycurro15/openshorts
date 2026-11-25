@@ -2,7 +2,7 @@ import { Activity, Boxes, CalendarDays, CloudSun, ShieldAlert, Sparkles, Bot, Wo
 import { AICore } from '../components/AICore';
 import { Badge, Button, Dot, Empty, Meter, Panel, Stat } from '../components/ui';
 import { useConnection, useCoreData } from '../lib/connection';
-import { core, formatBytes, formatDuration } from '../lib/api';
+import { core, formatBytes, formatDuration, formatUsd } from '../lib/api';
 import { useSettings, ACCENTS } from '../lib/settings';
 import { useSystemInfo } from '../lib/useSystem';
 import { EVENT_LABEL, STATE_LABEL, timeAgo } from '../lib/labels';
@@ -25,6 +25,7 @@ export function HomeSection({ navigate }: { navigate: (id: string) => void }) {
   const { info, error: sysError } = useSystemInfo(4000, 2);
   const { data: health } = useCoreData(() => core.health(), [], 15000);
   const { data: pending } = useCoreData(() => core.approvals('pending'));
+  const { data: ai } = useCoreData(() => core.aiStatus());
   const memUsed = info ? 1 - info.memory.freeBytes / info.memory.totalBytes : 0;
   const load = info ? (info.cpu.loadAvg[0] ?? 0) / info.cpu.cores : 0;
 
@@ -40,7 +41,10 @@ export function HomeSection({ navigate }: { navigate: (id: string) => void }) {
               <span className="flex items-center gap-2"><Dot tone={internet ? 'ok' : 'danger'} />{internet ? 'Disponible' : 'Sin conexión'}</span></li>
             <li className="flex items-center justify-between"><span className="text-muted">Seguridad</span>
               {lockdown ? <Badge tone="danger">Emergencia activa</Badge> : <Badge tone="ok">Normal</Badge>}</li>
-            <li className="flex items-center justify-between"><span className="text-muted">Cerebro IA</span><Badge>Opus 5.5 · Fase 3</Badge></li>
+            <li className="flex items-center justify-between"><span className="text-muted">Cerebro IA</span>
+              {ai ? (ai.configured ? <Badge tone="ok">{ai.models.find((m) => m.id === ai.settings.model)?.label ?? ai.settings.model}</Badge> : <Badge tone="warn">Sin clave API</Badge>) : <Badge>…</Badge>}</li>
+            {ai?.configured && <li><div className="mb-1.5 flex justify-between text-xs"><span className="text-muted">Gasto del mes</span><span className="font-mono">{formatUsd(ai.spentMonthUsd)} / {formatUsd(ai.settings.monthlyLimitUsd)}</span></div>
+              <Meter label="Gasto del mes" value={ai.budgetRatio} tone={ai.blocked ? 'danger' : ai.warn ? 'warn' : 'accent'} /></li>}
             <li className="flex items-center justify-between"><span className="text-muted">Voz</span><Badge>Fase 4</Badge></li>
             {health && <li className="flex items-center justify-between"><span className="text-muted">Núcleo activo</span><span className="font-mono text-xs">{formatDuration(health.uptimeSec)}</span></li>}
           </ul>
@@ -71,10 +75,11 @@ export function HomeSection({ navigate }: { navigate: (id: string) => void }) {
             <div className="mt-1 font-display text-xl font-semibold tracking-[0.2em] text-ink glow-text uppercase" aria-live="polite">{STATE_LABEL[assistant]}</div>
             <p className="mx-auto mt-3 max-w-sm text-sm text-muted">
               {status === 'online'
-                ? 'Núcleo operativo. La conversación y la voz llegarán en las Fases 3 y 4.'
+                ? (ai?.configured ? 'A su servicio. Escríbeme en Conversación; la voz llega en la Fase 4.' : 'Núcleo operativo. Añade tu clave API en Configuración para activar el cerebro.')
                 : 'Esperando al núcleo local. Arráncalo con «npm run dev» en la carpeta jarvis.'}
             </p>
             <div className="mt-4 flex flex-wrap justify-center gap-2">
+              <Button tone="accent" onClick={() => navigate('conversacion')}>Conversar</Button>
               <Button onClick={() => navigate('comandos')}>Centro de comandos</Button>
               <Button onClick={() => navigate('laboratorio')}><Sparkles size={14} aria-hidden /> Probar estados</Button>
             </div>

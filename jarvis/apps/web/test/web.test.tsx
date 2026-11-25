@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, act } from '@testing-library/react';
-import { SECTIONS } from '../src/sections/registry';
+import { CURRENT_PHASE, SECTIONS } from '../src/sections/registry';
+import { Markdown } from '../src/components/Markdown';
 import { STATE_PARAMS } from '../src/components/AICore';
 import { STATE_LABEL } from '../src/lib/labels';
 import { formatBytes, formatDuration } from '../src/lib/api';
@@ -13,9 +14,20 @@ describe('secciones', () => {
   });
 
   it('toda sección aún no operativa explica qué hará y en qué fase', () => {
-    for (const s of SECTIONS.filter((x) => x.phase > 2)) {
+    for (const s of SECTIONS.filter((x) => x.phase > CURRENT_PHASE)) {
       expect(s.planned?.length, s.id).toBeGreaterThan(0);
     }
+  });
+});
+
+describe('Markdown', () => {
+  it('renderiza formato básico y nunca inyecta HTML', () => {
+    const { container } = render(<Markdown text={'Hola **mundo** y `código`\n\n- uno\n- dos\n\n<img src=x onerror=alert(1)>'} />);
+    expect(container.querySelector('strong')?.textContent).toBe('mundo');
+    expect(container.querySelector('code')?.textContent).toBe('código');
+    expect(container.querySelectorAll('li')).toHaveLength(2);
+    expect(container.querySelector('img')).toBeNull();
+    expect(container.textContent).toContain('<img src=x onerror=alert(1)>');
   });
 });
 
@@ -66,13 +78,31 @@ class FakeWS {
 
 const health = { status: 'ok', version: '0.1.0', uptimeSec: 5, lockdown: false, modules: [{ id: 'system', name: 'Sistema', version: '0.1.0', description: '', dependsOn: [], status: 'running', error: null }] };
 
+const aiStatus = { provider: 'anthropic', configured: true, keyUpdatedAt: null, settings: { model: 'claude-opus-5-5', effort: 'medium', monthlyLimitUsd: 5 },
+  models: [{ id: 'claude-opus-5-5', label: 'Claude Opus 5.5', description: '', price: { input: 4, output: 20, cacheRead: 0.2, cacheWrite: 5 } }],
+  spentMonthUsd: 0, budgetRatio: 0, warn: false, blocked: false, activeConversations: [] };
+let aiConfigured = true;
+
 function mockCore(validToken: string) {
   vi.stubGlobal('WebSocket', FakeWS);
   vi.stubGlobal('fetch', vi.fn(async (url: string, init?: RequestInit) => {
     const auth = (init?.headers as Record<string, string> | undefined)?.authorization;
     if (auth !== `Bearer ${validToken}`) return new Response(JSON.stringify({ error: 'No autorizado' }), { status: 401 });
     const path = String(url);
-    const body = path.startsWith('/api/health') ? health
+    if (path === '/api/chat') {
+      const lines = [
+        { type: 'start', conversationId: '11111111-1111-4111-8111-111111111111', title: 'Hola' },
+        { type: 'text', delta: 'A su ' }, { type: 'text', delta: '**servicio**.' },
+        { type: 'tool_call', id: 't1', tool: 'system.datetime', input: {} },
+        { type: 'approval_required', id: 't1', approvalId: 'ap1', tool: 'system.datetime', reason: 'jarvis pide permiso para: system.time.read', risk: 'low' },
+        { type: 'usage', model: 'claude-opus-5-5', costUsd: 0.0061, monthUsd: 0.01, limitUsd: 5 },
+        { type: 'done', stopReason: 'end_turn' },
+      ].map((l) => JSON.stringify(l)).join('\n') + '\n';
+      return new Response(lines, { status: 200, headers: { 'content-type': 'application/x-ndjson' } });
+    }
+    const body = path.startsWith('/api/ai/status') ? { ...aiStatus, configured: aiConfigured }
+      : path.startsWith('/api/conversations') ? []
+      : path.startsWith('/api/health') ? health
       : path.startsWith('/api/approvals') ? []
       : path.startsWith('/api/tools/invoke') ? { status: 'ok', output: { platform: 'linux', release: '6', arch: 'x64', hostname: 'pc', cpu: { model: 'x', cores: 4, loadAvg: [1, 1, 1] }, memory: { totalBytes: 100, freeBytes: 50 }, uptimeSec: 60 } }
       : [];
@@ -119,6 +149,33 @@ describe('App', () => {
     await renderApp();
     await waitFor(() => expect(screen.getByText('Disponible en la Fase 6')).toBeTruthy());
     expect(screen.getByText(/todavía no funciona/)).toBeTruthy();
+  });
+
+  it('Conversación sin clave API: explica cómo configurarla', async () => {
+    mockCore('t');
+    aiConfigured = false;
+    window.localStorage.setItem('jarvis.token', JSON.stringify('t'));
+    window.location.hash = '/conversacion';
+    await renderApp();
+    await waitFor(() => expect(screen.getByText('Cerebro sin configurar')).toBeTruthy());
+    aiConfigured = true;
+  });
+
+  it('Conversación: muestra la respuesta en streaming, la herramienta, la confirmación y el coste', async () => {
+    mockCore('t');
+    window.localStorage.setItem('jarvis.token', JSON.stringify('t'));
+    window.location.hash = '/conversacion';
+    await renderApp();
+    const input = await screen.findByLabelText('Mensaje para JARVIS');
+    const { fireEvent } = await import('@testing-library/react');
+    fireEvent.change(input, { target: { value: 'Hola' } });
+    fireEvent.click(screen.getByTitle('Enviar'));
+    await waitFor(() => expect(screen.getByText('servicio')).toBeTruthy());
+    expect(screen.getByText('Hola')).toBeTruthy();
+    expect(screen.getByText('system.datetime')).toBeTruthy();
+    expect(screen.getByRole('group', { name: 'Confirmación requerida' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Aprobar siempre' })).toBeTruthy();
+    expect(screen.getByText(/0\.0061 \$ · mes 0\.01 \$ de 5\.00 \$/)).toBeTruthy();
   });
 
   it('un token guardado que ya no es válido vuelve a la pantalla de vinculación', async () => {

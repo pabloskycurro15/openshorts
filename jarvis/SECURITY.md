@@ -32,10 +32,22 @@ Las concesiones admiten comodín final (`fs.*`, `fs.read:C:/Users/Ana/Proyectos/
 ### Registros
 El logger censura campos `token`, `apiKey`, `password`, `secret` y la cabecera `authorization`.
 
+### Credenciales (Fase 3)
+- Almacén cifrado AES-256-GCM (`security/vault.ts`); clave maestra en `<dataDir>/vault.key` (0600).
+- La clave API solo entra (`PUT /api/ai/key`); ninguna ruta la devuelve (probado: no aparece en estado, auditoría
+  ni salud). La auditoría guarda solo los 4 últimos caracteres.
+
+### Asistente conversacional (Fase 3)
+- Actúa como `agent:jarvis`, nunca como el usuario. Sin concesión, pregunta en el chat; con «Aprobar siempre»
+  queda una concesión revocable en Seguridad. Riesgo alto/crítico: siempre pregunta.
+- Las salidas del modelo (argumentos de herramientas) se validan con zod antes de ejecutar nada.
+- Límite de gasto y de pasos; el modo emergencia corta respuestas en curso y cancela confirmaciones.
+- Las instrucciones de sistema obligan a la honestidad: no afirmar acciones no realizadas ni capacidades inexistentes.
+
 ## Pendiente (con fase prevista)
 | Medida | Fase |
 |---|---|
-| Almacén de credenciales cifrado (Windows DPAPI / Keychain de iOS) para claves de IA y conectores | 3 y 8 |
+| Clave maestra protegida por el sistema (Windows DPAPI vía Electron / Keychain de iOS) | 5 y 10 |
 | Cuentas de usuario, contraseñas (Argon2id), sesiones y gestión de dispositivos | 10 |
 | TLS y emparejamiento de dispositivos para acceso desde iPhone/PWA | 10 |
 | Cifrado en reposo de datos sensibles y copias de seguridad cifradas con restauración verificada | 11 |
