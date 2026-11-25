@@ -51,9 +51,9 @@ describe('Budget', () => {
   const budget = () => new Budget(openDatabase(':memory:'));
   const usage = { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheWriteTokens: 0 };
 
-  it('valores por defecto: Opus 5.5, esfuerzo medio, 5 $', () => {
+  it('valores por defecto: repartidor automático, Gemini gratis permitido, esfuerzo medio, 5 $', () => {
     expect(budget().getSettings()).toEqual(DEFAULT_AI_SETTINGS);
-    expect(DEFAULT_AI_SETTINGS).toEqual({ model: 'claude-opus-5-5', effort: 'medium', monthlyLimitUsd: 5 });
+    expect(DEFAULT_AI_SETTINGS).toEqual({ model: 'auto', allowFreeGoogle: true, effort: 'medium', monthlyLimitUsd: 5 });
   });
 
   it('valida los ajustes', () => {

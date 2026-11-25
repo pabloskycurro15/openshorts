@@ -70,6 +70,12 @@ El logger censura campos `token`, `apiKey`, `password`, `secret` y la cabecera `
   «Jarvis» se descartan sin guardarse.
 - CSP: `wasm-unsafe-eval` (WebAssembly) y conexión a Hugging Face solo para descargar el modelo.
 
+### Varios proveedores (0.7)
+- Claves de Anthropic, OpenAI y Google en el almacén cifrado; ninguna ruta las devuelve.
+- Nivel gratuito de Google: puede usar las conversaciones para mejorar sus productos. Desactivable; y los mensajes
+  con datos sensibles (contraseñas, banco, salud, documentos de identidad…) nunca se le envían.
+- OpenAI en modo sin estado (`store: false`): no se guardan respuestas en sus servidores.
+
 ## Pendiente (con fase prevista)
 | Medida | Fase |
 |---|---|

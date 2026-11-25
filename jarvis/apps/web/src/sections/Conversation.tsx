@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { CircleStop, Headphones, KeyRound, MessageSquarePlus, Mic, PanelLeft, Send, Trash2, Volume2, VolumeX, Wrench, ShieldQuestion } from 'lucide-react';
 import { useVoice } from '../voice/VoiceProvider';
-import { ModelSwitch } from '../components/ModelSwitch';
+import { ModelSwitch, modelShortName } from '../components/ModelSwitch';
 import type { AiStatus, ChatEvent, ChatMessageView, ConversationSummary, RiskLevel } from '@jarvis/shared';
 import { Badge, Button, ErrorNote, Meter } from '../components/ui';
 import { Markdown } from '../components/Markdown';
@@ -15,14 +15,17 @@ type Item =
   | { kind: 'text'; text: string }
   | { kind: 'tool'; id: string; tool: string; status: string; summary: string; approval?: { approvalId: string; reason: string; risk: RiskLevel; resolved?: boolean } }
   | { kind: 'notice'; tone: 'error' | 'warning'; text: string }
-  | { kind: 'cost'; text: string };
+  | { kind: 'cost'; text: string }
+  | { kind: 'route'; text: string };
 
 /** Convierte el historial guardado en elementos visibles (los resultados se asocian a su herramienta). */
 function fromHistory(messages: ChatMessageView[]): Item[] {
+  // (el modelo de cada respuesta se muestra como una etiqueta)
   const results = new Map<string, { content: string; isError?: boolean }>();
   for (const m of messages) for (const b of m.content) if (b.type === 'tool_result') results.set(b.toolUseId, b);
   const items: Item[] = [];
   for (const m of messages) {
+    if (m.role === 'assistant' && m.model) items.push({ kind: 'route', text: modelShortName(m.model) });
     for (const b of m.content) {
       if (b.type === 'text') items.push(m.role === 'user' ? { kind: 'user', text: b.text } : { kind: 'text', text: b.text });
       else if (b.type === 'tool_use') {
@@ -67,7 +70,7 @@ function NotConfigured({ goSettings }: { goSettings: () => void }) {
     <div className="mx-auto mt-10 max-w-md panel p-6 text-center">
       <KeyRound size={28} className="mx-auto text-accent" aria-hidden />
       <h2 className="mt-3 font-display text-sm tracking-[0.2em] uppercase">Cerebro sin configurar</h2>
-      <p className="mt-2 text-sm text-muted">Para conversar, JARVIS necesita tu clave API de Anthropic. Se guarda cifrada en tu equipo y nunca se muestra.</p>
+      <p className="mt-2 text-sm text-muted">Para conversar, JARVIS necesita al menos una clave: Anthropic (Claude), OpenAI (GPT) o Google (Gemini, gratis). Se guardan cifradas en tu equipo.</p>
       <ol className="mt-4 list-decimal space-y-1 pl-5 text-left text-sm text-muted">
         <li>Carga crédito en <a className="text-accent-soft underline" href="https://platform.claude.com/settings/billing" target="_blank" rel="noreferrer">platform.claude.com</a> (sin recarga automática).</li>
         <li>Crea una clave en <a className="text-accent-soft underline" href="https://platform.claude.com/settings/keys" target="_blank" rel="noreferrer">API Keys</a>.</li>
@@ -157,6 +160,9 @@ export function ConversationSection({ navigate }: { navigate: (id: string) => vo
           }
           break;
         }
+        case 'route':
+          next.push({ kind: 'route', text: `${e.label}${e.auto ? ` · ${e.reason}` : ''}` });
+          break;
         case 'usage':
           next.push({ kind: 'cost', text: `${formatUsd(e.costUsd)} · mes ${formatUsd(e.monthUsd)} de ${formatUsd(e.limitUsd)}` });
           break;
@@ -341,6 +347,8 @@ export function ConversationSection({ navigate }: { navigate: (id: string) => vo
                 return <div key={i} className="ml-9 max-w-[85%]"><ToolChip item={it} onDecide={decide} /></div>;
               case 'notice':
                 return <p key={i} role={it.tone === 'error' ? 'alert' : 'status'} className={`my-2 ml-9 rounded-lg border p-2.5 text-sm ${it.tone === 'error' ? 'border-danger/40 bg-danger/10 text-danger' : 'border-warn/40 bg-warn/10 text-warn'}`}>{it.text}</p>;
+              case 'route':
+                return <p key={i} className="ml-9 mt-3 inline-flex items-center gap-1 rounded-full border border-accent/30 bg-accent/8 px-2 py-0.5 font-mono text-[10px] text-accent-soft">⟐ {it.text}</p>;
               case 'cost':
                 return <p key={i} className="ml-9 font-mono text-[10px] text-dim">{it.text}</p>;
             }

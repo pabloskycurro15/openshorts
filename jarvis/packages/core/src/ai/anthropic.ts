@@ -35,7 +35,7 @@ export function toApiTools(tools: ToolDescriptor[]): Anthropic.Beta.BetaTool[] {
 /** Convierte el historial neutro al formato de la API, reenviando intacto el contenido original de Claude. */
 export function toApiMessages(messages: ChatMessage[]): Anthropic.Beta.BetaMessageParam[] {
   return messages.map((m) => {
-    if (m.role === 'assistant' && m.raw?.provider === 'anthropic') {
+    if (m.role === 'assistant' && m.raw?.provider === 'anthropic' && m.raw.blocks.length) {
       return { role: 'assistant', content: m.raw.blocks as Anthropic.Beta.BetaContentBlockParam[] };
     }
     const content: Anthropic.Beta.BetaContentBlockParam[] = m.content.map((b) => {

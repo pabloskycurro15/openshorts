@@ -105,6 +105,26 @@ AES-256-GCM con el nombre del secreto como dato autenticado; clave maestra en ar
 datos (`MasterKeyProvider` intercambiable: en la Fase 5, Electron `safeStorage`/DPAPI). Protege frente a
 filtraciones de la base de datos o de copias; no frente a quien controle por completo la cuenta del usuario.
 
+## ADR-019 · Varios proveedores y repartidor automático ✅ (decisión del usuario: «repártelo como veas mejor»)
+- **Proveedores:** Anthropic (Claude), OpenAI (GPT-6.1 Terra, API Responses) y Google (Gemini, nivel gratuito de
+  AI Studio, API generateContent). El plan gratuito de ChatGPT no tiene API (automatizar la web incumple sus
+  condiciones), por eso OpenAI es de pago.
+- **Clasificación local por reglas** (sin gastar una llamada para decidir): sencilla / media / compleja, acciones
+  sobre el equipo y datos sensibles.
+- **Cadenas:** sencilla → Gemini 3.5 Flash-Lite (gratis, ~500/día) → Gemini 3.8 Flash (gratis, ~20/día) → Haiku;
+  media → Terra → Sonnet → Opus; compleja → Opus → Sonnet → Terra; acciones → Sonnet/Opus (usan mejor las
+  herramientas); lo sensible nunca va al nivel gratuito de Google (usa los datos para mejorar sus productos).
+- **Respaldo:** si un modelo falla por cupo, saldo, clave o caída *antes de escribir nada*, se pasa al siguiente,
+  se avisa y ese modelo queda en pausa 10 minutos. Dentro de una respuesta se mantiene el mismo modelo.
+- **Transparencia:** evento `route` (modelo y motivo) y modelo guardado en cada mensaje; coste por respuesta.
+- **Historial entre proveedores:** cada adaptador reenvía intacto el contenido original solo si es suyo
+  (razonamiento cifrado de OpenAI, firmas de Gemini, razonamiento de Claude); el de otros, en formato neutro.
+- **Limitaciones honestas:** los formatos de OpenAI y Gemini se han implementado según su documentación oficial y
+  probado contra simuladores; falta la primera llamada real (requiere las claves). Terra responde de golpe (sin
+  streaming) hasta verificar sus eventos. Si el proyecto de Google tiene facturación activada, Gemini deja de ser
+  gratis y el contador de JARVIS no lo reflejaría.
+- Por defecto ahora es **Automático** (antes Opus fijo); se puede fijar cualquier modelo desde el selector.
+
 ## ADR-018 · Voz local: Whisper + detector de voz como palabra de activación ✅
 - **Reconocimiento local:** Whisper *base* (multilingüe, cuantizado q8, ~80 MB) con transformers.js y ONNX
   Runtime en WebAssembly, dentro de un Web Worker. Probado con español: «¿Qué hora es?» exacto, ~0,6 s por frase

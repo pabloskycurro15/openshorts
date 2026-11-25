@@ -12,7 +12,7 @@ const CONV_KEY = 'jarvis.homeConversation';
  * Barra de órdenes del Inicio: habla o escribe sin salir de la pantalla principal.
  * La respuesta aparece como subtítulo bajo el núcleo y se guarda en Conversación.
  */
-export function CommandBar({ onSubtitle }: { onSubtitle: (text: string, live: boolean) => void }) {
+export function CommandBar({ onSubtitle, onRoute }: { onSubtitle: (text: string, live: boolean) => void; onRoute?: (label: string) => void }) {
   const voice = useVoice();
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
@@ -43,6 +43,9 @@ export function CommandBar({ onSubtitle }: { onSubtitle: (text: string, live: bo
         case 'message_end':
           if (speak) { voice.endReply(); voice.beginReply(); }
           text.current += ' ';
+          break;
+        case 'route':
+          onRoute?.(e.label);
           break;
         case 'tool_call':
           onSubtitle(`${text.current}\n⟐ ${e.tool}…`, true);

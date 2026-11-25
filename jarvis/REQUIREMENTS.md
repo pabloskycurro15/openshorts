@@ -45,7 +45,7 @@ Clientes Windows, iOS y PWA. El detalle y los criterios de aceptación de cada f
 
 | Servicio | Para qué | Coste estimado | Alternativa gratuita |
 |---|---|---|---|
-| Modelo de IA (Claude / Gemini / OpenAI) | Cerebro | Por uso: aprox. 1-20 €/mes en uso personal moderado | Ollama con modelo local (calidad inferior, requiere buena GPU) / nivel gratuito de Gemini |
+| Modelo de IA (Claude / OpenAI / Gemini) | Cerebro (repartidor automático) | Gemini: gratis con límite diario · Terra 1 $/5 $ · Haiku 0,10/0,50 · Sonnet 2/10 · Opus 4/20 (por millón de tokens) | Gemini gratis cubre lo sencillo; Ollama local en el futuro |
 | ElevenLabs | Voz premium | Desde ~5 USD/mes | Voces del sistema (Web Speech / SAPI) |
 | STT en la nube (Whisper API) | Transcripción precisa | ~0,006 USD/min | Web Speech API / Whisper local |
 | Supabase | Sincronización entre dispositivos | Plan gratuito suficiente al inicio; Pro 25 USD/mes | Sincronización directa PC↔iPhone por red local |

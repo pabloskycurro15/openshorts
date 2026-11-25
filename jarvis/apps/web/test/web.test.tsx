@@ -78,8 +78,9 @@ class FakeWS {
 
 const health = { status: 'ok', version: '0.1.0', uptimeSec: 5, lockdown: false, modules: [{ id: 'system', name: 'Sistema', version: '0.1.0', description: '', dependsOn: [], status: 'running', error: null }] };
 
-const aiStatus = { provider: 'anthropic', configured: true, keyUpdatedAt: null, settings: { model: 'claude-opus-5-5', effort: 'medium', monthlyLimitUsd: 5 },
-  models: [{ id: 'claude-opus-5-5', label: 'Claude Opus 5.5', description: '', price: { input: 4, output: 20, cacheRead: 0.2, cacheWrite: 5 } }],
+const aiStatus = { provider: 'multi', configured: true, keyUpdatedAt: null, settings: { model: 'auto', allowFreeGoogle: true, effort: 'medium', monthlyLimitUsd: 5 },
+  providers: [{ id: 'anthropic', name: 'Anthropic', configured: true, keyUpdatedAt: null, keyUrl: '' }],
+  models: [{ id: 'claude-opus-5-5', provider: 'anthropic', label: 'Claude Opus 5.5', description: '', price: { input: 4, output: 20, cacheRead: 0.2, cacheWrite: 5 } }],
   spentMonthUsd: 0, budgetRatio: 0, warn: false, blocked: false, activeConversations: [] };
 let aiConfigured = true;
 const voiceEvents: string[] = [];

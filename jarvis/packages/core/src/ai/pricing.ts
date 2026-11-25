@@ -30,3 +30,39 @@ export function costUsd(model: ModelInfo | undefined, u: Usage): number {
   const p = model.price;
   return (u.inputTokens * p.input + u.outputTokens * p.output + u.cacheReadTokens * p.cacheRead + u.cacheWriteTokens * p.cacheWrite) / 1_000_000;
 }
+
+/** OpenAI (consultado el 2026-11-25 en developers.openai.com). Escritura en caché: 1,25 × entrada. */
+export const OPENAI_MODELS: ModelInfo[] = [
+  {
+    id: 'gpt-6.1-terra',
+    label: 'GPT-6.1 Terra',
+    description: 'Intermedio de OpenAI: buena calidad a precio bajo.',
+    price: { input: 1, output: 5, cacheRead: 0.05, cacheWrite: 1.25 },
+  },
+];
+
+/**
+ * Google Gemini en el nivel GRATUITO de AI Studio: coste 0 (con límites diarios; Google
+ * puede usar estos datos para mejorar sus productos). Si el proyecto tiene facturación,
+ * el uso se cobra a los precios de Google y este contador no lo reflejaría.
+ */
+export const GOOGLE_MODELS: ModelInfo[] = [
+  {
+    id: 'gemini-3.5-flash-lite',
+    label: 'Gemini 3.5 Flash-Lite (gratis)',
+    description: 'Gratis con límite diario amplio. Para tareas sencillas.',
+    price: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+  },
+  {
+    id: 'gemini-3.8-flash',
+    label: 'Gemini 3.8 Flash (gratis)',
+    description: 'Gratis con límite diario muy bajo. Respaldo del anterior.',
+    price: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+  },
+];
+
+export const ALL_MODELS: (ModelInfo & { provider: string })[] = [
+  ...ANTHROPIC_MODELS.map((m) => ({ ...m, provider: 'anthropic' })),
+  ...OPENAI_MODELS.map((m) => ({ ...m, provider: 'openai' })),
+  ...GOOGLE_MODELS.map((m) => ({ ...m, provider: 'google' })),
+];

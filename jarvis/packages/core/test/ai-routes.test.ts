@@ -22,11 +22,12 @@ async function setup(script: ConstructorParameters<typeof ScriptedProvider>[0] =
 }
 
 describe('API de IA', () => {
-  it('estado inicial: sin clave, Opus 5.5 y límite de 5 $', async () => {
+  it('estado inicial: sin claves, repartidor automático y límite de 5 $', async () => {
     const { app } = await setup();
     const s = (await app.inject({ url: '/api/ai/status', headers: auth })).json();
-    expect(s).toMatchObject({ configured: false, settings: { model: 'claude-opus-5-5', effort: 'medium', monthlyLimitUsd: 5 }, spentMonthUsd: 0, blocked: false });
-    expect(s.models.map((m: { id: string }) => m.id)).toEqual(['claude-opus-5-5', 'claude-sonnet-5-5', 'claude-haiku-5-5']);
+    expect(s).toMatchObject({ configured: false, settings: { model: 'auto', allowFreeGoogle: true, effort: 'medium', monthlyLimitUsd: 5 }, spentMonthUsd: 0, blocked: false });
+    expect(s.providers.map((p: { id: string; configured: boolean }) => `${p.id}:${p.configured}`)).toEqual(['anthropic:false', 'openai:false', 'google:false']);
+    expect(s.models.map((m: { id: string }) => m.id)).toEqual(['claude-opus-5-5', 'claude-sonnet-5-5', 'claude-haiku-5-5', 'gpt-6.1-terra', 'gemini-3.5-flash-lite', 'gemini-3.8-flash']);
   });
 
   it('la clave entra cifrada y NUNCA sale por la API', async () => {
@@ -49,7 +50,8 @@ describe('API de IA', () => {
     expect((await app.inject({ method: 'PUT', url: '/api/ai/settings', headers: auth, payload: { model: 'gpt-9' } })).statusCode).toBe(400);
     expect((await app.inject({ method: 'PUT', url: '/api/ai/settings', headers: auth, payload: { monthlyLimitUsd: -3 } })).statusCode).toBe(400);
     const ok = await app.inject({ method: 'PUT', url: '/api/ai/settings', headers: auth, payload: { model: 'claude-sonnet-5-5', monthlyLimitUsd: 10 } });
-    expect(ok.json()).toEqual({ model: 'claude-sonnet-5-5', effort: 'medium', monthlyLimitUsd: 10 });
+    expect(ok.json()).toEqual({ model: 'claude-sonnet-5-5', allowFreeGoogle: true, effort: 'medium', monthlyLimitUsd: 10 });
+    expect((await app.inject({ method: 'PUT', url: '/api/ai/settings', headers: auth, payload: { model: 'auto' } })).json().model).toBe('auto');
   });
 
   it('chat en streaming por HTTP real (NDJSON), conversaciones y borrado', async () => {
@@ -60,7 +62,7 @@ describe('API de IA', () => {
     const res = await fetch(`http://127.0.0.1:${port}/api/chat`, { method: 'POST', headers: { ...auth, 'content-type': 'application/json' }, body: JSON.stringify({ message: 'Hola' }) });
     expect(res.headers.get('content-type')).toContain('application/x-ndjson');
     const events = (await res.text()).trim().split('\n').map((l) => JSON.parse(l) as ChatEvent);
-    expect(events.map((e) => e.type)).toEqual(['start', 'text', 'usage', 'message_end', 'done']);
+    expect(events.map((e) => e.type)).toEqual(['start', 'route', 'text', 'usage', 'message_end', 'done']);
     const conv = (events[0] as { conversationId: string }).conversationId;
 
     const list = (await (await fetch(`http://127.0.0.1:${port}/api/conversations`, { headers: auth })).json()) as { id: string; title: string; costUsd: number }[];
@@ -79,7 +81,7 @@ describe('API de IA', () => {
     const r = await app.inject({ method: 'POST', url: '/api/chat', headers: auth, payload: { message: 'hola' } });
     const ev = r.body.trim().split('\n').map((l) => JSON.parse(l));
     expect(ev[0]).toMatchObject({ type: 'error' });
-    expect(ev[0].message).toMatch(/clave API/);
+    expect(ev[0].message).toMatch(/clave/);
   });
 
   it('mensaje vacío → 400', async () => {

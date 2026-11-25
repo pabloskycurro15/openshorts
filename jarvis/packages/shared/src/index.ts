@@ -187,7 +187,10 @@ export const Effort = z.enum(['low', 'medium', 'high']);
 export type Effort = z.infer<typeof Effort>;
 
 export const AiSettings = z.object({
+  /** Id de un modelo concreto, o «auto» para que el repartidor elija según la tarea. */
   model: z.string().min(1),
+  /** Permitir el nivel gratuito de Gemini para tareas sencillas (Google puede usar esos datos). */
+  allowFreeGoogle: z.boolean().default(true),
   effort: Effort,
   /** Límite de gasto mensual en USD. JARVIS se detiene al alcanzarlo. */
   monthlyLimitUsd: z.number().min(0).max(10_000),
@@ -196,14 +199,25 @@ export type AiSettings = z.infer<typeof AiSettings>;
 
 export interface AiModelView {
   id: string;
+  provider: string;
   label: string;
   description: string;
   price: { input: number; output: number; cacheRead: number; cacheWrite: number };
 }
 
+export interface AiProviderStatus {
+  id: 'anthropic' | 'openai' | 'google';
+  name: string;
+  configured: boolean;
+  keyUpdatedAt: string | null;
+  keyUrl: string;
+}
+
 export interface AiStatus {
   provider: string;
+  /** Hay al menos un proveedor configurado. */
   configured: boolean;
+  providers: AiProviderStatus[];
   keyUpdatedAt: string | null;
   settings: AiSettings;
   models: AiModelView[];
@@ -238,6 +252,8 @@ export type ChatBlockView =
 export interface ChatMessageView {
   seq: number;
   role: 'user' | 'assistant';
+  /** Modelo que generó la respuesta (solo asistente). */
+  model?: string;
   content: ChatBlockView[];
   createdAt: string;
 }
@@ -245,6 +261,7 @@ export interface ChatMessageView {
 /** Eventos del flujo de una respuesta (NDJSON en POST /api/chat). */
 export type ChatEvent =
   | { type: 'start'; conversationId: string; title: string }
+  | { type: 'route'; provider: string; model: string; label: string; tier: string; reason: string; auto: boolean }
   | { type: 'text'; delta: string }
   | { type: 'message_end' }
   | { type: 'tool_call'; id: string; tool: string; input: unknown }

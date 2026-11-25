@@ -46,7 +46,9 @@ escritorio (Windows 11), iOS y PWA.
   bandeja del sistema, Ctrl+Alt+J, inicio con Windows, ventana aislada.
 - Sin módulos nativos: SQLite integrado de Node (se instala en Windows sin herramientas de compilación).
 - Voz 100 % local (Fase 5B): Whisper en tu equipo (el audio no sale) y palabra de activación «Jarvis».
-- 139 pruebas automatizadas (ver [TESTING.md](TESTING.md)).
+- Varios cerebros con repartidor automático (0.7): Gemini gratis para lo sencillo, GPT-6.1 Terra para lo
+  intermedio, Claude Opus para lo complejo y Claude para las acciones; respaldo automático si uno falla.
+- 175 pruebas automatizadas (ver [TESTING.md](TESTING.md)).
 
 ## Instalar la app de escritorio en Windows 11
 
@@ -60,16 +62,22 @@ escritorio (Windows 11), iOS y PWA.
    npm install
    npm run dist:win
    ```
-3. Ejecuta `jarvis\apps\desktop\release\JARVIS-Setup-0.6.0.exe`. Windows SmartScreen avisará de que el
+3. Ejecuta `jarvis\apps\desktop\release\JARVIS-Setup-0.7.0.exe`. Windows SmartScreen avisará de que el
    instalador no está firmado: «Más información» → «Ejecutar de todas formas» (firmarlo requiere un certificado de pago).
 
 Para probar sin instalar: `npm run desktop` (desde `jarvis/`).
 
 ## Activar el cerebro
 
-1. Carga crédito en https://platform.claude.com/settings/billing (desactiva la recarga automática).
-2. Crea una clave en https://platform.claude.com/settings/keys.
-3. En JARVIS: **Configuración → Cerebro IA**, pega la clave y pulsa Guardar (se verifica sola, sin coste).
+En **Configuración → Cerebro IA** pega las claves que tengas (basta con una; cada una se verifica sola, sin coste):
+
+| Proveedor | Dónde | Coste |
+|---|---|---|
+| Google Gemini | https://aistudio.google.com/apikey | Gratis con límite diario (Google puede usar esos datos) |
+| OpenAI (GPT-6.1 Terra) | https://platform.openai.com/api-keys | Prepago; 1 $ / 5 $ por millón de tokens |
+| Anthropic (Claude) | https://platform.claude.com/settings/keys | Prepago; Haiku 0,10 $ / 0,50 $ · Sonnet 2 $ / 10 $ · Opus 4 $ / 20 $ |
+
+Desactiva siempre la recarga automática. Con «Automático», JARVIS reparte las tareas según su dificultad.
 
 ## Inicio rápido
 

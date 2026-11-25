@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { AiSettings, ChatRequest, SetApiKeyRequest, type ChatEvent, type Principal } from '@jarvis/shared';
 import type { Jarvis } from '../app';
 import { ConversationBusyError } from '../ai/engine';
+import type { ProviderId } from '../ai/service';
 
 const USER: Principal = { kind: 'user', id: 'owner' };
 
@@ -11,28 +12,41 @@ export function registerAiRoutes(app: FastifyInstance, j: Jarvis) {
 
   app.put('/api/ai/settings', async (req, reply) => {
     const patch = AiSettings.partial().parse(req.body);
-    if (patch.model && !j.ai.status().models.some((m) => m.id === patch.model)) return reply.code(400).send({ error: 'Modelo desconocido' });
+    if (patch.model && patch.model !== 'auto' && !j.ai.status().models.some((m) => m.id === patch.model)) return reply.code(400).send({ error: 'Modelo desconocido' });
     const s = j.ai.budget.updateSettings(patch);
     j.audit.append({ principal: USER, action: 'ai.settings', outcome: 'success', details: s });
     return s;
   });
 
-  // La clave solo entra: ninguna ruta la devuelve.
-  app.put('/api/ai/key', async (req, reply) => {
+  const providerOf = (req: { params: unknown }): ProviderId | null => {
+    const p = (req.params as { provider?: string }).provider ?? 'anthropic';
+    return p === 'anthropic' || p === 'openai' || p === 'google' ? p : null;
+  };
+
+  // Las claves solo entran: ninguna ruta las devuelve. (/api/ai/key = Anthropic, por compatibilidad)
+  const setKey = async (req: { body: unknown; params: unknown }, reply: { code: (n: number) => { send: (b: unknown) => unknown } }) => {
+    const provider = providerOf(req);
+    if (!provider) return reply.code(404).send({ error: 'Proveedor desconocido' });
     const { apiKey } = SetApiKeyRequest.parse(req.body);
     try {
-      j.ai.setApiKey(USER, apiKey);
+      j.ai.setApiKey(USER, apiKey, provider);
     } catch (err) {
       return reply.code(400).send({ error: (err as Error).message });
     }
     return { configured: true };
-  });
+  };
+  app.put('/api/ai/key', setKey);
+  app.put('/api/ai/keys/:provider', setKey);
   app.delete('/api/ai/key', async () => ({ deleted: j.ai.deleteApiKey(USER) }));
+  app.delete('/api/ai/keys/:provider', async (req, reply) => {
+    const provider = providerOf(req);
+    return provider ? { deleted: j.ai.deleteApiKey(USER, provider) } : reply.code(404).send({ error: 'Proveedor desconocido' });
+  });
 
-  app.post('/api/ai/test', async () => {
-    const p = j.ai.getProvider();
-    if (!p) return { ok: false, detail: 'No hay clave API configurada.' };
-    return p.healthCheck(j.ai.budget.getSettings().model);
+  app.post('/api/ai/test', async () => j.ai.test('anthropic'));
+  app.post('/api/ai/test/:provider', async (req, reply) => {
+    const provider = providerOf(req);
+    return provider ? j.ai.test(provider) : reply.code(404).send({ error: 'Proveedor desconocido' });
   });
 
   app.get('/api/conversations', async () => j.ai.store.list());

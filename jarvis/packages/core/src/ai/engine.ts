@@ -6,7 +6,8 @@ import type { ToolRegistry } from '../tools/registry';
 import type { Budget } from './budget';
 import type { ConversationStore } from './conversations';
 import { costUsd } from './pricing';
-import { ProviderError, type AIProvider, type ContentBlock } from './provider';
+import { ProviderError, type ContentBlock, type TurnResult } from './provider';
+import type { Plan } from './service';
 import { SYSTEM_PROMPT } from './prompt';
 
 /** Identidad con la que el asistente invoca herramientas. Nunca es el usuario. */
@@ -23,8 +24,13 @@ export interface EngineDeps {
   audit: AuditLog;
   bus: EventBus;
   logger: Logger;
-  getProvider: () => AIProvider | null;
+  /** Plan del repartidor: candidatos ordenados (o un único modelo fijado por el usuario). */
+  plan: (message: string) => Plan;
+  markUnavailable: (c: { provider: string; model: string }) => void;
 }
+
+/** Fallos por los que tiene sentido pasar al siguiente modelo. */
+const RETRYABLE = new Set(['rate_limit', 'credit', 'auth', 'overloaded', 'network']);
 
 function summarize(r: ToolResult): string {
   switch (r.status) {
@@ -75,12 +81,15 @@ export class ChatEngine {
 
   async run(input: { conversationId?: string; message: string }, emit: (e: ChatEvent) => void, outerSignal?: AbortSignal): Promise<void> {
     const { store, budget, tools, bus, audit } = this.d;
-    const provider = this.d.getProvider();
-    if (!provider) {
-      emit({ type: 'error', message: 'El cerebro no está configurado: añade tu clave API de Anthropic en Configuración.' });
+    const plan = this.d.plan(input.message);
+    if (!plan.candidates.length) {
+      emit({ type: 'error', message: plan.auto || !input.message
+        ? 'El cerebro no está configurado: añade al menos una clave (Anthropic, OpenAI o Gemini) en Configuración.'
+        : 'El modelo elegido no tiene clave configurada. Añádela en Configuración o elige «Automático».' });
       emit({ type: 'done', stopReason: 'not_configured' });
       return;
     }
+    let ci = 0; // candidato en uso (se mantiene durante toda la respuesta)
     if (input.conversationId && this.active.has(input.conversationId)) throw new ConversationBusyError('Esta conversación ya está respondiendo');
     if (input.conversationId && !store.exists(input.conversationId)) throw new Error('Conversación inexistente');
 
@@ -92,6 +101,11 @@ export class ChatEngine {
     emit({ type: 'start', conversationId: conv.id, title: conv.title });
 
     store.append(conv.id, { role: 'user', content: [{ type: 'text', text: input.message }] });
+    const announce = () => {
+      const c = plan.candidates[ci]!;
+      emit({ type: 'route', provider: c.provider.id, model: c.model.id, label: c.model.label, tier: plan.decision?.tier ?? 'fijo', reason: plan.decision?.reason ?? 'elegido por ti', auto: plan.auto });
+    };
+    announce();
     let finalState: 'idle' | 'error' = 'idle';
     let stopReason: string;
 
@@ -111,25 +125,45 @@ export class ChatEngine {
 
         const settings = budget.getSettings();
         bus.emit('assistant.state', { state: 'thinking' });
-        let speaking = false;
-        const result = await provider.runTurn({
-          model: settings.model,
-          effort: settings.effort,
-          system: SYSTEM_PROMPT,
-          messages: store.history(conv.id),
-          tools: tools.describe(),
-          signal: ctrl.signal,
-          onText: (delta) => {
-            if (!speaking) {
-              speaking = true;
-              bus.emit('assistant.state', { state: 'speaking' });
-            }
-            emit({ type: 'text', delta });
-          },
-        });
+        let result: TurnResult | null = null;
+        // Intentar con el candidato actual; si falla por cupo/saldo/caída antes de escribir nada, pasar al siguiente.
+        for (;;) {
+          const cand = plan.candidates[ci]!;
+          let wrote = false;
+          try {
+            result = await cand.provider.runTurn({
+              model: cand.model.id,
+              effort: settings.effort,
+              system: SYSTEM_PROMPT,
+              messages: store.history(conv.id),
+              tools: tools.describe(),
+              signal: ctrl.signal,
+              onText: (delta) => {
+                if (!wrote) {
+                  wrote = true;
+                  bus.emit('assistant.state', { state: 'speaking' });
+                }
+                emit({ type: 'text', delta });
+              },
+            });
+            break;
+          } catch (err) {
+            const canRetry = err instanceof ProviderError && RETRYABLE.has(err.kind) && !wrote && !ctrl.signal.aborted && ci + 1 < plan.candidates.length;
+            if (!canRetry) throw err;
+            this.d.markUnavailable({ provider: cand.provider.id, model: cand.model.id });
+            const next = plan.candidates[ci + 1]!;
+            emit({ type: 'warning', message: `${cand.model.label} no está disponible: ${(err as ProviderError).message.replace(/\.$/, '')}. Sigo con ${next.model.label}.` });
+            ci++;
+            announce();
+          }
+        }
+        if (!result) throw new Error('Sin respuesta del modelo');
+        const provider = plan.candidates[ci]!.provider;
+        // Siempre se guarda qué modelo respondió; los adaptadores solo reenvían `blocks` si no está vacío.
+        result.message.raw = result.message.raw ? { ...result.message.raw, model: result.servedModel } : { provider: provider.id, model: result.servedModel, blocks: [] };
 
         // Coste real de la llamada (también si luego se descarta por negativa).
-        const model = provider.models.find((m) => m.id === result.servedModel) ?? provider.models.find((m) => m.id === settings.model);
+        const model = provider.models.find((m) => m.id === result.servedModel) ?? plan.candidates[ci]!.model;
         const cost = costUsd(model, result.usage);
         const wasWarn = b.warn;
         budget.record({ conversationId: conv.id, provider: provider.id, model: result.servedModel, usage: result.usage, costUsd: cost });

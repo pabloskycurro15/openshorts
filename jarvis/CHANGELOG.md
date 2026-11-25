@@ -2,6 +2,15 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versionado semántico.
 
+## [0.7.0] — 2026-11-25
+### Añadido
+- Proveedores OpenAI (GPT-6.1 Terra, API Responses sin estado) y Google Gemini (nivel gratuito).
+- Repartidor automático por dificultad con respaldo entre modelos, pausa de modelos sin cupo y protección de datos
+  sensibles; modo «Automático» por defecto.
+- Claves por proveedor (`/api/ai/keys/:provider`), etiqueta del modelo en cada respuesta, selector con
+  «Automático», tabla del reparto en Configuración.
+- 25 pruebas nuevas (175 en total) y prueba en navegador con los tres proveedores simulados.
+
 ## [0.6.0] — 2026-11-25
 ### Añadido
 - Voz 100 % local: Whisper base (transformers.js + ONNX WebAssembly en un Web Worker), motor servido por JARVIS,

@@ -98,6 +98,9 @@ export class CoreClient {
   aiSettings = (patch: Partial<AiSettings>) => this.req<AiSettings>('/api/ai/settings', { method: 'PUT', body: JSON.stringify(patch) });
   setApiKey = (apiKey: string) => this.req<{ configured: boolean }>('/api/ai/key', { method: 'PUT', body: JSON.stringify({ apiKey }) });
   deleteApiKey = () => this.req<{ deleted: boolean }>('/api/ai/key', { method: 'DELETE' });
+  setProviderKey = (provider: string, apiKey: string) => this.req<{ configured: boolean }>(`/api/ai/keys/${provider}`, { method: 'PUT', body: JSON.stringify({ apiKey }) });
+  deleteProviderKey = (provider: string) => this.req<{ deleted: boolean }>(`/api/ai/keys/${provider}`, { method: 'DELETE' });
+  testProvider = (provider: string) => this.req<{ ok: boolean; detail: string }>(`/api/ai/test/${provider}`, { method: 'POST', body: '{}' });
   testAi = () => this.req<{ ok: boolean; detail: string }>('/api/ai/test', { method: 'POST', body: '{}' });
   conversations = () => this.req<ConversationSummary[]>('/api/conversations');
   conversation = (id: string) =>

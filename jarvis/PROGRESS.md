@@ -54,7 +54,13 @@
 - [x] Whisper local y palabra de activación; verificados con audio en español sintetizado en local.
 - [ ] Pendiente de decisión del usuario: activar la búsqueda web (coste: ~10 $ por 1.000 búsquedas + tokens).
 
+## 2026-11-25 — Varios cerebros (0.7)
+- [x] Adaptadores OpenAI y Gemini; repartidor y respaldo; interfaz.
+- [x] Probado contra simuladores de las tres APIs (navegador real).
+- [ ] Primera llamada real a OpenAI y Gemini — pendiente de las claves del usuario.
+
 ## Decisiones tomadas por el usuario
+- Repartir tareas entre Gemini gratis, GPT-6.1 Terra y Claude «como mejor veas» (0.7). ChatGPT gratis no tiene API.
 - Cerebro: Claude Opus 5.5 (API de Anthropic, prepago de 5 $, sin recarga automática). Límite en JARVIS: 5 $/mes.
 
 - Voz: empezar con voces gratuitas del sistema; ElevenLabs preparado para activarlo más adelante.

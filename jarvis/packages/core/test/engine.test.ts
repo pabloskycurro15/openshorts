@@ -14,6 +14,8 @@ async function setup(script: ConstructorParameters<typeof ScriptedProvider>[0], 
   const j = createJarvis(loadConfig({}, { dataDir: tmpDir(), logLevel: 'silent' }), { dbFile: ':memory:', providerFactory: () => provider });
   await j.start();
   if (withKey) j.ai.setApiKey(USER, 'sk-ant-api03-PRUEBA-0000000000000000');
+  // Estas pruebas fijan Opus; el repartidor tiene sus propias pruebas.
+  j.ai.budget.updateSettings({ model: 'claude-opus-5-5' });
   const events: ChatEvent[] = [];
   const run = (message: string, conversationId?: string, signal?: AbortSignal) => j.ai.engine.run({ message, conversationId }, (e) => events.push(e), signal);
   return { j, provider, events, run };
@@ -25,7 +27,7 @@ describe('ChatEngine', () => {
   it('sin clave API avisa y no llama a nadie', async () => {
     const { events, run, provider } = await setup([], false);
     await run('hola');
-    expect(of(events, 'error')[0]!.message).toMatch(/clave API/);
+    expect(of(events, 'error')[0]!.message).toMatch(/clave/);
     expect(provider.calls).toHaveLength(0);
   });
 

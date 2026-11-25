@@ -5,7 +5,8 @@ import { getSetting, setSetting } from '../storage/db';
 import type { Usage } from './provider';
 
 /** Valores por defecto decididos con el usuario: Opus 5.5 y 5 USD al mes (su recarga inicial). */
-export const DEFAULT_AI_SETTINGS: AiSettings = { model: 'claude-opus-5-5', effort: 'medium', monthlyLimitUsd: 5 };
+/** Por defecto: repartidor automático (decisión del usuario), esfuerzo medio y 5 USD al mes. */
+export const DEFAULT_AI_SETTINGS: AiSettings = { model: 'auto', allowFreeGoogle: true, effort: 'medium', monthlyLimitUsd: 5 };
 export const WARN_RATIO = 0.8;
 const KEY = 'ai.settings';
 

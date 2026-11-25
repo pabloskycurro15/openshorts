@@ -56,10 +56,13 @@ export class ConversationStore {
 
   /** Vista para la interfaz (sin contenido interno del proveedor). */
   view(conversationId: string): ChatMessageView[] {
-    const rows = this.db.prepare('SELECT seq, role, content, created_at FROM messages WHERE conversation_id = ? ORDER BY seq').all(conversationId) as {
-      seq: number; role: 'user' | 'assistant'; content: string; created_at: string;
+    const rows = this.db.prepare('SELECT seq, role, content, raw, created_at FROM messages WHERE conversation_id = ? ORDER BY seq').all(conversationId) as {
+      seq: number; role: 'user' | 'assistant'; content: string; raw: string | null; created_at: string;
     }[];
-    return rows.map((r) => ({ seq: r.seq, role: r.role, content: JSON.parse(r.content) as ContentBlock[], createdAt: r.created_at }));
+    return rows.map((r) => {
+      const model = r.role === 'assistant' && r.raw ? (JSON.parse(r.raw) as { model?: string }).model : undefined;
+      return { seq: r.seq, role: r.role, content: JSON.parse(r.content) as ContentBlock[], createdAt: r.created_at, ...(model ? { model } : {}) };
+    });
   }
 
   delete(id: string): boolean {

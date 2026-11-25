@@ -20,7 +20,7 @@ export interface ChatMessage {
    * Debe reenviarse sin cambios al mismo proveedor: algunos modelos verifican que
    * el historial no se ha editado. Otros proveedores lo ignoran y usan `content`.
    */
-  raw?: { provider: string; blocks: unknown[] } | null;
+  raw?: { provider: string; model?: string; blocks: unknown[] } | null;
 }
 
 export type StopReason = 'end_turn' | 'tool_use' | 'max_tokens' | 'refusal' | 'pause_turn' | 'other';

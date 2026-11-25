@@ -29,6 +29,7 @@ export function HomeSection({ navigate }: { navigate: (id: string) => void }) {
   const { data: pending } = useCoreData(() => core.approvals('pending'));
   const { data: ai } = useCoreData(() => core.aiStatus());
   const [subtitle, setSubtitle] = useState<{ text: string; live: boolean }>({ text: '', live: false });
+  const [routeLabel, setRouteLabel] = useState('');
   const memUsed = info ? 1 - info.memory.freeBytes / info.memory.totalBytes : 0;
   const load = info ? (info.cpu.usagePercent !== undefined ? info.cpu.usagePercent / 100 : (info.cpu.loadAvg[0] ?? 0) / info.cpu.cores) : 0;
   const accent = ACCENTS[appearance.accent].hex;
@@ -46,7 +47,7 @@ export function HomeSection({ navigate }: { navigate: (id: string) => void }) {
           <li className="flex items-center justify-between"><span className="text-muted">Seguridad</span>
             {lockdown ? <Badge tone="danger">Emergencia</Badge> : <Badge tone="ok">Normal</Badge>}</li>
           <li className="flex items-center justify-between"><span className="text-muted">Cerebro</span>
-            {ai ? (ai.configured ? <Badge tone="ok">{ai.models.find((m) => m.id === ai.settings.model)?.label ?? ai.settings.model}</Badge> : <Badge tone="warn">Sin clave API</Badge>) : <Badge>…</Badge>}</li>
+            {ai ? (ai.configured ? <Badge tone="ok">{ai.settings.model === 'auto' ? `Automático · ${(ai.providers ?? []).filter((p) => p.configured).length} proveedor(es)` : ai.models.find((m) => m.id === ai.settings.model)?.label ?? ai.settings.model}</Badge> : <Badge tone="warn">Sin clave API</Badge>) : <Badge>…</Badge>}</li>
           {ai?.configured && <li><div className="mb-1.5 flex justify-between text-xs"><span className="text-muted">Gasto del mes</span><span className="font-mono">{formatUsd(ai.spentMonthUsd)} / {formatUsd(ai.settings.monthlyLimitUsd)}</span></div>
             <Meter label="Gasto del mes" value={ai.budgetRatio} tone={ai.blocked ? 'danger' : ai.warn ? 'warn' : 'accent'} /></li>}
           {health && <li className="flex items-center justify-between"><span className="text-muted">Activo</span><span className="data-blip font-mono text-xs">{formatDuration(health.uptimeSec)}</span></li>}
@@ -121,13 +122,14 @@ export function HomeSection({ navigate }: { navigate: (id: string) => void }) {
           <div className="font-display text-[10px] tracking-[0.5em] text-dim uppercase">Estado</div>
           <div className="holo-text mt-1 font-display text-xl font-semibold tracking-[0.25em] uppercase" aria-live="polite">{STATE_LABEL[assistant]}</div>
         </div>
+        {routeLabel && <div className="mt-3 rounded-full border border-accent/30 bg-accent/8 px-2.5 py-0.5 font-mono text-[10px] text-accent-soft">⟐ {routeLabel}</div>}
         <p className={`mt-4 min-h-[1.5rem] max-w-2xl px-2 text-center font-mono text-sm whitespace-pre-line text-ink/90 [text-shadow:0_0_12px_rgb(var(--accent-rgb)/0.6)] ${subtitle.live ? 'typing-caret' : ''}`} aria-live="polite">
           {shown || (status === 'online'
             ? (ai?.configured ? 'A su servicio. ¿En qué puedo ayudarle?' : 'Núcleo operativo. Añade tu clave API en Configuración para activar el cerebro.')
             : 'Esperando al núcleo local…')}
         </p>
         <div className="mt-5 flex w-full justify-center px-2">
-          {ai?.configured ? <CommandBar onSubtitle={(text, live) => setSubtitle({ text, live })} /> : <Button tone="accent" onClick={() => navigate('configuracion')}>Configurar el cerebro</Button>}
+          {ai?.configured ? <CommandBar onSubtitle={(text, live) => setSubtitle({ text, live })} onRoute={setRouteLabel} /> : <Button tone="accent" onClick={() => navigate('configuracion')}>Configurar el cerebro</Button>}
         </div>
       </div>
 
