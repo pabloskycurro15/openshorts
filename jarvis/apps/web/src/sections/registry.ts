@@ -21,8 +21,7 @@ export const SECTIONS: SectionDef[] = [
   { id: 'tareas', label: 'Centro de tareas', icon: ListChecks, phase: 7, summary: 'Objetivos que reparte el equipo de agentes.' },
   { id: 'automatizaciones', label: 'Automatizaciones', icon: Workflow, phase: 9, summary: 'Rutinas y tareas programadas.',
     planned: ['Disparadores por hora, evento o condición', 'Secuencias de acciones con permisos propios', 'Historial de ejecuciones y reintentos seguros', 'Aprobación para acciones importantes'] },
-  { id: 'conectores', label: 'Conectores', icon: Cable, phase: 8, summary: 'Servicios e integraciones.',
-    planned: ['Gmail, Calendar, Drive, YouTube, GitHub, Spotify, Telegram…', 'Credenciales cifradas y permisos por conector', 'Registro de actividad y errores', 'Aprobación antes de activar cualquier conector'] },
+  { id: 'conectores', label: 'Conectores', icon: Cable, phase: 8, summary: 'WhatsApp, Telegram, GitHub, Netlify, OpenShorts.' },
   { id: 'configuracion', label: 'Configuración', icon: Settings, phase: 2, summary: 'Apariencia, conexión y preferencias.' },
   { id: 'monitor', label: 'Monitor del equipo', icon: Activity, phase: 2, summary: 'Rendimiento del ordenador en tiempo real.' },
   { id: 'historial', label: 'Historial', icon: History, phase: 2, summary: 'Registro de auditoría verificable.' },
@@ -36,6 +35,6 @@ export const SECTIONS: SectionDef[] = [
 ];
 
 /** Última fase completada y verificada. */
-export const CURRENT_PHASE = 7;
+export const CURRENT_PHASE = 8;
 
 export const sectionById = (id: string) => SECTIONS.find((s) => s.id === id);

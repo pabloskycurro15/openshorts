@@ -172,6 +172,18 @@ const MIGRATIONS: string[] = [
   CREATE INDEX subtasks_task ON subtasks(task_id, idx);
   CREATE TABLE agent_settings (agent_id TEXT PRIMARY KEY, enabled INTEGER NOT NULL);
   `,
+  // 6 — conectores: registro de actividad
+  `
+  CREATE TABLE connector_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ts TEXT NOT NULL,
+    connector TEXT NOT NULL,
+    operation TEXT NOT NULL,
+    outcome TEXT NOT NULL CHECK (outcome IN ('ok','error','info')),
+    detail TEXT NOT NULL
+  );
+  CREATE INDEX connector_log_c ON connector_log(connector, id);
+  `,
 ];
 
 export function openDatabase(file: string): Database {

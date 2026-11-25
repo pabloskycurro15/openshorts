@@ -19,6 +19,7 @@ import { FilesSection } from './sections/Files';
 import { MemorySection } from './sections/Memory';
 import { TasksSection } from './sections/Tasks';
 import { AgentsSection } from './sections/Agents';
+import { ConnectorsSection } from './sections/Connectors';
 
 import { useEffect } from 'react';
 
@@ -49,6 +50,7 @@ export function App() {
       case 'memoria': return <MemorySection />;
       case 'tareas': return <TasksSection />;
       case 'agentes': return <AgentsSection />;
+      case 'conectores': return <ConnectorsSection />;
       case 'conversacion': return <ConversationSection navigate={navigate} />;
       default: return <PlannedSection section={section} />;
     }

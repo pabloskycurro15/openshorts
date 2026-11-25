@@ -2,7 +2,7 @@
 import { build } from 'esbuild';
 import fs from 'node:fs';
 
-const common = { bundle: true, platform: 'node', target: 'node24', format: 'cjs', sourcemap: true, logLevel: 'warning', external: ['electron', 'bufferutil', 'utf-8-validate', '@huggingface/transformers', 'onnxruntime-node', 'onnxruntime-web', 'sharp'] };
+const common = { bundle: true, platform: 'node', target: 'node24', format: 'cjs', sourcemap: true, logLevel: 'warning', external: ['electron', 'bufferutil', 'utf-8-validate', '@huggingface/transformers', 'onnxruntime-node', 'onnxruntime-web', 'sharp', '@whiskeysockets/baileys'] };
 await build({ ...common, entryPoints: ['src/main.ts'], outfile: 'dist/main.cjs' });
 await build({ ...common, entryPoints: ['src/preload.ts'], outfile: 'dist/preload.cjs' });
 fs.copyFileSync('build/icon.png', 'dist/icon.png');

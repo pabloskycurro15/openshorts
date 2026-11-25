@@ -6,6 +6,7 @@ import type {
   ConversationSummary,
   ElevenLabsSettings,
   AgentInfo,
+  ConnectorInfo,
   TaskView,
   Memory,
   MemoryHit,
@@ -121,6 +122,15 @@ export class CoreClient {
   createTask = (goal: string) => this.req<TaskView>('/api/tasks', { method: 'POST', body: JSON.stringify({ goal }) });
   cancelTask = (id: string) => this.req<{ cancelled: boolean }>(`/api/tasks/${id}/cancel`, { method: 'POST', body: '{}' });
   deleteTask = (id: string) => this.req<{ deleted: boolean }>(`/api/tasks/${id}`, { method: 'DELETE' });
+
+  // ── Conectores ──
+  connectors = () => this.req<ConnectorInfo[]>('/api/connectors');
+  configureConnector = (id: string, values: Record<string, string>) => this.req<ConnectorInfo>(`/api/connectors/${id}`, { method: 'PUT', body: JSON.stringify(values) });
+  enableConnector = (id: string) => this.req<{ ok: boolean; detail: string }>(`/api/connectors/${id}/enable`, { method: 'POST', body: '{}' });
+  disableConnector = (id: string) => this.req<{ ok: boolean }>(`/api/connectors/${id}/disable`, { method: 'POST', body: '{}' });
+  testConnector = (id: string) => this.req<{ ok: boolean; detail: string }>(`/api/connectors/${id}/test`, { method: 'POST', body: '{}' });
+  deleteConnectorCredentials = (id: string) => this.req<{ ok: boolean }>(`/api/connectors/${id}/credentials`, { method: 'DELETE' });
+  connectorAction = (id: string, action: string, body: Record<string, unknown> = {}) => this.req<Record<string, unknown>>(`/api/connectors/${id}/actions/${action}`, { method: 'POST', body: JSON.stringify(body) });
 
   // ── Memoria ──
   memories = (o: { q?: string; category?: string; status?: string } = {}) => {

@@ -17,6 +17,7 @@ import { registerAiRoutes } from './ai-routes';
 import { registerVoiceRoutes } from './voice-routes';
 import { registerMemoryRoutes } from './memory-routes';
 import { registerAgentRoutes } from './agent-routes';
+import { registerConnectorRoutes } from './connector-routes';
 
 const USER: Principal = { kind: 'user', id: 'owner' };
 
@@ -122,6 +123,7 @@ export async function buildServer(j: Jarvis, token: string): Promise<FastifyInst
   registerVoiceRoutes(app, j);
   registerMemoryRoutes(app, j);
   registerAgentRoutes(app, j);
+  registerConnectorRoutes(app, j);
 
   app.get('/api/events', { websocket: true }, (socket) => {
     const off = j.bus.onAny((env) => {

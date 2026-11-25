@@ -218,3 +218,15 @@ Electron. En Node 22 muestra un aviso «experimental» (silenciado); en Node 24 
 - **Iconos:** lucide-react (única dependencia visual).
 - **Conexión:** la web habla con el proxy de Vite, que reenvía `/api` al núcleo (sin CORS). Token del núcleo
   guardado en el navegador; en la app de escritorio lo inyectará Electron (Fase 5).
+
+## ADR-022 · Conectores como extensiones con herramientas condicionadas ✅
+- `ConnectorDef` = manifiesto + campos + `tools(ctx)` + `test` + `start/stop` opcionales + `actions` de la interfaz.
+  Las herramientas se registran siempre en `ToolRegistry` con `available()`: si el conector está apagado no se
+  describen a la IA y `invoke` las rechaza. Así heredan permisos, confirmaciones y auditoría sin código nuevo.
+- Activar = aprobación explícita del usuario + prueba real de credenciales. Secretos en el almacén cifrado.
+- Sin SDKs por servicio: `fetch` con un envoltorio de errores legibles (inyectable en pruebas). ZIP propio (sin deps).
+- WhatsApp: no hay API oficial para cuentas personales; se usa Baileys (WhatsApp Web, dispositivo vinculado) a
+  petición expresa del usuario, con aviso de riesgo de bloqueo, envío crítico y límite de 15/h. La alternativa
+  oficial (WhatsApp Business Cloud API) exige un número distinto y verificación de empresa.
+- Canales externos (Telegram/WhatsApp) entran por `converse()` → `ChatEngine` con una conversación persistente por
+  canal; las acciones con efectos siguen pidiendo confirmación en la app.

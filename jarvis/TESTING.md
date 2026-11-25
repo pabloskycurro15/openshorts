@@ -8,7 +8,7 @@
 
 ## Resultados reales (2026-11-25, Linux x64, Node 22.23)
 
-`npm run check` → typecheck OK (núcleo, web y escritorio), lint OK (0 avisos), **185/185 pruebas superadas**.
+`npm run check` → typecheck OK (núcleo, web y escritorio), lint OK (0 avisos), **196/196 pruebas superadas**.
 
 | Archivo | Pruebas | Cubre |
 |---|---|---|
@@ -30,7 +30,14 @@
 | `router.test.ts` | 25 | Clasificación (7 casos), acciones y datos sensibles; cadenas por nivel, sensibles fuera del gratis, Gemini desactivable, solo proveedores con clave, pausa; motor: cupo agotado en los dos Gemini → Haiku con aviso y pausa, modelo guardado por mensaje; modelo fijo; claves por proveedor; adaptador OpenAI (petición sin estado, texto, llamada, uso con caché, reenvío del razonamiento cifrado, errores de saldo/límite/clave); adaptador Gemini (esquemas, petición, firma reenviada intacta, respuesta de función, cupo 429, bloqueo); precios |
 | `apps/web/test/vad.test.ts` | 13 | Detector de voz (silencio, frase con margen, ruidos cortos, frases largas, adaptación a ruido constante); palabra de activación (9 casos, incluidas variantes y falsos positivos) |
 | `apps/web/test/voice.test.tsx` | 9 | Texto para voz; troceado por frases (abreviaturas, código); reconocimiento (sin soporte, parciales y final es-ES, permiso denegado, silencio); síntesis (cola, ajustes, fin, cancelación); voz por defecto |
-| `apps/web/test/web.test.tsx` | 13 | 15 secciones con ids únicos y plan para las futuras; 8 estados del núcleo visual; utilidades; almacenamiento tolerante a fallos; App con núcleo simulado: pantalla de vinculación, panel con 15 secciones, reacción a eventos (estado y emergencia), secciones futuras honestas, token caducado |
+| `connectors.test.ts` | 10 | Marco: herramientas ocultas sin activar, secretos cifrados y fuera de la API, credencial errónea rechazada, registro y estadísticas, borrar credenciales; GitHub: issue con confirmación; ZIP válido (CRC, deflate, sin ocultos); Netlify: ruta fuera rechazada sin preguntar, confirmación, ZIP enviado; OpenShorts: clave de Gemini del almacén; Telegram: solo chat autorizado, pendientes y autorización; WhatsApp: teléfonos, QR, código, órdenes solo desde ti mismo (por LID), sin bucles, mensajes ajenos nunca son órdenes, leer con permiso, envío crítico siempre confirmado, límite 15/h; emergencia; API HTTP |
+| `apps/web/test/web.test.tsx` | 14 | 15 secciones con ids únicos y plan para las futuras; 8 estados del núcleo visual; utilidades; almacenamiento tolerante a fallos; App con núcleo simulado: pantalla de vinculación, panel con 15 secciones, reacción a eventos (estado y emergencia), secciones futuras honestas, token caducado |
+
+### Conectores con servicios reales (Fase 8A)
+- WhatsApp: Baileys contra los servidores reales de WhatsApp → QR recibido (Node), mostrado en Chromium y en la app
+  de escritorio empaquetada (Electron). La vinculación con un teléfono no se ha podido probar aquí.
+- GitHub: activar con un token falso → «HTTP 401 (credencial no válida o sin permisos): Bad credentials».
+- OpenShorts sin servidor arrancado → «No se pudo conectar».
 
 ### Prueba en navegador real (Playwright + Chromium, núcleo y web arrancados)
 - Token incorrecto → mensaje «Token incorrecto»; token correcto → panel «Núcleo en línea».

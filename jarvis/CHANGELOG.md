@@ -2,6 +2,17 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versionado semántico.
 
+## [0.10.0] — 2026-11-25
+### Añadido
+- Conectores (Fase 8, primera parte): marco común (manifiesto, credenciales cifradas en el almacén, activación solo
+  por el usuario, herramientas que solo existen con el conector activado, registro de actividad y errores,
+  acciones desde la interfaz). Migración 6 (`connector_log`).
+- WhatsApp (no oficial, Baileys): vinculación por QR o código, órdenes desde «Mensaje a ti mismo», leer chats con
+  permiso, enviar con confirmación siempre y máximo 15 por hora.
+- Telegram (bot oficial, solo el chat autorizado), GitHub, Netlify (publicar una carpeta autorizada) y OpenShorts.
+- Canales externos: Telegram y WhatsApp conversan con JARVIS con su propia conversación persistente.
+- Sección Conectores; el agente «integraciones» usa los conectores. 11 pruebas nuevas (196 en total).
+
 ## [0.9.0] — 2026-11-25
 ### Añadido
 - Multiagente (Fase 7): coordinador, 8 agentes especializados con identidad y permisos propios, Centro de tareas en

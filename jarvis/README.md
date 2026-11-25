@@ -5,7 +5,7 @@ conectores, automatizaciones y control autorizado del ordenador, con clientes de
 escritorio (Windows 11), iOS y PWA.
 
 > **Estado actual: Fases 1–7 completadas (núcleo, interfaz holográfica, varios cerebros con repartidor, voz local
-> con palabra de activación, control del equipo, app de escritorio, memoria y multiagente).** Siguiente: conectores (Fase 8). ver [ROADMAP.md](ROADMAP.md) y [PROGRESS.md](PROGRESS.md).
+> con palabra de activación, control del equipo, app de escritorio, memoria y multiagente).** Conectores (Fase 8A): WhatsApp, Telegram, GitHub, Netlify y OpenShorts. Siguiente: Google (Gmail, Calendar, Drive). ver [ROADMAP.md](ROADMAP.md) y [PROGRESS.md](PROGRESS.md).
 > Este documento solo describe lo que existe y está probado.
 
 ## Qué funciona hoy

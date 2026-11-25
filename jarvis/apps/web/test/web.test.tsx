@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor, act, fireEvent } from '@testing-library/react';
 import { CURRENT_PHASE, SECTIONS } from '../src/sections/registry';
 import { Markdown } from '../src/components/Markdown';
 import { STATE_PARAMS } from '../src/components/AICore';
@@ -85,6 +85,13 @@ const aiStatus = { provider: 'multi', configured: true, keyUpdatedAt: null, sett
 let aiConfigured = true;
 const voiceEvents: string[] = [];
 
+const connectors = [
+  { id: 'whatsapp', name: 'WhatsApp', description: 'd', official: false, warning: 'Conexión NO oficial', docsUrl: 'https://x', fields: [], enabled: true,
+    status: { state: 'qr', qr: 'data:image/png;base64,AAAA' }, operations: [{ name: 'whatsapp.send', description: 'e', risk: 'critical' }], stats: { calls: 0, errors: 0, lastUsed: null }, recent: [] },
+  { id: 'telegram', name: 'Telegram', description: 'd', official: false, warning: 'x', docsUrl: 'https://x', fields: [{ key: 'botToken', label: 'Token', secret: true, required: true, configured: false }], enabled: false,
+    status: {}, operations: [], stats: { calls: 0, errors: 0, lastUsed: null }, recent: [] },
+];
+
 function mockCore(validToken: string) {
   vi.stubGlobal('WebSocket', FakeWS);
   vi.stubGlobal('fetch', vi.fn(async (url: string, init?: RequestInit) => {
@@ -107,6 +114,7 @@ function mockCore(validToken: string) {
       : path.startsWith('/api/conversations') ? []
       : path.startsWith('/api/health') ? health
       : path.startsWith('/api/approvals') ? []
+      : path.startsWith('/api/connectors') ? connectors
       : path.startsWith('/api/tools/invoke') ? { status: 'ok', output: { platform: 'linux', release: '6', arch: 'x64', hostname: 'pc', cpu: { model: 'x', cores: 4, loadAvg: [1, 1, 1] }, memory: { totalBytes: 100, freeBytes: 50 }, uptimeSec: 60 } }
       : [];
     return new Response(JSON.stringify(body), { status: 200 });
@@ -149,10 +157,24 @@ describe('App', () => {
   it('las secciones futuras dicen claramente que no funcionan aún', async () => {
     mockCore('t');
     window.localStorage.setItem('jarvis.token', JSON.stringify('t'));
+    window.location.hash = '/automatizaciones';
+    await renderApp();
+    await waitFor(() => expect(screen.getByText('Disponible en la Fase 9')).toBeTruthy());
+    expect(screen.getByText(/todavía no funciona/)).toBeTruthy();
+  });
+
+  it('Conectores: los no oficiales exigen aceptar el riesgo; WhatsApp muestra el QR', async () => {
+    mockCore('t');
+    window.localStorage.setItem('jarvis.token', JSON.stringify('t'));
     window.location.hash = '/conectores';
     await renderApp();
-    await waitFor(() => expect(screen.getByText('Disponible en la Fase 8')).toBeTruthy());
-    expect(screen.getByText(/todavía no funciona/)).toBeTruthy();
+    await waitFor(() => expect(screen.getByText('WhatsApp')).toBeTruthy());
+    expect(screen.getAllByText('No oficial')).toHaveLength(2);
+    expect(screen.getByAltText('Código QR para vincular WhatsApp')).toBeTruthy();
+    const activar = screen.getAllByRole('button', { name: 'Activar' });
+    expect((activar[0] as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.click(screen.getByLabelText(/Entiendo los riesgos/));
+    expect((screen.getAllByRole('button', { name: 'Activar' })[0] as HTMLButtonElement).disabled).toBe(false);
   });
 
   it('Conversación sin clave API: explica cómo configurarla', async () => {

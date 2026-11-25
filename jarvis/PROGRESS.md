@@ -68,7 +68,18 @@
 - [x] Coordinador, agentes, tareas, API e interfaz; verificado en navegador con API simulada.
 - [x] Búsqueda web programada y desactivada (decisión del usuario: «prográmala para luego»).
 
+## 2026-11-25 — Fase 8A (conectores)
+- [x] Marco de conectores, WhatsApp, Telegram, GitHub, Netlify y OpenShorts; API, interfaz y pruebas.
+- [x] WhatsApp: QR real recibido de los servidores de WhatsApp en Node, navegador y app de escritorio empaquetada.
+- [x] GitHub real: un token falso se rechaza con «401 Bad credentials» (verificado contra api.github.com).
+- [ ] Vinculación real de WhatsApp, bot real de Telegram, publicación real en Netlify y OpenShorts en marcha:
+      requieren que el usuario escanee el QR / cree el bot / dé los tokens desde su equipo.
+- [ ] Fase 8B: Gmail, Google Calendar y Google Drive (OAuth de Google).
+
 ## Decisiones tomadas por el usuario
+- WhatsApp con su número personal mediante conexión no oficial, aceptando el riesgo de bloqueo («da igual las
+  consecuencias»). Medidas igualmente: confirmación en cada envío, 15/hora, sin envíos masivos. El número no se
+  guarda en el código ni en el repositorio: se introduce en la app.
 - Búsqueda web: implementada pero desactivada hasta que el usuario la active.
 - Repartir tareas entre Gemini gratis, GPT-6.1 Terra y Claude «como mejor veas» (0.7). ChatGPT gratis no tiene API.
 - Cerebro: Claude Opus 5.5 (API de Anthropic, prepago de 5 $, sin recarga automática). Límite en JARVIS: 5 $/mes.

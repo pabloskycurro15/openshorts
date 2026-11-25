@@ -32,6 +32,8 @@ export interface ToolDefinition<S extends z.ZodType = z.ZodType> {
    * Permite conceder una carpeta entera en lugar de un archivo concreto.
    */
   grantScopes?: (args: z.infer<S>) => string[];
+  /** Si devuelve false, la herramienta no se ofrece ni se puede usar (p. ej. conector desactivado). */
+  available?: () => boolean;
   execute(args: z.infer<S>, ctx: ToolContext): Promise<unknown> | unknown;
 }
 
@@ -106,7 +108,7 @@ export class ToolRegistry {
   }
 
   describe(): ToolDescriptor[] {
-    return [...this.tools.values()].map((t) => ({
+    return [...this.tools.values()].filter((t) => !t.available || t.available()).map((t) => ({
       name: t.name,
       description: t.description,
       parameters: z.toJSONSchema(t.parameters) as Record<string, unknown>,
@@ -127,6 +129,7 @@ export class ToolRegistry {
     const signal = opts.signal ?? new AbortController().signal;
     const tool = this.tools.get(name);
     if (!tool) return this.finish(principal, name, null, { status: 'error', error: `Herramienta desconocida: ${name}` });
+    if (tool.available && !tool.available()) return this.finish(principal, name, null, { status: 'error', error: `«${name}» no está disponible: su conector está desactivado` });
 
     const parsed = tool.parameters.safeParse(rawArgs ?? {});
     if (!parsed.success) {

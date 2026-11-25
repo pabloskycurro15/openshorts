@@ -87,6 +87,21 @@ El logger censura campos `token`, `apiKey`, `password`, `secret` y la cabecera `
 - Herramienta fuera de la lista de un agente → denegada aunque el modelo la pida.
 - Emergencia: cancela tareas en curso y bloquea la creación de nuevas.
 
+### Conectores (Fase 8)
+- Apagados por defecto; solo el usuario los configura y activa (la activación prueba las credenciales).
+  Los no oficiales (WhatsApp) exigen además marcar «Entiendo los riesgos».
+- Credenciales en el almacén cifrado (`connector.<id>.<campo>`); nunca salen por la API (solo «configurado»).
+- Sus herramientas no existen (ni se ofrecen a la IA) mientras el conector está apagado.
+- Riesgos: leer = bajo/medio (pide permiso), publicar una issue o una web = alto (confirma cada vez), enviar un
+  WhatsApp = crítico (confirma siempre, aunque se haya «aprobado siempre») con máximo 15 por hora.
+- Netlify solo publica carpetas autorizadas; la ruta se valida antes de pedir confirmación.
+- Órdenes remotas: Telegram solo desde el chat autorizado por el usuario; WhatsApp solo desde «Mensaje a ti mismo»
+  y nunca desde mensajes de otras personas. Las respuestas de JARVIS llevan prefijo y se ignoran (sin bucles).
+  Las acciones con efectos siguen necesitando confirmación en la app. En emergencia no se ejecutan órdenes remotas.
+- WhatsApp: los mensajes recibidos solo se guardan en memoria (no en disco); la sesión de vinculación está en
+  `dataDir/whatsapp-session` (permisos 0700) y se borra al desvincular.
+- Registro de actividad por conector (`connector_log`) además de la auditoría encadenada.
+
 ## Pendiente (con fase prevista)
 | Medida | Fase |
 |---|---|

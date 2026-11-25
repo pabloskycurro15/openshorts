@@ -429,3 +429,23 @@ export interface TaskView {
 }
 
 export const CreateTaskRequest = z.object({ goal: z.string().trim().min(5).max(4000) });
+
+// ───────────────────────── Conectores (Fase 8) ─────────────────────────
+
+export interface ConnectorField { key: string; label: string; secret: boolean; required: boolean; placeholder?: string; help?: string; configured: boolean; value?: string }
+
+export interface ConnectorInfo {
+  id: string;
+  name: string;
+  description: string;
+  official: boolean;
+  warning: string | null;
+  docsUrl: string;
+  fields: ConnectorField[];
+  enabled: boolean;
+  /** Estado específico (p. ej. WhatsApp: código QR, conectado; Telegram: chats pendientes). */
+  status: Record<string, unknown>;
+  operations: { name: string; description: string; risk: RiskLevel }[];
+  stats: { calls: number; errors: number; lastUsed: string | null };
+  recent: { ts: string; operation: string; outcome: 'ok' | 'error' | 'info'; detail: string }[];
+}

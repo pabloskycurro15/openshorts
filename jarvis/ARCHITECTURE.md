@@ -57,6 +57,7 @@ jarvis/
 │       │   ├── voice/       ElevenLabs (vía núcleo)
 │       │   ├── memory/      store (híbrido), embedder (modelo local), tools
 │       │   ├── agents/      definitions (8 agentes), tasks (coordinador y ejecución), tools
+│       │   ├── connectors/  framework (ConnectorManager), whatsapp, telegram, github, netlify, openshorts, zip, http
 │       │   ├── ai/          provider, anthropic, pricing, budget, conversations, engine, prompt, service
 │       │   ├── server/      API REST + WebSocket
 │       │   ├── app.ts       composición del núcleo
@@ -104,6 +105,10 @@ Todas las rutas salvo `/api/ping` requieren `Authorization: Bearer <token>`.
 | GET | `/api/voice/elevenlabs/voices` | Voces disponibles |
 | POST | `/api/voice/tts` | `{text}` → audio MP3 (solo si está activado) |
 | GET / PUT | `/api/agents[/:id]` | Agentes (estadísticas, permisos) y activar/desactivar |
+| GET / PUT | `/api/connectors[/:id]` | Conectores (estado, campos, operaciones, actividad) y guardar configuración |
+| POST | `/api/connectors/:id/{enable,disable,test}` | Activar (prueba credenciales), desactivar, probar |
+| POST | `/api/connectors/:id/actions/:action` | Acciones: WhatsApp `pair`/`logout`/`restart`, Telegram `authorize` |
+| DELETE | `/api/connectors/:id/credentials` | Borrar credenciales (desactiva) |
 | GET / POST | `/api/tasks` | Tareas / encargar un objetivo `{goal}` |
 | GET / DELETE | `/api/tasks/:id` | Detalle con subtareas y registro / borrar |
 | POST | `/api/tasks/:id/cancel` | Detener |

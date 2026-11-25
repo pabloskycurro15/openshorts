@@ -18,7 +18,7 @@ Anthropic, que requiere la clave del usuario (ver TESTING.md).
 | 5B | Voz 100 % local (Whisper) y palabra de activación «Jarvis» | ✅ Completada* |
 | 6 | Memoria: categorías, búsqueda híbrida FTS5 + vectores, administración | ✅ Completada |
 | 7 | Multiagente: coordinador, agentes especializados, supervisión | ✅ Completada |
-| 8 | Conectores: extensiones, almacén de credenciales, integraciones prioritarias | ⏳ Siguiente |
+| 8 | Conectores: extensiones, almacén de credenciales, integraciones prioritarias | 🟡 8A hecha (WhatsApp, Telegram, GitHub, Netlify, OpenShorts); 8B Google |
 | 9 | Automatizaciones: motor, programador, rutinas, historial | Pendiente |
 | 10 | iOS (Capacitor) y PWA, autenticación, sincronización | Pendiente |
 | 11 | Seguridad avanzada y mantenimiento: cifrado, copias, diagnóstico, actualizaciones | Pendiente |
@@ -115,7 +115,11 @@ Anthropic, que requiere la clave del usuario (ver TESTING.md).
       reinicio se marcan como fallidas. Herramienta `agents.delegate` para que JARVIS encargue objetivos grandes.
 - [x] Búsqueda web (Claude) preparada y desactivada; el repartidor la usa solo si el usuario la activa.
 
-### Fase 8 (propuesta) — Conectores
+### Fase 8 — Conectores
+- [x] 8A: marco de extensiones, WhatsApp (no oficial), Telegram, GitHub, Netlify, OpenShorts; sección Conectores.
+- [ ] 8B: Gmail, Google Calendar y Google Drive (OAuth de Google).
+
+Propuesta original:
 - Arquitectura de extensiones (manifiesto, operaciones como herramientas, credenciales en el almacén, aprobación
   antes de activar, registro y errores).
 - Prioritarios: Gmail, Google Calendar, Google Drive (OAuth de Google), GitHub, Telegram (bot), OpenShorts (JARVIS
