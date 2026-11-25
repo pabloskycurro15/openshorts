@@ -14,6 +14,7 @@ Node.js ≥ 22.13 (usa el SQLite integrado; no hace falta compilar nada).
 | `npm run check` | Las tres anteriores (obligatorio antes de cada commit) |
 | `npm run desktop` | Compila y abre la app de escritorio |
 | `npm run dist:win` | Genera el instalador de Windows (ejecutar en Windows) |
+| `npx -w @jarvis/desktop electron-builder --win dir` | Desde Linux: carpeta portátil de Windows (el instalador NSIS necesita Wine). Antes, instalar `@img/sharp-win32-x64` de la misma versión que `sharp` (npm solo instala el binario del sistema actual). |
 
 ## Convenciones
 - TypeScript estricto (`noUncheckedIndexedAccess`), ESM, `import type` para tipos.
