@@ -60,7 +60,8 @@ jarvis/
 │       └── test/
 └── apps/
     ├── web/             Interfaz React (✔ Fase 2): src/components (AICore, Shell…), src/sections (15),
-    │                    src/lib (cliente API, conexión WebSocket, ajustes, router)
+    │                    src/lib (cliente API, conexión WebSocket, ajustes, router),
+    │                    src/voice (✔ Fase 4: reconocimiento, síntesis, troceado por frases, VoiceProvider)
     ├── desktop/         (Fase 5) Electron
     └── ios/             (Fase 10) Capacitor
 ```
@@ -92,6 +93,12 @@ Todas las rutas salvo `/api/ping` requieren `Authorization: Bearer <token>`.
 | GET / DELETE | `/api/conversations[/:id]` | Lista, detalle (sin contenido interno) y borrado |
 | POST | `/api/chat` | `{conversationId?, message}` → flujo NDJSON de `ChatEvent` |
 | POST | `/api/chat/:id/stop` | Detiene la respuesta en curso |
+| GET | `/api/voice/status` | Estado de ElevenLabs y caracteres del mes |
+| POST | `/api/voice/event` | Registro de uso del micrófono (auditoría) |
+| PUT / DELETE | `/api/voice/elevenlabs/key` | Clave de ElevenLabs (cifrada, nunca se devuelve) |
+| PUT | `/api/voice/elevenlabs/settings` | `{enabled?, voiceId?, modelId?, stability?, similarity?}` |
+| GET | `/api/voice/elevenlabs/voices` | Voces disponibles |
+| POST | `/api/voice/tts` | `{text}` → audio MP3 (solo si está activado) |
 | WS | `/api/events?token=` | Flujo de eventos (`assistant.state`, `approval.*`, `tool.invoked`...) |
 
 ## Modelo de datos (migración 1)

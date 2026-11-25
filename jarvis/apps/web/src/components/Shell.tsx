@@ -5,6 +5,7 @@ import { core } from '../lib/api';
 import { STATE_LABEL } from '../lib/labels';
 import { CURRENT_PHASE, SECTIONS, type SectionDef } from '../sections/registry';
 import { Dot } from './ui';
+import { useDisplayState, useVoice } from '../voice/VoiceProvider';
 
 const LINK: Record<LinkStatus, { label: string; tone: 'ok' | 'warn' | 'danger' | 'muted' }> = {
   online: { label: 'Núcleo en línea', tone: 'ok' },
@@ -46,7 +47,9 @@ function NavItem({ s, active, onSelect, badge }: { s: SectionDef; active: boolea
 }
 
 export function Shell({ route, navigate, children }: { route: string; navigate: (id: string) => void; children: ReactNode }) {
-  const { status, assistant, lockdown, internet } = useConnection();
+  const { status, lockdown, internet } = useConnection();
+  const assistant = useDisplayState();
+  const voice = useVoice();
   const [open, setOpen] = useState(false);
   const { data: pending } = useCoreData(() => core.approvals('pending'));
   const pendingCount = pending?.length ?? 0;
@@ -62,7 +65,7 @@ export function Shell({ route, navigate, children }: { route: string; navigate: 
         </div>
         <div>
           <div className="font-display text-lg font-bold tracking-[0.3em] text-ink glow-text">JARVIS</div>
-          <div className="text-[10px] tracking-widest text-dim uppercase">v0.3 · Fase 3</div>
+          <div className="text-[10px] tracking-widest text-dim uppercase">v0.4 · Fase 4</div>
         </div>
       </div>
       <ul className="flex-1 space-y-0.5 overflow-y-auto px-2 pb-4">
@@ -108,7 +111,7 @@ export function Shell({ route, navigate, children }: { route: string; navigate: 
           </div>
           <div className="flex items-center gap-1.5" aria-label="Indicadores de privacidad y conexión">
             <Indicator icon={internet ? Wifi : WifiOff} label={internet ? 'Internet disponible' : 'Sin Internet'} active tone={internet ? 'ok' : 'danger'} />
-            <Indicator icon={assistant === 'listening' ? Mic : MicOff} label={assistant === 'listening' ? 'Micrófono ACTIVO' : 'Micrófono desactivado'} active={assistant === 'listening'} tone="danger" />
+            <Indicator icon={voice.listening ? Mic : MicOff} label={voice.listening ? `Micrófono ACTIVO · audio procesado por ${voice.processor}` : 'Micrófono desactivado'} active={voice.listening} tone="danger" />
             <span className="hidden sm:contents">
               <Indicator icon={CameraOff} label="Cámara desactivada" active={false} />
               <Indicator icon={MonitorOff} label="Pantalla no se está analizando" active={false} />

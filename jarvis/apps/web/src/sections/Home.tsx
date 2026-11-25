@@ -5,6 +5,7 @@ import { useConnection, useCoreData } from '../lib/connection';
 import { core, formatBytes, formatDuration, formatUsd } from '../lib/api';
 import { useSettings, ACCENTS } from '../lib/settings';
 import { useSystemInfo } from '../lib/useSystem';
+import { useDisplayState } from '../voice/VoiceProvider';
 import { EVENT_LABEL, STATE_LABEL, timeAgo } from '../lib/labels';
 
 function Planned({ icon: Icon, title, phase, text }: { icon: typeof Bot; title: string; phase: number; text: string }) {
@@ -20,7 +21,8 @@ function Planned({ icon: Icon, title, phase, text }: { icon: typeof Bot; title: 
 }
 
 export function HomeSection({ navigate }: { navigate: (id: string) => void }) {
-  const { assistant, status, lockdown, internet, feed } = useConnection();
+  const { status, lockdown, internet, feed } = useConnection();
+  const assistant = useDisplayState();
   const { appearance } = useSettings();
   const { info, error: sysError } = useSystemInfo(4000, 2);
   const { data: health } = useCoreData(() => core.health(), [], 15000);
@@ -45,7 +47,7 @@ export function HomeSection({ navigate }: { navigate: (id: string) => void }) {
               {ai ? (ai.configured ? <Badge tone="ok">{ai.models.find((m) => m.id === ai.settings.model)?.label ?? ai.settings.model}</Badge> : <Badge tone="warn">Sin clave API</Badge>) : <Badge>…</Badge>}</li>
             {ai?.configured && <li><div className="mb-1.5 flex justify-between text-xs"><span className="text-muted">Gasto del mes</span><span className="font-mono">{formatUsd(ai.spentMonthUsd)} / {formatUsd(ai.settings.monthlyLimitUsd)}</span></div>
               <Meter label="Gasto del mes" value={ai.budgetRatio} tone={ai.blocked ? 'danger' : ai.warn ? 'warn' : 'accent'} /></li>}
-            <li className="flex items-center justify-between"><span className="text-muted">Voz</span><Badge>Fase 4</Badge></li>
+            <li className="flex items-center justify-between"><span className="text-muted">Voz</span><Badge tone="ok">Disponible</Badge></li>
             {health && <li className="flex items-center justify-between"><span className="text-muted">Núcleo activo</span><span className="font-mono text-xs">{formatDuration(health.uptimeSec)}</span></li>}
           </ul>
         </Panel>
@@ -75,7 +77,7 @@ export function HomeSection({ navigate }: { navigate: (id: string) => void }) {
             <div className="mt-1 font-display text-xl font-semibold tracking-[0.2em] text-ink glow-text uppercase" aria-live="polite">{STATE_LABEL[assistant]}</div>
             <p className="mx-auto mt-3 max-w-sm text-sm text-muted">
               {status === 'online'
-                ? (ai?.configured ? 'A su servicio. Escríbeme en Conversación; la voz llega en la Fase 4.' : 'Núcleo operativo. Añade tu clave API en Configuración para activar el cerebro.')
+                ? (ai?.configured ? 'A su servicio. Háblame o escríbeme en Conversación.' : 'Núcleo operativo. Añade tu clave API en Configuración para activar el cerebro.')
                 : 'Esperando al núcleo local. Arráncalo con «npm run dev» en la carpeta jarvis.'}
             </p>
             <div className="mt-4 flex flex-wrap justify-center gap-2">

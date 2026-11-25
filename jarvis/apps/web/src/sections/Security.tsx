@@ -118,7 +118,7 @@ export function SecuritySection() {
 
       <Panel title="Sensores y privacidad" icon={Eye}>
         <ul className="space-y-2 text-sm">
-          {[['Micrófono', 'Desactivado · llega en la Fase 4'], ['Cámara', 'Desactivada · sin uso previsto aún'], ['Análisis de pantalla', 'Desactivado · Fase 5, con indicador visible']].map(([k, v]) => (
+          {[['Micrófono', 'Solo al pulsarlo · indicador rojo · auditado'], ['Cámara', 'Desactivada · sin uso previsto aún'], ['Análisis de pantalla', 'Desactivado · Fase 5, con indicador visible']].map(([k, v]) => (
             <li key={k} className="flex items-center justify-between"><span className="text-muted">{k}</span><Badge>{v}</Badge></li>
           ))}
         </ul>

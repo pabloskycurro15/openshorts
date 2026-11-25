@@ -4,8 +4,8 @@ Asistente personal inteligente multimodal: núcleo local seguro, voz, memoria, a
 conectores, automatizaciones y control autorizado del ordenador, con clientes de
 escritorio (Windows 11), iOS y PWA.
 
-> **Estado actual: Fases 1–3 completadas (núcleo, interfaz y cerebro IA).** Todavía no hay
-> voz ni control de Windows: ver [ROADMAP.md](ROADMAP.md) y [PROGRESS.md](PROGRESS.md).
+> **Estado actual: Fases 1–4 completadas (núcleo, interfaz, cerebro IA y voz).** Todavía no hay
+> control de Windows ni palabra de activación: ver [ROADMAP.md](ROADMAP.md) y [PROGRESS.md](PROGRESS.md).
 > Este documento solo describe lo que existe y está probado.
 
 ## Qué funciona hoy
@@ -33,7 +33,12 @@ escritorio (Windows 11), iOS y PWA.
   - Clave API guardada cifrada (AES-256-GCM); ninguna ruta de la API la devuelve.
   - Control de gasto: coste por respuesta, gasto del mes, aviso al 80 % y bloqueo al 100 % del límite (5 $ por defecto).
   - Conversaciones persistentes; cancelación; el modo emergencia corta cualquier respuesta en curso.
-- 91 pruebas automatizadas (ver [TESTING.md](TESTING.md)).
+- Voz (Fase 4):
+  - Micrófono al pulsar (indicador rojo, quién procesa el audio, cada activación auditada).
+  - Respuestas habladas frase a frase mientras se generan, en español de España (voz grave por defecto).
+  - Interrupción (micrófono, Detener o Esc), manos libres, modo discreto, lectura de avisos importantes.
+  - Ajustes de voz, velocidad, tono y volumen. ElevenLabs preparado (de pago, desactivado por defecto).
+- 106 pruebas automatizadas (ver [TESTING.md](TESTING.md)).
 
 ## Activar el cerebro
 

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
-import { CircleStop, KeyRound, MessageSquarePlus, PanelLeft, Send, Trash2, Wrench, ShieldQuestion } from 'lucide-react';
+import { CircleStop, Headphones, KeyRound, MessageSquarePlus, Mic, PanelLeft, Send, Trash2, Volume2, VolumeX, Wrench, ShieldQuestion } from 'lucide-react';
+import { useVoice } from '../voice/VoiceProvider';
 import type { AiStatus, ChatEvent, ChatMessageView, ConversationSummary, RiskLevel } from '@jarvis/shared';
 import { Badge, Button, ErrorNote, Meter } from '../components/ui';
 import { Markdown } from '../components/Markdown';
@@ -90,6 +91,8 @@ export function ConversationSection({ navigate }: { navigate: (id: string) => vo
   const endRef = useRef<HTMLDivElement>(null);
   const currentRef = useRef<string | null>(null);
   currentRef.current = current;
+  const voice = useVoice();
+  const speakThisTurn = useRef(false);
 
   const refreshMeta = useCallback(async () => {
     try {
@@ -119,6 +122,13 @@ export function ConversationSection({ navigate }: { navigate: (id: string) => vo
   }, [items]);
 
   const onEvent = (e: ChatEvent) => {
+    if (speakThisTurn.current) {
+      if (e.type === 'text') voice.feed(e.delta);
+      else if (e.type === 'message_end' || e.type === 'tool_call') { voice.endReply(); voice.beginReply(); }
+      else if (e.type === 'approval_required') { voice.endReply(); voice.say('Necesito tu confirmación.'); voice.beginReply(); }
+      else if (e.type === 'error') { voice.endReply(); voice.say(e.message); }
+      else if (e.type === 'done') voice.endReply();
+    }
     setItems((prev) => {
       const next = [...prev];
       const last = next.at(-1);
@@ -160,30 +170,67 @@ export function ConversationSection({ navigate }: { navigate: (id: string) => vo
     });
   };
 
-  const send = async (e?: FormEvent) => {
-    e?.preventDefault();
-    const message = input.trim();
+  const sendText = async (raw: string, viaVoice: boolean) => {
+    const message = raw.trim();
     if (!message || busy) return;
     setInput('');
     setError(null);
     setBusy(true);
     setItems((p) => [...p, { kind: 'user', text: message }]);
+    const mode = voice.settings.replyMode;
+    speakThisTurn.current = !voice.settings.muted && (mode === 'always' || (mode === 'voice' && viaVoice));
+    if (speakThisTurn.current) voice.beginReply();
     const ctrl = new AbortController();
     abortRef.current = ctrl;
+    let ok = true;
     try {
-      await core.chat({ conversationId: current ?? undefined, message }, onEvent, ctrl.signal);
+      await core.chat({ conversationId: currentRef.current ?? undefined, message }, onEvent, ctrl.signal);
     } catch (err) {
+      ok = false;
       if (!ctrl.signal.aborted) setError(err instanceof Error ? err.message : String(err));
     } finally {
+      if (speakThisTurn.current) voice.endReply();
       setBusy(false);
       abortRef.current = null;
       void refreshMeta();
     }
+    // Manos libres: cuando JARVIS termina de hablar, vuelve a escuchar.
+    if (ok && viaVoice && voice.settings.handsFree && !voice.settings.muted) {
+      await voice.whenIdle();
+      handsFreeNext.current?.();
+    }
+  };
+  const handsFreeNext = useRef<(() => void) | null>(null);
+
+  const send = (e?: FormEvent) => {
+    e?.preventDefault();
+    void sendText(input, false);
   };
 
+  const talk = async () => {
+    if (voice.listening) return voice.stopListening();
+    const text = await voice.listen();
+    if (!text) return;
+    if (voice.settings.autoSend) await sendText(text, true);
+    else setInput((p) => (p ? `${p} ${text}` : text));
+  };
+  handsFreeNext.current = () => void talk();
+
   const stop = async () => {
+    voice.cancelSpeech();
     if (currentRef.current) await core.stopChat(currentRef.current).catch(() => undefined);
   };
+
+  useEffect(() => {
+    const onKey = (e: globalThis.KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        voice.cancelSpeech();
+        if (voice.listening) voice.stopListening();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [voice]);
 
   const decide = async (approvalId: string, d: 'approved' | 'approved_always' | 'denied') => {
     try {
@@ -240,6 +287,21 @@ export function ConversationSection({ navigate }: { navigate: (id: string) => vo
         <header className="flex flex-wrap items-center gap-3 border-b border-navy-700 px-4 py-3">
           <button type="button" className="text-muted hover:text-ink lg:hidden" onClick={() => setShowList((v) => !v)} aria-label="Conversaciones"><PanelLeft size={18} /></button>
           <Badge tone="accent">{model?.label ?? '…'}</Badge>
+          {voice.synthesisSupported && (
+            <button type="button" onClick={() => { if (!voice.settings.muted) voice.cancelSpeech(); voice.update({ muted: !voice.settings.muted }); }}
+              aria-pressed={!voice.settings.muted} title={voice.settings.muted ? 'Modo discreto: voz silenciada' : 'Respuestas habladas activas'}
+              className={`rounded-lg border p-1.5 ${voice.settings.muted ? 'border-navy-600 text-dim' : 'border-accent/50 text-accent'}`}>
+              {voice.settings.muted ? <VolumeX size={15} aria-hidden /> : <Volume2 size={15} aria-hidden />}
+              <span className="sr-only">{voice.settings.muted ? 'Activar voz' : 'Modo discreto'}</span>
+            </button>
+          )}
+          {voice.recognitionSupported && (
+            <button type="button" onClick={() => { const v = !voice.settings.handsFree; voice.update({ handsFree: v }); void core.voiceEvent(v ? 'handsfree_on' : 'handsfree_off').catch(() => undefined); }}
+              aria-pressed={voice.settings.handsFree} title="Manos libres: tras cada respuesta hablada vuelve a escuchar"
+              className={`flex items-center gap-1 rounded-lg border px-2 py-1 text-xs ${voice.settings.handsFree ? 'border-accent/50 text-accent' : 'border-navy-600 text-dim'}`}>
+              <Headphones size={14} aria-hidden /> Manos libres
+            </button>
+          )}
           {status && (
             <div className="ml-auto flex min-w-[160px] items-center gap-2 text-xs text-muted" title="Gasto estimado este mes">
               <span className="font-mono">{formatUsd(status.spentMonthUsd)} / {formatUsd(status.settings.monthlyLimitUsd)}</span>
@@ -252,7 +314,7 @@ export function ConversationSection({ navigate }: { navigate: (id: string) => vo
           {!items.length && (
             <div className="mx-auto mt-16 max-w-sm text-center">
               <p className="font-display text-sm tracking-[0.3em] text-dim uppercase">A su servicio</p>
-              <p className="mt-2 text-sm text-muted">Pregúntame lo que necesites. Ahora mismo puedo conversar, razonar y consultar la hora y el estado de tu equipo.</p>
+              <p className="mt-2 text-sm text-muted">Pregúntame lo que necesites. Puedes escribirme o pulsar el micrófono y hablarme. Ahora mismo puedo conversar, razonar y consultar la hora y el estado de tu equipo.</p>
             </div>
           )}
           {items.map((it, i) => {
@@ -275,10 +337,19 @@ export function ConversationSection({ navigate }: { navigate: (id: string) => vo
             }
           })}
           {busy && items.at(-1)?.kind === 'user' && <p className="ml-9 animate-pulse text-xs text-muted">Pensando…</p>}
+          {voice.speaking && <p className="ml-9 text-xs text-accent-soft">Hablando… (Esc para interrumpir)</p>}
           <div ref={endRef} />
         </div>
 
         {error && <div className="px-4"><ErrorNote>{error}</ErrorNote></div>}
+        {voice.error && <div className="px-4 pt-2"><ErrorNote>{voice.error}</ErrorNote></div>}
+        {voice.listening && (
+          <div className="mx-3 mt-2 flex items-center gap-2 rounded-lg border border-danger/50 bg-danger/10 px-3 py-2 text-sm" role="status">
+            <span className="pulse-dot h-2 w-2 rounded-full bg-danger" aria-hidden />
+            <span className="min-w-0 flex-1 truncate">{voice.partial || 'Escuchando… habla ahora'}</span>
+            <span className="hidden text-[11px] text-dim sm:inline">Audio procesado por {voice.processor}</span>
+          </div>
+        )}
         {status?.blocked && <div className="px-4 pt-2"><ErrorNote>Has alcanzado tu límite de gasto mensual. Puedes ampliarlo en Configuración.</ErrorNote></div>}
 
         <form onSubmit={send} className="flex items-end gap-2 border-t border-navy-700 p-3">
@@ -286,6 +357,14 @@ export function ConversationSection({ navigate }: { navigate: (id: string) => vo
           <textarea id="chat-input" rows={1} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={onKey}
             placeholder="Escribe a JARVIS…  (Intro para enviar, Mayús+Intro para salto de línea)" maxLength={20000}
             className="max-h-40 min-h-[42px] flex-1 resize-y rounded-xl border border-navy-600 bg-navy-900 px-3 py-2.5 text-sm text-ink outline-none placeholder:text-dim focus:border-accent" />
+          {voice.recognitionSupported && !busy && (
+            <button type="button" onClick={() => void talk()} disabled={status?.blocked}
+              aria-pressed={voice.listening} aria-label={voice.listening ? 'Terminar de hablar' : 'Hablar con JARVIS'}
+              title={voice.listening ? 'Terminar de hablar' : `Hablar (el audio lo procesa el ${voice.processor})`}
+              className={`flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-xl border transition-colors disabled:opacity-40 ${voice.listening ? 'border-danger bg-danger/20 text-danger' : 'border-navy-600 bg-navy-900 text-accent hover:border-accent'}`}>
+              <Mic size={18} aria-hidden />
+            </button>
+          )}
           {busy
             ? <Button tone="danger" onClick={stop} title="Detener la respuesta"><CircleStop size={16} aria-hidden /> Detener</Button>
             : <Button type="submit" tone="accent" disabled={!input.trim() || status?.blocked} title="Enviar"><Send size={16} aria-hidden /> Enviar</Button>}

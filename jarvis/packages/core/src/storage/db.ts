@@ -98,6 +98,16 @@ const MIGRATIONS: string[] = [
   );
   CREATE INDEX ai_usage_ts ON ai_usage(ts);
   `,
+  // 3 — consumo de síntesis de voz externa
+  `
+  CREATE TABLE voice_usage (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ts TEXT NOT NULL,
+    provider TEXT NOT NULL,
+    chars INTEGER NOT NULL
+  );
+  CREATE INDEX voice_usage_ts ON voice_usage(ts);
+  `,
 ];
 
 export function openDatabase(file: string): Database {

@@ -2,6 +2,17 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versionado semántico.
 
+## [0.4.0] — 2026-11-25
+### Añadido
+- Voz: micrófono al pulsar con indicador y auditoría, respuestas habladas frase a frase, interrupción, manos
+  libres, modo discreto, lectura de avisos, ajustes de voz/velocidad/tono/volumen.
+- ElevenLabs preparado a través del núcleo (desactivado por defecto) con contador de caracteres.
+- Migración 3 (`voice_usage`).
+- 15 pruebas nuevas (106 en total) y prueba de voz en navegador real.
+
+### Corregido
+- El troceado de frases podía cortar dentro de un bloque de código.
+
 ## [0.3.0] — 2026-11-25
 ### Añadido
 - Cerebro IA: capa de proveedores, adaptador Anthropic (SDK oficial, streaming, respaldo automático, caché),

@@ -8,12 +8,15 @@ import './styles/theme.css';
 import { App } from './App';
 import { ConnectionProvider } from './lib/connection';
 import { SettingsProvider } from './lib/settings';
+import { VoiceProvider } from './voice/VoiceProvider';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <SettingsProvider>
       <ConnectionProvider>
-        <App />
+        <VoiceProvider>
+          <App />
+        </VoiceProvider>
       </ConnectionProvider>
     </SettingsProvider>
   </StrictMode>,

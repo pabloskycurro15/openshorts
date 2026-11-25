@@ -10,8 +10,8 @@ Anthropic, que requiere la clave del usuario (ver TESTING.md).
 | 1 | Arquitectura, núcleo, seguridad base, API, documentación | ✅ Completada |
 | 2 | Interfaz: identidad naranja/azul oscuro, núcleo visual, navegación, 15 secciones, temas | ✅ Completada |
 | 3 | Cerebro IA: proveedores, conversación, contexto, uso de herramientas, control de presupuesto | ✅ Completada* |
-| 4 | Voz: STT, TTS, palabra de activación local, interrupción, conversación continua | ⏳ Siguiente |
-| 5 | Control de Windows (Electron + PowerShell/UI Automation) | Pendiente |
+| 4 | Voz: STT, TTS, interrupción, conversación continua (palabra de activación → Fase 5) | ✅ Completada |
+| 5 | App de escritorio Windows (Electron), control de Windows, palabra de activación local | ⏳ Siguiente |
 | 6 | Memoria: categorías, búsqueda híbrida FTS5 + vectores, administración | Pendiente |
 | 7 | Multiagente: coordinador, agentes especializados, supervisión | Pendiente |
 | 8 | Conectores: extensiones, almacén de credenciales, integraciones prioritarias | Pendiente |
@@ -54,12 +54,22 @@ Anthropic, que requiere la clave del usuario (ver TESTING.md).
 - [x] Límite de 15 pasos por respuesta; cancelación; emergencia corta respuestas en curso.
 - [ ] Primera conversación con la API real (pendiente de la clave del usuario).
 
-### Fase 4 (propuesta)
-- Reconocimiento de voz: Web Speech API (gratis) con botón de micrófono e indicador visible; arquitectura
-  intercambiable para Whisper (local o API) más adelante.
-- Síntesis de voz: voces del sistema en español de España (gratis); adaptador ElevenLabs opcional (de pago,
-  solo con aprobación) para la voz masculina, grave y cinematográfica.
-- Interrupción: hablar o pulsar detiene la respuesta en curso.
-- Conversación continua (manos libres) con detección de turnos.
-- Palabra de activación local ("Jarvis") con openWakeWord en el navegador/escritorio; sin enviar audio fuera.
-- Ajustes: voz, velocidad, tono, volumen, modo discreto.
+### Fase 4 ✅
+- [x] Reconocimiento con Web Speech API (gratis) tras la interfaz `SpeechRecognizer` (intercambiable por Whisper).
+- [x] Micrófono solo al pulsarlo; indicador rojo; se informa de qué servicio procesa el audio; auditoría de cada
+      activación, desactivación y denegación.
+- [x] Síntesis con voces del sistema (gratis) tras `SpeechSynthesizer`; voz es-ES masculina/natural por defecto,
+      tono 0,85; respuesta frase a frase durante el streaming; Markdown y código adaptados para leerse.
+- [x] ElevenLabs preparado: clave cifrada en el núcleo, voces, síntesis por el núcleo, contador de caracteres;
+      **desactivado hasta que el usuario lo active**.
+- [x] Interrupción (micrófono, Detener, Esc); manos libres; modo discreto; lectura de avisos; ajustes completos.
+- [ ] Palabra de activación local → **trasladada a la Fase 5**: en el navegador no puede funcionar en segundo plano
+      ni de forma local fiable; en la app de escritorio sí (openWakeWord, modelo «hey jarvis», 100 % local).
+
+### Fase 5 (propuesta)
+- App de escritorio Windows con Electron: núcleo integrado, token automático, clave maestra con DPAPI
+  (`safeStorage`), arranque con Windows opcional, icono en la bandeja.
+- Palabra de activación «Jarvis» local con openWakeWord (ONNX), indicador permanente y desactivable.
+- Control de Windows con permisos: abrir/cerrar aplicaciones autorizadas, ventanas, navegador, archivos en
+  carpetas autorizadas, comandos de una lista blanca, procesos y rendimiento real (CPU por contadores).
+- Todo como herramientas del `ToolRegistry` con riesgos honestos y confirmaciones.

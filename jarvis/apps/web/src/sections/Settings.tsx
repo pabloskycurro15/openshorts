@@ -1,4 +1,5 @@
-import { Link2, Mic, Palette } from 'lucide-react';
+import { Link2, Palette } from 'lucide-react';
+import { VoiceSettingsPanel } from './VoiceSettings';
 import { AiSettingsPanel } from './AiSettings';
 import { Button, Panel } from '../components/ui';
 import { ACCENTS, useSettings, type AccentId, type Appearance } from '../lib/settings';
@@ -62,9 +63,7 @@ export function SettingsSection() {
           <div className="mt-3"><Button tone="danger" onClick={disconnect}>Desvincular este navegador</Button></div>
         </Panel>
         <AiSettingsPanel />
-        <Panel title="Voz y sonidos" icon={Mic}>
-          <p className="text-sm text-muted">Voz, velocidad, tono, volumen, palabra de activación y sonidos se configurarán aquí en la Fase 4.</p>
-        </Panel>
+        <VoiceSettingsPanel />
       </div>
     </div>
   );

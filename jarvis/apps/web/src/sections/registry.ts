@@ -17,7 +17,7 @@ export interface SectionDef {
 /** Las 15 secciones de JARVIS, en el orden del documento de requisitos. */
 export const SECTIONS: SectionDef[] = [
   { id: 'inicio', label: 'Inicio', icon: Home, phase: 2, summary: 'Núcleo, estado del sistema y resumen.' },
-  { id: 'conversacion', label: 'Conversación', icon: MessageSquare, phase: 3, summary: 'Escribe a JARVIS (la voz llega en la Fase 4).' },
+  { id: 'conversacion', label: 'Conversación', icon: MessageSquare, phase: 3, summary: 'Habla o escribe a JARVIS.' },
   { id: 'tareas', label: 'Centro de tareas', icon: ListChecks, phase: 7, summary: 'Objetivos, planes y progreso.',
     planned: ['Tareas descompuestas por el agente coordinador', 'Progreso, errores y resultados en tiempo real', 'Detener o reanudar tareas'] },
   { id: 'automatizaciones', label: 'Automatizaciones', icon: Workflow, phase: 9, summary: 'Rutinas y tareas programadas.',
@@ -40,6 +40,6 @@ export const SECTIONS: SectionDef[] = [
 ];
 
 /** Última fase completada y verificada. */
-export const CURRENT_PHASE = 3;
+export const CURRENT_PHASE = 4;
 
 export const sectionById = (id: string) => SECTIONS.find((s) => s.id === id);

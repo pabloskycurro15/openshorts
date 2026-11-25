@@ -12,6 +12,7 @@ import {
 import { tokensEqual } from '../security/auth';
 import type { Jarvis } from '../app';
 import { registerAiRoutes } from './ai-routes';
+import { registerVoiceRoutes } from './voice-routes';
 
 const USER: Principal = { kind: 'user', id: 'owner' };
 
@@ -103,6 +104,7 @@ export async function buildServer(j: Jarvis, token: string): Promise<FastifyInst
   });
 
   registerAiRoutes(app, j);
+  registerVoiceRoutes(app, j);
 
   app.get('/api/events', { websocket: true }, (socket) => {
     const off = j.bus.onAny((env) => {

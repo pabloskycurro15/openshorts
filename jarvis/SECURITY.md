@@ -44,6 +44,13 @@ El logger censura campos `token`, `apiKey`, `password`, `secret` y la cabecera `
 - Límite de gasto y de pasos; el modo emergencia corta respuestas en curso y cancela confirmaciones.
 - Las instrucciones de sistema obligan a la honestidad: no afirmar acciones no realizadas ni capacidades inexistentes.
 
+### Voz y micrófono (Fase 4)
+- El micrófono solo se abre por acción del usuario (o en manos libres, que el usuario activa y queda auditado).
+- Indicador rojo en la barra superior y en el chat, con el servicio que procesa el audio.
+- Auditoría: `voice.mic_on`, `voice.mic_off`, `voice.mic_denied`, `voice.handsfree_on/off`.
+- Nada de audio continuo hacia fuera; sin palabra de activación en el navegador.
+- ElevenLabs: clave cifrada en el núcleo, desactivado por defecto, contador de caracteres enviados.
+
 ## Pendiente (con fase prevista)
 | Medida | Fase |
 |---|---|

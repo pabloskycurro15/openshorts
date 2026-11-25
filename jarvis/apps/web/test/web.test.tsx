@@ -82,6 +82,7 @@ const aiStatus = { provider: 'anthropic', configured: true, keyUpdatedAt: null, 
   models: [{ id: 'claude-opus-5-5', label: 'Claude Opus 5.5', description: '', price: { input: 4, output: 20, cacheRead: 0.2, cacheWrite: 5 } }],
   spentMonthUsd: 0, budgetRatio: 0, warn: false, blocked: false, activeConversations: [] };
 let aiConfigured = true;
+const voiceEvents: string[] = [];
 
 function mockCore(validToken: string) {
   vi.stubGlobal('WebSocket', FakeWS);
@@ -100,6 +101,7 @@ function mockCore(validToken: string) {
       ].map((l) => JSON.stringify(l)).join('\n') + '\n';
       return new Response(lines, { status: 200, headers: { 'content-type': 'application/x-ndjson' } });
     }
+    if (path === '/api/voice/event') { voiceEvents.push(JSON.parse(String(init?.body)).event); return new Response('{"ok":true}', { status: 200 }); }
     const body = path.startsWith('/api/ai/status') ? { ...aiStatus, configured: aiConfigured }
       : path.startsWith('/api/conversations') ? []
       : path.startsWith('/api/health') ? health
@@ -115,7 +117,8 @@ async function renderApp() {
   const { App } = await import('../src/App');
   const { ConnectionProvider } = await import('../src/lib/connection');
   const { SettingsProvider } = await import('../src/lib/settings');
-  return render(<SettingsProvider><ConnectionProvider><App /></ConnectionProvider></SettingsProvider>);
+  const { VoiceProvider } = await import('../src/voice/VoiceProvider');
+  return render(<SettingsProvider><ConnectionProvider><VoiceProvider><App /></VoiceProvider></ConnectionProvider></SettingsProvider>);
 }
 
 describe('App', () => {
@@ -176,6 +179,28 @@ describe('App', () => {
     expect(screen.getByRole('group', { name: 'Confirmación requerida' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Aprobar siempre' })).toBeTruthy();
     expect(screen.getByText(/0\.0061 \$ · mes 0\.01 \$ de 5\.00 \$/)).toBeTruthy();
+  });
+
+  it('Voz: hablar envía el mensaje, la respuesta se lee en voz alta y el micrófono queda auditado', async () => {
+    const { FakeRecognition, installFakeSynthesis } = await import('./voice-fakes');
+    mockCore('t');
+    vi.stubGlobal('webkitSpeechRecognition', FakeRecognition);
+    const { spoken } = installFakeSynthesis();
+    window.localStorage.setItem('jarvis.token', JSON.stringify('t'));
+    window.location.hash = '/conversacion';
+    await renderApp();
+    const mic = await screen.findByRole('button', { name: 'Hablar con JARVIS' });
+    const { fireEvent } = await import('@testing-library/react');
+    fireEvent.click(mic);
+    await waitFor(() => expect(FakeRecognition.instances.length).toBeGreaterThan(0));
+    const rec = FakeRecognition.instances.at(-1)!;
+    expect(screen.getByRole('status').textContent).toMatch(/Escuchando/);
+    act(() => rec.say([{ text: 'hola jarvis', final: true }]));
+    act(() => rec.onend!());
+    await waitFor(() => expect(screen.getByText('hola jarvis')).toBeTruthy());
+    await waitFor(() => expect(spoken.map((s) => s.text)).toContain('A su servicio.'));
+    expect(spoken.map((s) => s.text)).toContain('Necesito tu confirmación.');
+    expect(voiceEvents).toEqual(expect.arrayContaining(['mic_on', 'mic_off']));
   });
 
   it('un token guardado que ya no es válido vuelve a la pantalla de vinculación', async () => {

@@ -4,6 +4,9 @@ import type {
   ChatEvent,
   ChatMessageView,
   ConversationSummary,
+  ElevenLabsSettings,
+  ElevenLabsVoice,
+  VoiceStatus,
   ApprovalRequest,
   AuditEntry,
   GrantInfo,
@@ -98,6 +101,14 @@ export class CoreClient {
   conversation = (id: string) =>
     this.req<{ conversation: ConversationSummary; messages: ChatMessageView[]; active: boolean }>(`/api/conversations/${id}`);
   deleteConversation = (id: string) => this.req<{ deleted: boolean }>(`/api/conversations/${id}`, { method: 'DELETE' });
+  voiceEvent = (event: 'mic_on' | 'mic_off' | 'mic_denied' | 'handsfree_on' | 'handsfree_off', processor?: string) =>
+    this.req<{ ok: boolean }>('/api/voice/event', { method: 'POST', body: JSON.stringify({ event, processor }) });
+  voiceStatus = () => this.req<VoiceStatus>('/api/voice/status');
+  setElevenLabsKey = (apiKey: string) => this.req<{ configured: boolean }>('/api/voice/elevenlabs/key', { method: 'PUT', body: JSON.stringify({ apiKey }) });
+  deleteElevenLabsKey = () => this.req<{ deleted: boolean }>('/api/voice/elevenlabs/key', { method: 'DELETE' });
+  elevenLabsSettings = (patch: Partial<ElevenLabsSettings>) =>
+    this.req<ElevenLabsSettings>('/api/voice/elevenlabs/settings', { method: 'PUT', body: JSON.stringify(patch) });
+  elevenLabsVoices = () => this.req<ElevenLabsVoice[]>('/api/voice/elevenlabs/voices');
   stopChat = (id: string) => this.req<{ stopped: boolean }>(`/api/chat/${id}/stop`, { method: 'POST', body: '{}' });
 
   /** Envía un mensaje y entrega cada evento de la respuesta según llega (NDJSON). */

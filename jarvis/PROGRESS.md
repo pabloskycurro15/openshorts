@@ -31,8 +31,18 @@
 - [x] 91 pruebas; prueba en navegador: interfaz → núcleo → SDK real → API de Anthropic simulada.
 - [ ] Prueba con la API real — **pendiente de que el usuario cargue crédito y pegue su clave**.
 
+## 2026-11-25 — Fase 4
+- [x] Interfaces de voz intercambiables; Web Speech (reconocimiento y síntesis).
+- [x] Respuesta hablada en streaming; interrupción; manos libres; modo discreto; avisos hablados.
+- [x] Auditoría del micrófono; aviso del servicio que procesa el audio.
+- [x] ElevenLabs preparado y desactivado (decisión del usuario: empezar gratis).
+- [x] 106 pruebas; prueba de voz en Chromium real con micrófono y altavoz simulados.
+- [ ] Palabra de activación local → Fase 5 (escritorio).
+
 ## Decisiones tomadas por el usuario
 - Cerebro: Claude Opus 5.5 (API de Anthropic, prepago de 5 $, sin recarga automática). Límite en JARVIS: 5 $/mes.
 
+- Voz: empezar con voces gratuitas del sistema; ElevenLabs preparado para activarlo más adelante.
+
 ## Decisiones pendientes del usuario
-- Voz premium (ElevenLabs) o solo voces gratuitas del sistema (Fase 4).
+- Ninguna por ahora.

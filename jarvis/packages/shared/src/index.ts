@@ -254,3 +254,38 @@ export type ChatEvent =
   | { type: 'warning'; message: string }
   | { type: 'error'; message: string }
   | { type: 'done'; stopReason: string };
+
+// ───────────────────────── Voz (Fase 4) ─────────────────────────
+
+export const ElevenLabsSettings = z.object({
+  /** Desactivado por defecto: es un servicio de pago y solo se usa si el usuario lo activa. */
+  enabled: z.boolean(),
+  voiceId: z.string().regex(/^[A-Za-z0-9]{10,40}$/, 'Identificador de voz no válido'),
+  modelId: z.string().min(1).max(60),
+  stability: z.number().min(0).max(1),
+  similarity: z.number().min(0).max(1),
+});
+export type ElevenLabsSettings = z.infer<typeof ElevenLabsSettings>;
+
+export interface VoiceStatus {
+  elevenlabs: {
+    configured: boolean;
+    settings: ElevenLabsSettings;
+    /** Caracteres enviados este mes (ElevenLabs factura por caracteres). */
+    charsMonth: number;
+  };
+}
+
+export interface ElevenLabsVoice {
+  voiceId: string;
+  name: string;
+  labels: Record<string, string>;
+}
+
+export const VoiceEventRequest = z.object({
+  event: z.enum(['mic_on', 'mic_off', 'mic_denied', 'handsfree_on', 'handsfree_off']),
+  /** Servicio que procesa el audio (p. ej. "navegador (Google)"). */
+  processor: z.string().max(80).optional(),
+});
+
+export const TtsRequest = z.object({ text: z.string().trim().min(1).max(2500) });

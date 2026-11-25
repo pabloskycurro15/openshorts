@@ -101,13 +101,21 @@ AES-256-GCM con el nombre del secreto como dato autenticado; clave maestra en ar
 datos (`MasterKeyProvider` intercambiable: en la Fase 5, Electron `safeStorage`/DPAPI). Protege frente a
 filtraciones de la base de datos o de copias; no frente a quien controle por completo la cuenta del usuario.
 
-## ADR-011 · Voz 🔶
+## ADR-011 · Voz ✅
 - Base gratuita: Web Speech API (reconocimiento y síntesis del sistema).
 - Voz premium masculina, profunda y cinematográfica: ElevenLabs (ya usado en OpenShorts; de pago).
 - Palabra de activación **local**: openWakeWord (código abierto, ONNX) como primera opción; Porcupine
   como alternativa (requiere clave y licencia).
 - Nunca se envía audio continuo a servicios externos: solo tras la activación o con el botón.
-Se concreta en la Fase 4.
+**Implementado (Fase 4):**
+- Reconocimiento con Web Speech API. **Limitación honesta:** en Chrome/Edge/Safari el audio lo procesa el servicio
+  en la nube del navegador (Google/Microsoft/Apple), no JARVIS. Por eso: solo al pulsar, indicador visible, aviso
+  del procesador y auditoría. Whisper local queda como alternativa futura tras la misma interfaz.
+- Síntesis: voces del sistema; las voces «en línea» envían el texto al proveedor y se marcan como tal.
+- ElevenLabs a través del núcleo (la clave nunca llega al navegador); voz por defecto «Adam», modelo
+  `eleven_multilingual_v2`. Desactivado por defecto.
+- Ajustes de voz por dispositivo (localStorage): cada equipo tiene sus voces y su micrófono.
+- Palabra de activación: Fase 5 (escritorio), por no ser viable de forma local y en segundo plano en el navegador.
 
 ## ADR-012 · Detalles de la interfaz ✅
 - **React 19 + Vite 8 + Tailwind 4** (tokens de diseño en CSS con `@theme`; acento como variable de tiempo de
