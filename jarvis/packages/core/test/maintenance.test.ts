@@ -55,7 +55,7 @@ describe('Copias de seguridad: ciclo completo', () => {
     expect(b1.verifyDetail).toMatch(/Base de datos íntegra .*1 conversaciones/);
     const file = path.join(j.backups.dir(), b1.file);
     expect(fs.readFileSync(file).includes(Buffer.from('ghp_secreto_original'))).toBe(false);
-    expect(fs.statSync(file).mode & 0o777).toBe(0o600);
+    if (process.platform !== 'win32') expect(fs.statSync(file).mode & 0o777).toBe(0o600);
     await new Promise((r) => setTimeout(r, 1100));
     await j.backups.create(USER);
     await new Promise((r) => setTimeout(r, 1100));
