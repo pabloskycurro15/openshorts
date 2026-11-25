@@ -216,6 +216,15 @@ export function ConversationSection({ navigate }: { navigate: (id: string) => vo
     else setInput((p) => (p ? `${p} ${text}` : text));
   };
   handsFreeNext.current = () => void talk();
+  const wakeRef = useRef<(c: string) => void>(() => {});
+  wakeRef.current = (c: string) => { if (busy) return; if (c) void sendText(c, true); else void talk(); };
+  useEffect(() => {
+    const off = voice.onWake((c) => wakeRef.current(c));
+    const pending = voice.takePendingWake();
+    if (pending !== null) wakeRef.current(pending);
+    return off;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [voice.onWake]);
 
   const stop = async () => {
     voice.cancelSpeech();

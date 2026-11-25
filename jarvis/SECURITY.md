@@ -63,6 +63,13 @@ El logger censura campos `token`, `apiKey`, `password`, `secret` y la cabecera `
 - Ventana aislada sin Node; navegación externa bloqueada; CSP; token efímero; micrófono solo para JARVIS.
 - Clave maestra con DPAPI (Windows). Modo emergencia accesible desde la bandeja.
 
+### Voz local y palabra de activación (Fase 5B)
+- Whisper se ejecuta en el equipo; el audio no se envía a ningún servicio. Solo se descargan los pesos del modelo.
+- Con la palabra de activación el micrófono queda abierto: indicador naranja permanente, activación y detección
+  auditadas (`voice.wake_on/off`, `voice.wake_detected`), desactivable en un clic. Las frases que no empiezan por
+  «Jarvis» se descartan sin guardarse.
+- CSP: `wasm-unsafe-eval` (WebAssembly) y conexión a Hugging Face solo para descargar el modelo.
+
 ## Pendiente (con fase prevista)
 | Medida | Fase |
 |---|---|

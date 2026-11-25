@@ -15,8 +15,8 @@ Anthropic, que requiere la clave del usuario (ver TESTING.md).
 | 3 | Cerebro IA: proveedores, conversación, contexto, uso de herramientas, control de presupuesto | ✅ Completada* |
 | 4 | Voz: STT, TTS, interrupción, conversación continua (palabra de activación → Fase 5) | ✅ Completada |
 | 5A | App de escritorio Windows (Electron) y control del equipo con listas blancas | ✅ Completada* |
-| 5B | Voz 100 % local en escritorio (Whisper) y palabra de activación «Jarvis» | ⏳ Siguiente |
-| 6 | Memoria: categorías, búsqueda híbrida FTS5 + vectores, administración | Pendiente |
+| 5B | Voz 100 % local (Whisper) y palabra de activación «Jarvis» | ✅ Completada* |
+| 6 | Memoria: categorías, búsqueda híbrida FTS5 + vectores, administración | ⏳ Siguiente |
 | 7 | Multiagente: coordinador, agentes especializados, supervisión | Pendiente |
 | 8 | Conectores: extensiones, almacén de credenciales, integraciones prioritarias | Pendiente |
 | 9 | Automatizaciones: motor, programador, rutinas, historial | Pendiente |
@@ -83,8 +83,17 @@ Anthropic, que requiere la clave del usuario (ver TESTING.md).
 - [x] Migración a SQLite integrado de Node (sin módulos nativos).
 - [ ] Prueba en Windows 11 real (instalador, DPAPI, ventanas, aplicaciones) — **la hace el usuario**.
 
-### Fase 5B (propuesta)
-- Reconocimiento de voz 100 % local con Whisper (ONNX/transformers.js) en la app de escritorio y en el navegador
-  como alternativa privada a Web Speech; descarga del modelo una vez, con aviso de tamaño.
-- Palabra de activación «Jarvis» local (openWakeWord, modelo «hey jarvis») solo en escritorio, desactivable,
-  con indicador permanente mientras escucha.
+### Fase 5B ✅*
+- [x] Whisper local (transformers.js, ONNX WebAssembly, Web Worker) como motor de reconocimiento elegible
+      (navegador o local); local por defecto en escritorio; descarga del modelo con progreso.
+- [x] Detector de voz con suelo de ruido adaptativo; palabra de activación «Jarvis» (con orden en la misma frase).
+- [x] Pausa durante el habla de JARVIS; pitido de activación; enrutado de la orden desde cualquier sección.
+- [x] Indicador naranja de escucha local; auditoría de activación y detecciones.
+- [ ] Probar con micrófono real en Windows (el entorno de pruebas usa audio sintetizado en español).
+
+### Fase 6 (propuesta) — Memoria
+- Tablas de recuerdos con 8 categorías, origen, fecha, confianza y relaciones.
+- Búsqueda híbrida: FTS5 (texto) + vectores (embeddings locales con transformers.js) + filtros.
+- Herramientas `memory.*` con permisos; recuerdos sensibles requieren confirmación para guardarse.
+- Regla: los recuerdos personales solo se usan para personalizar si el usuario lo pide (configurable).
+- Sección Memoria: buscar, crear, editar, borrar, ver origen y relaciones.

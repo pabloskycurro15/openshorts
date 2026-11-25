@@ -106,7 +106,7 @@ export class CoreClient {
   // ── Control del equipo ──
   control = () => this.req<{ folders: { id: string; label: string; path: string; access: 'read' | 'readwrite' }[]; apps: { id: string; name: string; command: string; args: string[]; processName?: string }[]; commands: { id: string; name: string; description: string; command: string; args: string[]; cwdFolderId?: string; timeoutSec: number }[] }>('/api/control/config');
   setControl = (cfg: unknown) => this.req<Awaited<ReturnType<CoreClient['control']>>>('/api/control/config', { method: 'PUT', body: JSON.stringify(cfg) });
-  voiceEvent = (event: 'mic_on' | 'mic_off' | 'mic_denied' | 'handsfree_on' | 'handsfree_off', processor?: string) =>
+  voiceEvent = (event: 'mic_on' | 'mic_off' | 'mic_denied' | 'handsfree_on' | 'handsfree_off' | 'wake_on' | 'wake_off' | 'wake_detected', processor?: string) =>
     this.req<{ ok: boolean }>('/api/voice/event', { method: 'POST', body: JSON.stringify({ event, processor }) });
   voiceStatus = () => this.req<VoiceStatus>('/api/voice/status');
   setElevenLabsKey = (apiKey: string) => this.req<{ configured: boolean }>('/api/voice/elevenlabs/key', { method: 'PUT', body: JSON.stringify({ apiKey }) });

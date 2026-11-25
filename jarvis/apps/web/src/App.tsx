@@ -17,11 +17,20 @@ import { PlannedSection } from './sections/Planned';
 import { ConversationSection } from './sections/Conversation';
 import { FilesSection } from './sections/Files';
 
+import { useEffect } from 'react';
+
 export function App() {
   const { status } = useConnection();
   const { appearance } = useSettings();
   const [route, navigate] = useHashRoute('inicio');
   const section = sectionById(route) ?? SECTIONS[0]!;
+
+  // Activación por voz desde cualquier sección: llevar a Inicio, donde la barra recoge la orden.
+  useEffect(() => {
+    const on = () => { if (section.id !== 'inicio' && section.id !== 'conversacion') navigate('inicio'); };
+    window.addEventListener('jarvis:wake', on);
+    return () => window.removeEventListener('jarvis:wake', on);
+  }, [section.id, navigate]);
 
   const content = (() => {
     switch (section.id) {

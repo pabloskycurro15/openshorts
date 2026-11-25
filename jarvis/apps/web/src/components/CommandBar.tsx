@@ -1,4 +1,4 @@
-import { useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Mic, Send, ShieldQuestion, Square } from 'lucide-react';
 import type { ChatEvent } from '@jarvis/shared';
 import { core } from '../lib/api';
@@ -92,6 +92,21 @@ export function CommandBar({ onSubtitle }: { onSubtitle: (text: string, live: bo
       else setInput(t);
     }
   };
+
+  // «Jarvis, …»: ejecutar la orden; solo «Jarvis»: escuchar la orden a continuación.
+  const handleWake = useRef<(c: string) => void>(() => {});
+  handleWake.current = (command: string) => {
+    if (busy) return;
+    if (command) void send(command, true);
+    else void talk();
+  };
+  useEffect(() => {
+    const off = voice.onWake((c) => handleWake.current(c));
+    const pending = voice.takePendingWake();
+    if (pending !== null) handleWake.current(pending);
+    return off;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [voice.onWake]);
 
   const submit = (e: FormEvent) => {
     e.preventDefault();

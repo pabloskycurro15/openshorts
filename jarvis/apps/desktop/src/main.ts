@@ -132,6 +132,9 @@ function buildTray() {
   tray.on('click', showWindow);
 }
 
+// La palabra de activación debe poder escuchar al arrancar, sin esperar a un clic.
+app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
+
 if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {

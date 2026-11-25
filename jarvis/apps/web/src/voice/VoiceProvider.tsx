@@ -7,9 +7,15 @@ import { SentenceChunker, speakableText } from './text';
 import { RecognitionFailure, type SpeechSynthesizer } from './types';
 import { WebSpeechRecognizer, WebSpeechSynthesizer, pickDefaultVoice, systemVoices } from './webspeech';
 import { ElevenLabsSynthesizer } from './elevenlabs';
+import { LocalWhisperRecognizer, WakeWordListener, chime, whisper, WHISPER_SIZE_MB } from './local';
+import { desktop } from '../lib/desktop';
 
 export interface VoiceSettings {
   engine: 'system' | 'elevenlabs';
+  /** Reconocimiento: servicio del navegador (nube) o Whisper local (privado). */
+  recognition: 'browser' | 'local';
+  /** Palabra de activación «Jarvis» (solo con reconocimiento local). */
+  wakeWord: boolean;
   voiceURI: string | null;
   rate: number;
   pitch: number;
@@ -27,12 +33,25 @@ export interface VoiceSettings {
 }
 
 export const DEFAULT_VOICE: VoiceSettings = {
-  engine: 'system', voiceURI: null, rate: 1, pitch: 0.85, volume: 1, lang: 'es-ES',
+  engine: 'system',
+  recognition: 'browser',
+  wakeWord: false, voiceURI: null, rate: 1, pitch: 0.85, volume: 1, lang: 'es-ES',
   replyMode: 'voice', autoSend: true, handsFree: false, readNotifications: false, muted: false,
 };
 const KEY = 'jarvis.voice';
 
+export interface ModelInfo { state: 'idle' | 'loading' | 'ready' | 'error'; progress: number; error: string | null; sizeMb: number }
+
 interface VoiceApi {
+  model: ModelInfo;
+  loadModel: () => Promise<void>;
+  /** Escucha local de la palabra de activación en marcha. */
+  wakeActive: boolean;
+  lastHeard: string;
+  /** Suscribirse a activaciones («Jarvis, …»). Devuelve la función para anular. */
+  onWake: (cb: (command: string) => void) => () => void;
+  /** Recoge una activación que llegó sin nadie escuchando (p. ej. desde otra sección). */
+  takePendingWake: () => string | null;
   settings: VoiceSettings;
   update: (p: Partial<VoiceSettings>) => void;
   recognitionSupported: boolean;
@@ -59,14 +78,29 @@ interface VoiceApi {
 const Ctx = createContext<VoiceApi | null>(null);
 
 export function VoiceProvider({ children, recognizer: injectedRec }: { children: ReactNode; recognizer?: WebSpeechRecognizer }) {
-  const [settings, setSettings] = useState<VoiceSettings>(() => ({ ...DEFAULT_VOICE, ...readStore<Partial<VoiceSettings>>(KEY, {}) }));
+  const [settings, setSettings] = useState<VoiceSettings>(() => ({
+    ...DEFAULT_VOICE,
+    // En la app de escritorio no existe el servicio del navegador: Whisper local por defecto.
+    ...(desktop() ? { recognition: 'local' as const } : {}),
+    ...readStore<Partial<VoiceSettings>>(KEY, {}),
+  }));
+  const [model, setModel] = useState<ModelInfo>({ state: whisper.state, progress: whisper.progress, error: whisper.error, sizeMb: WHISPER_SIZE_MB });
+  const [wakeActive, setWakeActive] = useState(false);
+  const [lastHeard, setLastHeard] = useState('');
+  const wakeSubs = useRef(new Set<(c: string) => void>());
+  const pendingWake = useRef<string | null>(null);
+  const wake = useMemo(() => new WakeWordListener(), []);
   const [listening, setListening] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const [partial, setPartial] = useState('');
   const [error, setError] = useState<string | null>(null);
   const { feed: events } = useConnection();
 
-  const rec = useMemo(() => injectedRec ?? new WebSpeechRecognizer(), [injectedRec]);
+  const browserRec = useMemo(() => injectedRec ?? new WebSpeechRecognizer(), [injectedRec]);
+  const localRec = useMemo(() => new LocalWhisperRecognizer(), []);
+  const rec = settings.recognition === 'local' ? localRec : browserRec;
+
+  useEffect(() => { const off = whisper.onChange(() => setModel({ state: whisper.state, progress: whisper.progress, error: whisper.error, sizeMb: WHISPER_SIZE_MB })); return () => { off(); }; }, []);
   const system = useMemo(() => new WebSpeechSynthesizer(), []);
   const eleven = useMemo(() => new ElevenLabsSynthesizer(), []);
   const settingsRef = useRef(settings);
@@ -132,6 +166,30 @@ export function VoiceProvider({ children, recognizer: injectedRec }: { children:
     }
   }, [rec, cancelSpeech]);
 
+  // Palabra de activación: escucha local continua mientras esté activada.
+  useEffect(() => {
+    if (!(settings.wakeWord && settings.recognition === 'local' && whisper.supported)) {
+      if (wake.active) { wake.stop(); setWakeActive(false); void core.voiceEvent('wake_off').catch(() => undefined); }
+      return;
+    }
+    let cancelled = false;
+    void wake.start(settings.lang, (command) => {
+      chime();
+      void core.voiceEvent('wake_detected', 'Whisper local').catch(() => undefined);
+      if (wakeSubs.current.size) wakeSubs.current.forEach((s) => s(command));
+      else pendingWake.current = command;
+      window.dispatchEvent(new CustomEvent('jarvis:wake'));
+    }, setLastHeard).then(() => {
+      if (cancelled) { wake.stop(); return; }
+      setWakeActive(true);
+      void core.voiceEvent('wake_on', 'Whisper local').catch(() => undefined);
+    }).catch((e: Error) => { setError(`Palabra de activación: ${e.message}`); setSettings((s) => ({ ...s, wakeWord: false })); });
+    return () => { cancelled = true; wake.stop(); setWakeActive(false); };
+  }, [settings.wakeWord, settings.recognition, settings.lang, wake]);
+
+  // No despertarse con su propia voz ni mientras se escucha una orden.
+  useEffect(() => { wake.paused = listening || speaking; }, [listening, speaking, wake]);
+
   // Lectura en voz alta de avisos importantes (si el usuario lo activa).
   const seen = useRef<number>(events[0]?.id ?? 0);
   useEffect(() => {
@@ -147,6 +205,12 @@ export function VoiceProvider({ children, recognizer: injectedRec }: { children:
   }, [events, say]);
 
   const api = useMemo<VoiceApi>(() => ({
+    model,
+    loadModel: () => whisper.load(),
+    wakeActive,
+    lastHeard,
+    onWake: (cb) => { wakeSubs.current.add(cb); return () => { wakeSubs.current.delete(cb); }; },
+    takePendingWake: () => { const p = pendingWake.current; pendingWake.current = null; return p; },
     settings,
     update: (p) => setSettings((s) => ({ ...s, ...p })),
     recognitionSupported: rec.supported,
@@ -168,7 +232,7 @@ export function VoiceProvider({ children, recognizer: injectedRec }: { children:
     },
     say, cancelSpeech,
     whenIdle: () => synth().whenIdle(),
-  }), [settings, rec, system, listening, speaking, partial, error, listen, synth, say, cancelSpeech]);
+  }), [model, wakeActive, lastHeard, settings, rec, system, listening, speaking, partial, error, listen, synth, say, cancelSpeech]);
 
   return <Ctx.Provider value={api}>{children}</Ctx.Provider>;
 }

@@ -111,7 +111,9 @@ export function Shell({ route, navigate, children }: { route: string; navigate: 
           </div>
           <div className="flex items-center gap-1.5" aria-label="Indicadores de privacidad y conexión">
             <Indicator icon={internet ? Wifi : WifiOff} label={internet ? 'Internet disponible' : 'Sin Internet'} active tone={internet ? 'ok' : 'danger'} />
-            <Indicator icon={voice.listening ? Mic : MicOff} label={voice.listening ? `Micrófono ACTIVO · audio procesado por ${voice.processor}` : 'Micrófono desactivado'} active={voice.listening} tone="danger" />
+            <Indicator icon={voice.listening || voice.wakeActive ? Mic : MicOff}
+              label={voice.listening ? `Micrófono ACTIVO · audio procesado por ${voice.processor}` : voice.wakeActive ? 'Escuchando «Jarvis» en local (el audio no sale del equipo)' : 'Micrófono desactivado'}
+              active={voice.listening || voice.wakeActive} tone={voice.listening ? 'danger' : 'accent'} />
             <span className="hidden sm:contents">
               <Indicator icon={CameraOff} label="Cámara desactivada" active={false} />
               <Indicator icon={MonitorOff} label="Pantalla no se está analizando" active={false} />

@@ -283,7 +283,7 @@ export interface ElevenLabsVoice {
 }
 
 export const VoiceEventRequest = z.object({
-  event: z.enum(['mic_on', 'mic_off', 'mic_denied', 'handsfree_on', 'handsfree_off']),
+  event: z.enum(['mic_on', 'mic_off', 'mic_denied', 'handsfree_on', 'handsfree_off', 'wake_on', 'wake_off', 'wake_detected']),
   /** Servicio que procesa el audio (p. ej. "navegador (Google)"). */
   processor: z.string().max(80).optional(),
 });

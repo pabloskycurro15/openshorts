@@ -136,7 +136,8 @@ export async function buildServer(j: Jarvis, token: string): Promise<FastifyInst
         res.header('referrer-policy', 'no-referrer');
         res.header(
           'content-security-policy',
-          "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; font-src 'self' data:; connect-src 'self' ws: wss:; frame-ancestors 'none'",
+          // wasm-unsafe-eval: motor de voz local (WebAssembly). Hugging Face: solo para descargar el modelo una vez.
+          "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; font-src 'self' data:; connect-src 'self' ws: wss: https://huggingface.co https://*.huggingface.co https://*.hf.co; frame-ancestors 'none'",
         );
       },
     });

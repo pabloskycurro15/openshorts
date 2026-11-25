@@ -105,6 +105,20 @@ AES-256-GCM con el nombre del secreto como dato autenticado; clave maestra en ar
 datos (`MasterKeyProvider` intercambiable: en la Fase 5, Electron `safeStorage`/DPAPI). Protege frente a
 filtraciones de la base de datos o de copias; no frente a quien controle por completo la cuenta del usuario.
 
+## ADR-018 · Voz local: Whisper + detector de voz como palabra de activación ✅
+- **Reconocimiento local:** Whisper *base* (multilingüe, cuantizado q8, ~80 MB) con transformers.js y ONNX
+  Runtime en WebAssembly, dentro de un Web Worker. Probado con español: «¿Qué hora es?» exacto, ~0,6 s por frase
+  en CPU (Node). *tiny* descartado (transcripciones erróneas en español).
+- **Privacidad:** el audio nunca sale del equipo; solo se descarga el modelo una vez de Hugging Face (y se guarda
+  en la caché). El motor WebAssembly lo sirve el propio JARVIS (`/ort/`), sin CDN.
+- **Palabra de activación:** en lugar de un modelo dedicado (openWakeWord), un detector de voz por energía con suelo
+  de ruido adaptativo despierta a Whisper solo cuando alguien habla; si la frase empieza por «Jarvis» (o variantes
+  como «Yarvis», «Jarbis»), se activa. Ventajas: un único modelo, español nativo, orden en la misma frase
+  («Jarvis, ¿qué hora es?»). Coste: CPU solo mientras se habla. Se pausa mientras JARVIS habla o escucha una orden.
+- Escritorio: reconocimiento local por defecto (Electron no tiene el servicio en la nube del navegador) y política
+  de audio sin gesto previo para que la activación funcione al arrancar.
+- Pendiente de valorar: WebGPU para acelerar en equipos con GPU.
+
 ## ADR-015 · SQLite integrado de Node en lugar de better-sqlite3 ✅ (sustituye parte de ADR-006)
 **Problema:** better-sqlite3 es un módulo nativo: hay que compilarlo por separado para Node y para Electron, y en
 Windows suele exigir las herramientas de compilación de Visual Studio.

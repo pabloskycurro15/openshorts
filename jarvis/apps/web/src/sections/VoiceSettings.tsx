@@ -105,12 +105,39 @@ export function VoiceSettingsPanel() {
       <div className="space-y-4">
         <div className="rounded-lg border border-navy-700 bg-navy-900/50 p-3 text-xs text-muted">
           <p className="flex items-start gap-2"><ShieldCheck size={14} className="mt-0.5 shrink-0 text-accent" aria-hidden />
-            <span><strong className="text-ink">Privacidad del micrófono:</strong> solo se activa cuando pulsas el micrófono (o en manos libres, tras cada respuesta), con indicador rojo visible. El audio lo procesa el <strong className="text-ink">{v.processor}</strong>, no JARVIS. Cada activación queda en el Historial.</span></p>
-          <p className="mt-2">Palabra de activación «Jarvis» 100 % local: llegará con la aplicación de escritorio (Fase 5).</p>
-          {!v.recognitionSupported && (desktop()
-            ? <p className="mt-2 text-warn">En la app de escritorio, el reconocimiento de voz llega con la voz 100 % local (Whisper, Fase 5B). Mientras tanto, para hablarle abre JARVIS en Chrome o Edge; las respuestas habladas sí funcionan aquí.</p>
-            : <p className="mt-2 text-warn">Este navegador no admite reconocimiento de voz. Usa Chrome o Edge.</p>)}
+            <span><strong className="text-ink">Privacidad del micrófono:</strong> se activa al pulsar el micrófono (o en manos libres), con indicador visible. Ahora el audio lo procesa: <strong className="text-ink">{v.processor}</strong>. Con la palabra de activación, el micrófono queda abierto pero todo se procesa en tu equipo (indicador naranja). Cada activación queda en el Historial.</span></p>
+          {!v.recognitionSupported && <p className="mt-2 text-warn">{s.recognition === 'browser' ? 'Este navegador no ofrece reconocimiento en la nube: elige «Local (Whisper)».' : 'Este navegador no admite el reconocimiento local.'}</p>}
         </div>
+
+        <fieldset>
+          <legend className="mb-2 text-xs tracking-wider text-dim uppercase">Reconocimiento de voz</legend>
+          <div className="grid grid-cols-2 gap-2">
+            {([['local', 'Local (Whisper)', 'Privado: el audio no sale del equipo'], ['browser', 'Navegador', 'Servicio en la nube de Google/Microsoft']] as const).map(([val, label, hint]) => (
+              <button key={val} type="button" aria-pressed={s.recognition === val} title={hint}
+                disabled={val === 'browser' && !!desktop()}
+                onClick={() => v.update({ recognition: val, ...(val === 'browser' ? { wakeWord: false } : {}) })}
+                className={`rounded-lg border px-2 py-1.5 text-left text-sm disabled:opacity-40 ${s.recognition === val ? 'border-accent bg-accent/12 text-ink' : 'border-navy-600 text-muted hover:text-ink'}`}>
+                {label}<span className="block text-[11px] text-dim">{hint}</span>
+              </button>
+            ))}
+          </div>
+          {s.recognition === 'local' && (
+            <div className="mt-3 rounded-lg border border-navy-700 p-3 text-sm">
+              <div className="flex items-center justify-between gap-2">
+                <span>Modelo Whisper base <span className="text-xs text-dim">(~{v.model.sizeMb} MB, se descarga una vez de Hugging Face)</span></span>
+                {v.model.state === 'ready' ? <Badge tone="ok">Listo</Badge> : v.model.state === 'loading' ? <Badge tone="accent">{Math.round(v.model.progress * 100)} %</Badge> : v.model.state === 'error' ? <Badge tone="danger">Error</Badge> : <Badge>Sin descargar</Badge>}
+              </div>
+              {v.model.state === 'loading' && <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-navy-700"><div className="h-full bg-accent transition-[width]" style={{ width: `${Math.round(v.model.progress * 100)}%` }} /></div>}
+              {v.model.state === 'error' && <p className="mt-2 text-xs text-danger">{v.model.error}</p>}
+              {(v.model.state === 'idle' || v.model.state === 'error') && <div className="mt-2"><Button tone="accent" onClick={() => void v.loadModel().catch(() => undefined)}>Descargar y preparar</Button></div>}
+              <div className="mt-3 border-t border-navy-700 pt-2">
+                <Check label="Palabra de activación «Jarvis»" hint="Escucha continua 100 % local: un detector de voz despierta a Whisper solo cuando hablas; si la frase empieza por «Jarvis», actúa. Ejemplo: «Jarvis, ¿qué hora es?»."
+                  checked={s.wakeWord} onChange={(x) => { if (x) void v.loadModel().catch(() => undefined); v.update({ wakeWord: x }); }} />
+                {v.wakeActive && <p className="text-xs text-accent-soft">Escuchando «Jarvis»… {v.lastHeard && <span className="text-dim">Última frase oída: «{v.lastHeard}» (no se guarda)</span>}</p>}
+              </div>
+            </div>
+          )}
+        </fieldset>
 
         <fieldset>
           <legend className="mb-2 text-xs tracking-wider text-dim uppercase">Responder hablando</legend>
