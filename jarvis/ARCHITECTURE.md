@@ -58,7 +58,11 @@ jarvis/
 │       │   ├── app.ts       composición del núcleo
 │       │   └── main.ts      punto de entrada
 │       └── test/
-└── apps/                (Fase 2+) web (React/PWA), desktop (Electron), ios (Capacitor)
+└── apps/
+    ├── web/             Interfaz React (✔ Fase 2): src/components (AICore, Shell…), src/sections (15),
+    │                    src/lib (cliente API, conexión WebSocket, ajustes, router)
+    ├── desktop/         (Fase 5) Electron
+    └── ios/             (Fase 10) Capacitor
 ```
 
 ## API (v1)
@@ -76,6 +80,8 @@ Todas las rutas salvo `/api/ping` requieren `Authorization: Bearer <token>`.
 | GET | `/api/approvals/:id` | Detalle y resultado |
 | POST | `/api/approvals/:id` | `{decision: approved|denied}` |
 | GET | `/api/permissions` | Concesiones vigentes |
+| POST | `/api/permissions/revoke` | `{principal, scope?}` — revoca una o todas las de un principal |
+| POST | `/api/permissions/revoke-all` | Revoca todas las concesiones |
 | GET | `/api/audit?limit=&before=` | Auditoría paginada |
 | GET | `/api/audit/verify` | Verifica la cadena de hashes |
 | POST | `/api/emergency` | `{lockdown: bool}` — bloqueo total de operaciones con efectos |

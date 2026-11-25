@@ -59,6 +59,19 @@ describe('API HTTP', () => {
     expect((await app.inject({ url: '/api/audit/verify', headers: auth })).json().ok).toBe(true);
   });
 
+  it('revoca concesiones individuales y todas', async () => {
+    const { app, auth, j } = await setup();
+    const agent = { kind: 'agent' as const, id: 'research' };
+    j.permissions.grant({ kind: 'user', id: 'owner' }, agent, 'web.*');
+    j.permissions.grant({ kind: 'user', id: 'owner' }, agent, 'fs.read:/tmp/*');
+    expect((await app.inject({ url: '/api/permissions', headers: auth })).json()).toHaveLength(2);
+    const r1 = await app.inject({ method: 'POST', url: '/api/permissions/revoke', headers: auth, payload: { principal: agent, scope: 'web.*' } });
+    expect(r1.json()).toEqual({ removed: 1 });
+    const r2 = await app.inject({ method: 'POST', url: '/api/permissions/revoke-all', headers: auth });
+    expect(r2.json()).toEqual({ removed: 1 });
+    expect(j.permissions.listGrants()).toHaveLength(0);
+  });
+
   it('WebSocket de eventos: rechaza sin token y retransmite eventos con token', async () => {
     const { app, j } = await setup();
     await app.listen({ host: '127.0.0.1', port: 0 });

@@ -4,8 +4,8 @@ Asistente personal inteligente multimodal: núcleo local seguro, voz, memoria, a
 conectores, automatizaciones y control autorizado del ordenador, con clientes de
 escritorio (Windows 11), iOS y PWA.
 
-> **Estado actual: Fase 1 completada (núcleo y arquitectura).** Todavía no hay
-> interfaz, IA ni voz: ver [ROADMAP.md](ROADMAP.md) y [PROGRESS.md](PROGRESS.md).
+> **Estado actual: Fases 1 y 2 completadas (núcleo + interfaz).** Todavía no hay
+> IA ni voz: ver [ROADMAP.md](ROADMAP.md) y [PROGRESS.md](PROGRESS.md).
 > Este documento solo describe lo que existe y está probado.
 
 ## Qué funciona hoy
@@ -20,7 +20,13 @@ escritorio (Windows 11), iOS y PWA.
   - API REST + WebSocket de eventos, protegida por token local.
   - Herramienta real `system.info` (SO, CPU, memoria).
 - Contratos compartidos `@jarvis/shared` (zod) para todos los clientes.
-- 39 pruebas automatizadas (ver [TESTING.md](TESTING.md)).
+- Interfaz `@jarvis/web` (React 19 + Vite + Tailwind 4), naranja y azul oscuro:
+  - Núcleo visual animado (Canvas) con 8 estados, conectado en tiempo real al núcleo.
+  - Navegación con las 15 secciones. Operativas con datos reales: Inicio, Monitor, Seguridad
+    (confirmaciones, permisos, emergencia, verificación), Historial, Notificaciones, Laboratorio,
+    Centro de comandos y Configuración (apariencia). El resto indica claramente su fase.
+  - Diseño adaptable (escritorio y móvil), respeta «reducir movimiento», pausa animaciones en segundo plano.
+- 49 pruebas automatizadas (ver [TESTING.md](TESTING.md)).
 
 ## Inicio rápido
 
@@ -29,10 +35,12 @@ cd jarvis
 npm install
 cp .env.example .env        # opcional
 npm run dev                 # núcleo en http://127.0.0.1:7777
+npm run dev:web             # interfaz en http://127.0.0.1:5180 (en otra terminal)
 npm run check               # tipos + lint + pruebas
 ```
 
-El token de acceso se genera en `.data/auth-token` en el primer arranque:
+El token de acceso se genera en `.data/auth-token` en el primer arranque. La interfaz lo pide
+la primera vez (pégalo en la pantalla de vinculación). También sirve para la API:
 
 ```bash
 curl -H "Authorization: Bearer $(cat .data/auth-token)" http://127.0.0.1:7777/api/health

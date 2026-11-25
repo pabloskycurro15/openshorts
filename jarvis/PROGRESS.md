@@ -12,6 +12,17 @@
 - [x] 39 pruebas pasando; typecheck y lint limpios; prueba manual con el servidor arrancado.
 - [x] Documentación inicial.
 
+## 2026-11-25 — Fase 2
+- [x] App web React 19 + Vite 8 + Tailwind 4 en el monorepo.
+- [x] Tema naranja/azul oscuro con tokens y acento personalizable.
+- [x] Núcleo visual Canvas con 8 estados e interpolación suave; pausa y movimiento reducido.
+- [x] Conexión en tiempo real con reconexión exponencial; detección de token inválido.
+- [x] 15 secciones: 8 operativas con datos reales, 7 con su plan y fase (sin datos inventados).
+- [x] Endpoints de revocación de permisos.
+- [x] 49 pruebas; prueba en Chromium real (escritorio 1440×900 y móvil 390×844) con capturas.
+
+## Decisiones tomadas por el usuario
+- Cerebro: Claude Opus 5.5 (API de Anthropic, prepago de 5 $, sin recarga automática).
+
 ## Decisiones pendientes del usuario
-- Proveedor de IA por defecto para la Fase 3 (implica coste).
-- Voz premium (ElevenLabs) o solo voces gratuitas del sistema.
+- Voz premium (ElevenLabs) o solo voces gratuitas del sistema (Fase 4).

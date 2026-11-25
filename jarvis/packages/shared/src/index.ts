@@ -164,4 +164,18 @@ export const ResolveApprovalRequest = z.object({
 
 export const EmergencyRequest = z.object({ lockdown: z.boolean() });
 
+export const RevokeRequest = z.object({
+  principal: Principal,
+  scope: z.string().optional(),
+});
+
+export const GrantInfo = z.object({
+  id: z.string(),
+  principal: Principal,
+  scope: z.string(),
+  mode: z.enum(['allow', 'ask']),
+  grantedAt: z.string(),
+});
+export type GrantInfo = z.infer<typeof GrantInfo>;
+
 export const API_VERSION = 'v1';

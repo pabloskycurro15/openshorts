@@ -54,10 +54,12 @@ Motor de permisos por ámbitos jerárquicos, concesiones explícitas para todo p
 confirmación obligatoria en riesgo alto/crítico, auditoría encadenada por hashes y modo emergencia.
 Detalle en SECURITY.md.
 
-## ADR-009 · IA independiente del proveedor 🔶
+## ADR-009 · IA independiente del proveedor ✅
 Interfaz `AIProvider` (chat en streaming + llamadas a herramientas + healthCheck). Adaptadores previstos:
 Anthropic (Claude), Google (Gemini, ya usado en OpenShorts), OpenAI-compatible y Ollama (local, gratis).
-**El proveedor por defecto lo eliges tú en la Fase 3** (implica coste).
+**Decisión del usuario (2026-11-25):** Claude **Opus 5.5** como modelo por defecto, vía API de Anthropic
+con crédito de prepago (5 $ iniciales, sin recarga automática). Sonnet 5.5 y Haiku 5.5 seleccionables.
+JARVIS incluirá además su propio límite de gasto mensual.
 
 ## ADR-010 · Identidad visual: naranja y azul oscuro ✅ (decisión del usuario)
 Sustituye a la paleta azul/cian del prompt original. Tokens previstos:
@@ -82,3 +84,15 @@ Será configurable (sistema de temas, Fase 2).
   como alternativa (requiere clave y licencia).
 - Nunca se envía audio continuo a servicios externos: solo tras la activación o con el botón.
 Se concreta en la Fase 4.
+
+## ADR-012 · Detalles de la interfaz ✅
+- **React 19 + Vite 8 + Tailwind 4** (tokens de diseño en CSS con `@theme`; acento como variable de tiempo de
+  ejecución para la personalización).
+- **Núcleo visual en Canvas 2D**, no WebGL: suficiente para anillos, onda y ~90 partículas a 60 fps con un coste
+  mínimo; sin dependencias. Se pausa con la pestaña oculta o fuera de pantalla y respeta `prefers-reduced-motion`.
+- **Enrutado por hash** propio (`#/seccion`): sin dependencia y compatible con `file://` en Electron.
+- **Fuentes locales** (`@fontsource`: Orbitron para títulos, Inter para texto, JetBrains Mono para datos): sin
+  peticiones a terceros, por privacidad y para funcionar sin Internet.
+- **Iconos:** lucide-react (única dependencia visual).
+- **Conexión:** la web habla con el proxy de Vite, que reenvía `/api` al núcleo (sin CORS). Token del núcleo
+  guardado en el navegador; en la app de escritorio lo inyectará Electron (Fase 5).

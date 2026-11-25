@@ -5,6 +5,7 @@ import {
   EmergencyRequest,
   InvokeToolRequest,
   ResolveApprovalRequest,
+  RevokeRequest,
   type HealthResponse,
   type Principal,
 } from '@jarvis/shared';
@@ -80,6 +81,11 @@ export async function buildServer(j: Jarvis, token: string): Promise<FastifyInst
   });
 
   app.get('/api/permissions', async () => j.permissions.listGrants());
+  app.post('/api/permissions/revoke', async (req) => {
+    const { principal, scope } = RevokeRequest.parse(req.body);
+    return { removed: j.permissions.revoke(USER, principal, scope) };
+  });
+  app.post('/api/permissions/revoke-all', async () => ({ removed: j.permissions.revokeAll(USER) }));
 
   app.get('/api/audit', async (req) => {
     const q = req.query as { limit?: string; before?: string };

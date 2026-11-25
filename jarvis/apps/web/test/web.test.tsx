@@ -1,0 +1,130 @@
+import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { render, screen, waitFor, act } from '@testing-library/react';
+import { SECTIONS } from '../src/sections/registry';
+import { STATE_PARAMS } from '../src/components/AICore';
+import { STATE_LABEL } from '../src/lib/labels';
+import { formatBytes, formatDuration } from '../src/lib/api';
+import { readStore, writeStore } from '../src/lib/storage';
+
+describe('secciones', () => {
+  it('existen las 15 secciones del documento, con ids únicos', () => {
+    expect(SECTIONS).toHaveLength(15);
+    expect(new Set(SECTIONS.map((s) => s.id)).size).toBe(15);
+  });
+
+  it('toda sección aún no operativa explica qué hará y en qué fase', () => {
+    for (const s of SECTIONS.filter((x) => x.phase > 2)) {
+      expect(s.planned?.length, s.id).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe('núcleo visual', () => {
+  it('define parámetros y etiqueta para los 8 estados', () => {
+    const states = ['idle', 'listening', 'processing', 'thinking', 'speaking', 'executing', 'error', 'offline'];
+    expect(Object.keys(STATE_PARAMS).sort()).toEqual([...states].sort());
+    expect(Object.keys(STATE_LABEL).sort()).toEqual([...states].sort());
+    expect(STATE_PARAMS.error.hue).toBe(1);
+    expect(STATE_PARAMS.offline.hue).toBe(2);
+  });
+});
+
+describe('utilidades', () => {
+  it('formatea bytes y duraciones', () => {
+    expect(formatBytes(1536)).toBe('2 KB');
+    expect(formatBytes(16 * 1024 ** 3)).toBe('16.0 GB');
+    expect(formatDuration(90061)).toBe('1 d 1 h 1 min');
+    expect(formatDuration(59)).toBe('0 min');
+  });
+
+  it('el almacenamiento tolera un localStorage que falla', () => {
+    const spy = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => { throw new Error('bloqueado'); });
+    expect(readStore('x', 'def')).toBe('def');
+    spy.mockRestore();
+    const spy2 = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('lleno'); });
+    expect(() => writeStore('x', 1)).not.toThrow();
+    spy2.mockRestore();
+  });
+});
+
+// ── Integración de la App con un núcleo simulado (fetch + WebSocket falsos) ──
+
+class FakeWS {
+  static last: FakeWS | null = null;
+  onopen: (() => void) | null = null;
+  onmessage: ((m: { data: string }) => void) | null = null;
+  onclose: (() => void) | null = null;
+  constructor(public url: string) {
+    FakeWS.last = this;
+    setTimeout(() => this.onopen?.(), 0);
+  }
+  close() {}
+  emit(type: string, payload: unknown) {
+    this.onmessage?.({ data: JSON.stringify({ type, ts: new Date().toISOString(), payload }) });
+  }
+}
+
+const health = { status: 'ok', version: '0.1.0', uptimeSec: 5, lockdown: false, modules: [{ id: 'system', name: 'Sistema', version: '0.1.0', description: '', dependsOn: [], status: 'running', error: null }] };
+
+function mockCore(validToken: string) {
+  vi.stubGlobal('WebSocket', FakeWS);
+  vi.stubGlobal('fetch', vi.fn(async (url: string, init?: RequestInit) => {
+    const auth = (init?.headers as Record<string, string> | undefined)?.authorization;
+    if (auth !== `Bearer ${validToken}`) return new Response(JSON.stringify({ error: 'No autorizado' }), { status: 401 });
+    const path = String(url);
+    const body = path.startsWith('/api/health') ? health
+      : path.startsWith('/api/approvals') ? []
+      : path.startsWith('/api/tools/invoke') ? { status: 'ok', output: { platform: 'linux', release: '6', arch: 'x64', hostname: 'pc', cpu: { model: 'x', cores: 4, loadAvg: [1, 1, 1] }, memory: { totalBytes: 100, freeBytes: 50 }, uptimeSec: 60 } }
+      : [];
+    return new Response(JSON.stringify(body), { status: 200 });
+  }));
+}
+
+async function renderApp() {
+  vi.resetModules();
+  const { App } = await import('../src/App');
+  const { ConnectionProvider } = await import('../src/lib/connection');
+  const { SettingsProvider } = await import('../src/lib/settings');
+  return render(<SettingsProvider><ConnectionProvider><App /></ConnectionProvider></SettingsProvider>);
+}
+
+describe('App', () => {
+  beforeEach(() => { vi.unstubAllGlobals(); FakeWS.last = null; });
+
+  it('sin token muestra la pantalla de vinculación', async () => {
+    mockCore('buen-token');
+    await renderApp();
+    expect(screen.getByLabelText('Token de acceso')).toBeTruthy();
+  });
+
+  it('con token válido muestra el panel con las 15 secciones y reacciona a eventos', async () => {
+    mockCore('buen-token');
+    window.localStorage.setItem('jarvis.token', JSON.stringify('buen-token'));
+    await renderApp();
+    await waitFor(() => expect(screen.getAllByText('Núcleo en línea').length).toBeGreaterThan(0));
+    const nav = screen.getAllByRole('navigation', { name: 'Secciones' })[0]!;
+    expect(nav.querySelectorAll('button')).toHaveLength(15);
+
+    act(() => FakeWS.last!.emit('assistant.state', { state: 'thinking' }));
+    await waitFor(() => expect(document.querySelector('canvas[data-state="thinking"]')).toBeTruthy());
+
+    act(() => FakeWS.last!.emit('emergency.changed', { lockdown: true, by: { kind: 'user', id: 'owner' } }));
+    await waitFor(() => expect(screen.getAllByText('Modo emergencia').length).toBeGreaterThan(0));
+  });
+
+  it('las secciones futuras dicen claramente que no funcionan aún', async () => {
+    mockCore('t');
+    window.localStorage.setItem('jarvis.token', JSON.stringify('t'));
+    window.location.hash = '/memoria';
+    await renderApp();
+    await waitFor(() => expect(screen.getByText('Disponible en la Fase 6')).toBeTruthy());
+    expect(screen.getByText(/todavía no funciona/)).toBeTruthy();
+  });
+
+  it('un token guardado que ya no es válido vuelve a la pantalla de vinculación', async () => {
+    mockCore('nuevo');
+    window.localStorage.setItem('jarvis.token', JSON.stringify('viejo'));
+    await renderApp();
+    await waitFor(() => expect(screen.getByText('El token guardado ya no es válido.')).toBeTruthy());
+  });
+});
