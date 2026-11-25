@@ -33,8 +33,12 @@ Clientes Windows, iOS y PWA. El detalle y los criterios de aceptación de cada f
 - Firmar el instalador evita avisos de SmartScreen pero requiere un certificado de firma de código (de pago).
 
 ### Conectores
-- **WhatsApp:** solo existe API oficial para empresas (WhatsApp Business Platform). No se usarán métodos no
-  oficiales que violen sus condiciones.
+- **WhatsApp:** solo existe API oficial para empresas (WhatsApp Business Platform). Por decisión expresa del
+  usuario se usa la vía no oficial (dispositivo vinculado), con avisos, confirmación en cada envío y límite.
+- **Vinted:** no tiene API pública. Por petición del usuario hay un conector experimental con su cookie de
+  sesión (puede dejar de funcionar); alternativa estable: avisos por correo + Gmail.
+- **Adobe Express:** solo el editor embebido oficial (Embed SDK) con Client ID gratuito; la IA no edita diseños.
+- **YouTube:** subir desde un proyecto de Google sin auditar deja los vídeos como privados; cuota ≈ 6 subidas/día.
 - **Spotify:** el control de reproducción por API requiere cuenta Premium.
 - Gmail/Calendar/Drive/YouTube requieren crear un proyecto OAuth en Google Cloud (gratuito; ciertos ámbitos
   sensibles necesitan verificación de Google para uso no personal).
@@ -48,7 +52,9 @@ Clientes Windows, iOS y PWA. El detalle y los criterios de aceptación de cada f
 | Modelo de IA (Claude / OpenAI / Gemini) | Cerebro (repartidor automático) | Gemini: gratis con límite diario · Terra 1 $/5 $ · Haiku 0,10/0,50 · Sonnet 2/10 · Opus 4/20 (por millón de tokens) | Gemini gratis cubre lo sencillo; Ollama local en el futuro |
 | ElevenLabs | Voz premium | Desde ~5 USD/mes | Voces del sistema (Web Speech / SAPI) |
 | STT en la nube (Whisper API) | Transcripción precisa | ~0,006 USD/min | Web Speech API / Whisper local |
-| Supabase | Sincronización entre dispositivos | Plan gratuito suficiente al inicio; Pro 25 USD/mes | Sincronización directa PC↔iPhone por red local |
+| Supabase | Copia externa cifrada (opcional) | Plan gratuito (1 GB); Pro 25 USD/mes | Copias locales / disco externo |
+| Tailscale | iPhone fuera de casa con HTTPS | Gratis (uso personal) | Solo red local |
+| Spotify Premium | Controlar la reproducción | Suscripción del usuario | Buscar y gestionar listas funciona sin Premium |
 | Apple Developer | App iOS en el dispositivo / publicar | 99 USD/año | Simulador o instalación de 7 días con Apple ID gratuito |
 | Certificado de firma de código para Windows | Evitar avisos de SmartScreen | ~70-300 €/año | Instalador sin firmar (muestra aviso) |
 | Dominio | Acceso remoto a la PWA | ~10 €/año | Red local / túnel gratuito |

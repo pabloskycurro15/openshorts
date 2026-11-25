@@ -109,6 +109,11 @@
 - [ ] Con cuentas reales al final: Spotify (Client ID), YouTube (canal; auditoría de la API para publicar en
       público), Vinted (cookie; puede fallar por su protección anti-robots), Adobe (Client ID + localhost).
 
+## 2026-11-25 — Fase 12 (validación y 1.0.0)
+- [x] 242 pruebas; humo de 15 secciones sin errores; escritorio empaquetado; validación y manual.
+- [ ] Activar GitHub Actions en el fork para las pruebas en Windows y el instalador.
+- [ ] Conectar las cuentas reales (lista en VALIDATION.md).
+
 ## Decisiones tomadas por el usuario
 - Añadir Adobe Express, Spotify, YouTube (publicar vídeos que haga JARVIS, con programas instalables) y mensajes
   de Vinted.

@@ -4,8 +4,11 @@ Asistente personal inteligente multimodal: núcleo local seguro, voz, memoria, a
 conectores, automatizaciones y control autorizado del ordenador, con clientes de
 escritorio (Windows 11), iOS y PWA.
 
-> **Estado actual: Fases 1–7 completadas (núcleo, interfaz holográfica, varios cerebros con repartidor, voz local
-> con palabra de activación, control del equipo, app de escritorio, memoria y multiagente).** Conectores (Fase 8): Google (Gmail, Calendar, Drive), WhatsApp, Telegram, GitHub, Netlify y OpenShorts. Automatizaciones (Fase 9). iPhone (PWA instalable y proyecto Capacitor; ver [IPHONE.md](IPHONE.md)). Copias cifradas, vigilancia, diagnóstico (Fase 11). Siguiente: validación integral y lanzamiento (Fase 12). ver [ROADMAP.md](ROADMAP.md) y [PROGRESS.md](PROGRESS.md).
+> **Estado actual: versión 1.0.0 — las 12 fases completadas.** Núcleo seguro, interfaz holográfica, varios
+> cerebros con repartidor, voz local con «Jarvis», control del equipo, app de escritorio, memoria, multiagente,
+> conectores (Google con YouTube, Spotify, WhatsApp, Telegram, GitHub, Netlify, OpenShorts, Vinted, Adobe Express),
+> estudio de vídeo, automatizaciones, iPhone/PWA, copias cifradas y vigilancia. Qué está verificado y qué falta
+> por conectar con tus cuentas: [VALIDATION.md](VALIDATION.md). Uso: [MANUAL.md](MANUAL.md).
 > Este documento solo describe lo que existe y está probado.
 
 ## Qué funciona hoy

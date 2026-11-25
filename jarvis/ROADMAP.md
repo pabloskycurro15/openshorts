@@ -22,7 +22,7 @@ Anthropic, que requiere la clave del usuario (ver TESTING.md).
 | 9 | Automatizaciones: motor, programador, rutinas, historial | ✅ Completada |
 | 10 | iOS (Capacitor) y PWA, autenticación, sincronización | ✅ Completada* (compilar iOS: Mac) |
 | 11 | Seguridad avanzada y mantenimiento: cifrado, copias, diagnóstico, actualizaciones | ✅ Completada |
-| 12 | Validación integral, instalador Windows, compilación iOS, despliegue PWA | Pendiente |
+| 12 | Validación integral, instalador Windows, compilación iOS, despliegue PWA | ✅ Completada* (instalador: CI en Windows; iOS nativo: Mac) |
 
 ## Criterios de aceptación
 

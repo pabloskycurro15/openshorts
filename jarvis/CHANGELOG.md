@@ -2,6 +2,16 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versionado semántico.
 
+## [1.0.0] — 2026-11-25
+### Añadido
+- Fase 12: integración continua en GitHub Actions (pruebas en Linux y Windows reales e instalador NSIS),
+  validación integral documentada (`VALIDATION.md`) y manual de usuario (`MANUAL.md`).
+- Prueba de humo de las 15 secciones en Chromium (0 errores) y de la app de escritorio empaquetada.
+
+### Cambiado
+- Requisitos y costes actualizados con las decisiones del usuario (WhatsApp y Vinted no oficiales, Supabase para
+  copias, Tailscale para el iPhone).
+
 ## [0.15.0] — 2026-11-25
 ### Añadido
 - YouTube (dentro del conector de Google): canal, tus vídeos, subida reanudable (privada por defecto, siempre con

@@ -34,6 +34,6 @@ export const SECTIONS: SectionDef[] = [
 ];
 
 /** Última fase completada y verificada. */
-export const CURRENT_PHASE = 9;
+export const CURRENT_PHASE = 12;
 
 export const sectionById = (id: string) => SECTIONS.find((s) => s.id === id);

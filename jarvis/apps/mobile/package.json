@@ -1,6 +1,6 @@
 {
   "name": "@jarvis/mobile",
-  "version": "0.15.0",
+  "version": "1.0.0",
   "private": true,
   "description": "App nativa de iPhone (Capacitor) que envuelve la interfaz web de JARVIS.",
   "scripts": {
