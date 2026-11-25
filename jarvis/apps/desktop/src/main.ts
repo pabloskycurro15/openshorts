@@ -129,6 +129,13 @@ function buildTray() {
   };
   refresh();
   running?.jarvis.bus.on('emergency.changed', refresh);
+  // Avisos de automatizaciones y de notify.send también como notificación del sistema.
+  running?.jarvis.bus.on('notification', (n) => {
+    if (!Notification.isSupported()) return;
+    const note = new Notification({ title: n.title, body: n.body.slice(0, 250) });
+    note.on('click', showWindow);
+    note.show();
+  });
   tray.on('click', showWindow);
 }
 

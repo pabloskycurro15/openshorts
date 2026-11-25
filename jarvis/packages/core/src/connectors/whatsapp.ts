@@ -86,7 +86,7 @@ export function whatsappConnector(runtime: WaRuntime = baileysRuntime): Connecto
     if (sentIds.size > 500) sentIds.delete(sentIds.values().next().value!);
   }
 
-  async function onMessages(ctx: ConnectorCtx, messages: WaMsg[]) {
+  async function onMessages(ctx: ConnectorCtx, messages: WaMsg[], live: boolean) {
     for (const m of messages) {
       const jid = m.key.remoteJid;
       const text = textOf(m);
@@ -103,6 +103,8 @@ export function whatsappConnector(runtime: WaRuntime = baileysRuntime): Connecto
       chats.set(nj, chat);
       if (chats.size > 100) chats.delete(chats.keys().next().value!);
 
+      // Mensaje de otra persona: evento para las automatizaciones («al recibir un WhatsApp…»).
+      if (live && !m.key.fromMe && !isSelf) ctx.emit('message', { from: nj.split('@')[0], name: chat.name, chat: nj, text: text.slice(0, 2000), group: nj.endsWith('@g.us') });
       // Órdenes: solo tus mensajes en tu propio chat, nunca los de otras personas.
       if (isSelf && m.key.fromMe && !text.startsWith(WA_PREFIX)) {
         if (ctx.lockdown()) {
@@ -152,7 +154,7 @@ export function whatsappConnector(runtime: WaRuntime = baileysRuntime): Connecto
     });
     s.ev.on('messages.upsert', ({ messages, type }) => {
       if (type !== 'notify' && type !== 'append') return;
-      void onMessages(ctx, messages).catch((err: Error) => ctx.log('mensaje', 'error', err.message));
+      void onMessages(ctx, messages, type === 'notify').catch((err: Error) => ctx.log('mensaje', 'error', err.message));
     });
   }
 

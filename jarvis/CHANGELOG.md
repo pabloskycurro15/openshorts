@@ -2,6 +2,20 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versionado semántico.
 
+## [0.12.0] — 2026-11-25
+### Añadido
+- Automatizaciones (Fase 9): disparadores por hora (días de la semana), intervalo, una vez, WhatsApp recibido
+  (filtros por remitente y texto), correo nuevo en Gmail (sondeo cada 5 min, sin disparar por lo antiguo),
+  condición del equipo (CPU/memoria > % durante X min) y manual. Acciones con IA (instrucciones + herramientas
+  elegidas) o pasos fijos sin IA con plantillas `{{event.*}}`, `{{last}}`, `{{date}}`, `{{time}}`.
+- Identidad propia por automatización (`automation:<id>`) con los permisos que el usuario concede al activarla;
+  riesgo alto/crítico pide confirmación aunque no haya nadie (la ejecución espera y avisa).
+- Historial de ejecuciones con registro paso a paso y coste, reintentos seguros (solo si no hubo efectos),
+  límite diario, sin solapes, emergencia → omitidas/canceladas. Migración 7.
+- Herramientas `notify.send`, `automations.list` y `automations.propose` (JARVIS propone; el usuario activa).
+- Sección Automatizaciones con plantillas y editor; avisos emergentes en la web y notificaciones del sistema en
+  el escritorio. 15 pruebas nuevas (218 en total).
+
 ## [0.11.0] — 2026-11-25
 ### Añadido
 - Conector Google (Fase 8B) con OAuth 2.0 de escritorio (PKCE, «state» de un solo uso, vuelta a 127.0.0.1):

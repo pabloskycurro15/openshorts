@@ -30,8 +30,10 @@ import { googleConnector } from './connectors/google';
 import { resolveAuthorized } from './control/paths';
 import { getSetting, setSetting } from './storage/db';
 import { ConversationBusyError } from './ai/engine';
+import { AutomationManager } from './automations/manager';
+import { createAutomationTools } from './automations/tools';
 
-export const VERSION = '0.11.0';
+export const VERSION = '0.12.0';
 
 export interface Jarvis {
   version: string;
@@ -50,6 +52,7 @@ export interface Jarvis {
   memory: MemoryStore;
   tasks: TaskManager;
   connectors: ConnectorManager;
+  automations: AutomationManager;
   /** Conversar con JARVIS desde un canal externo (Telegram, WhatsApp). */
   converse(text: string, channel: string): Promise<string>;
   start(): Promise<void>;
@@ -120,24 +123,29 @@ export function createJarvis(config: JarvisConfig, opts: { dbFile?: string; extr
   }
 
   const connectors = new ConnectorManager(db, vault, audit, tools, logger, {
-    logger, dataDir: config.dataDir, converse, port: config.port,
+    logger, dataDir: config.dataDir, converse, port: config.port, bus,
     secret: (name) => vault.get(name),
     lockdown: () => permissions.isLockdown(),
     resolvePath: (p, folderId) => resolveAuthorized(control.get().folders, p, folderId).abs,
     fetch: opts.fetch ?? ((...a) => fetch(...a)),
   });
+  const automations = new AutomationManager(db, tools, permissions, audit, bus, ai, { budget: ai.budget, tools, audit, bus, markUnavailable: (c) => ai.markUnavailable(c) }, logger);
+  for (const t of createAutomationTools(automations, bus)) tools.register(t);
+  bus.on('emergency.changed', ({ lockdown }) => { if (lockdown) automations.cancelAll(); });
   for (const c of opts.connectors ?? [googleConnector(), whatsappConnector(), telegramConnector(), githubConnector(), netlifyConnector(), openshortsConnector()]) connectors.register(c);
 
   const core = { kind: 'core', id: 'kernel' } as const;
   return {
-    version: VERSION, config, logger, bus, db, audit, permissions, tools, modules, vault, ai, voice, control, memory, tasks, connectors, converse,
+    version: VERSION, config, logger, bus, db, audit, permissions, tools, modules, vault, ai, voice, control, memory, tasks, connectors, automations, converse,
     async start() {
       audit.append({ principal: core, action: 'core.start', outcome: 'success', details: { version: VERSION } });
       await modules.startAll({ config, logger, bus, db, tools, permissions, audit });
       await connectors.startEnabled();
+      automations.start();
       bus.emit('assistant.state', { state: 'idle' });
     },
     async stop() {
+      automations.stop();
       await connectors.stopAll();
       await modules.stopAll();
       audit.append({ principal: core, action: 'core.stop', outcome: 'success' });

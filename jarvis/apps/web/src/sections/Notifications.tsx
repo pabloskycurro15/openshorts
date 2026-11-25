@@ -12,6 +12,9 @@ function describe(type: string, p: Record<string, unknown>): string {
     case 'module.status': return `Módulo ${String(p.id)}: ${String(p.status)}${p.error ? ` (${String(p.error)})` : ''}`;
     case 'emergency.changed': return p.lockdown ? 'Modo emergencia ACTIVADO' : 'Modo emergencia desactivado';
     case 'assistant.state': return `Estado: ${String(p.state)}`;
+    case 'notification': return `${String(p.title)}${p.body ? ` — ${String(p.body)}` : ''}`;
+    case 'automation.run': return `«${String(p.name)}»: ${({ running: 'en marcha', waiting_approval: 'espera tu confirmación', ok: 'correcta', error: 'error', denied: 'denegada', skipped: 'omitida', cancelled: 'cancelada' } as Record<string, string>)[String(p.status)] ?? String(p.status)}`;
+    case 'connector.event': return `${String(p.connector)}: ${String(p.event)}`;
     case 'audit.appended': return `${String(p.action)} ${p.target ? `· ${String(p.target)}` : ''}`;
     default: return type;
   }
@@ -24,13 +27,13 @@ export function NotificationsSection() {
   return (
     <Panel title="Eventos en directo" icon={Bell} className="mx-auto max-w-4xl"
       actions={<label className="flex items-center gap-2 text-xs text-muted"><input type="checkbox" checked={showAudit} onChange={(e) => setShowAudit(e.target.checked)} className="accent-[var(--accent)]" /> Incluir auditoría</label>}>
-      <p className="mb-3 text-xs text-dim">Eventos recibidos desde que abriste la interfaz. La lectura en voz alta de notificaciones autorizadas llegará con la Fase 4.</p>
+      <p className="mb-3 text-xs text-dim">Eventos recibidos desde que abriste la interfaz (avisos de automatizaciones, confirmaciones, conectores…).</p>
       {items.length ? (
         <ul className="space-y-2">
           {items.map((f) => (
             <li key={f.id} className="flex items-start justify-between gap-3 rounded-lg border border-navy-700 bg-navy-900/50 p-3">
               <div className="min-w-0">
-                <Badge tone={f.type.startsWith('approval') || f.type === 'emergency.changed' ? 'accent' : 'muted'}>{EVENT_LABEL[f.type] ?? f.type}</Badge>
+                <Badge tone={f.type.startsWith('approval') || f.type === 'emergency.changed' || f.type === 'notification' ? 'accent' : 'muted'}>{EVENT_LABEL[f.type] ?? f.type}</Badge>
                 <p className="mt-1.5 truncate text-sm">{describe(f.type, (f.payload ?? {}) as Record<string, unknown>)}</p>
               </div>
               <span className="shrink-0 text-xs text-dim">{timeAgo(f.ts)}</span>

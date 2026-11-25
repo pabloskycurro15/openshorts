@@ -20,6 +20,8 @@ import { MemorySection } from './sections/Memory';
 import { TasksSection } from './sections/Tasks';
 import { AgentsSection } from './sections/Agents';
 import { ConnectorsSection } from './sections/Connectors';
+import { AutomationsSection } from './sections/Automations';
+import { Toasts } from './components/Toasts';
 
 import { useEffect } from 'react';
 
@@ -51,6 +53,7 @@ export function App() {
       case 'tareas': return <TasksSection />;
       case 'agentes': return <AgentsSection />;
       case 'conectores': return <ConnectorsSection />;
+      case 'automatizaciones': return <AutomationsSection />;
       case 'conversacion': return <ConversationSection navigate={navigate} />;
       default: return <PlannedSection section={section} />;
     }
@@ -59,6 +62,7 @@ export function App() {
   return (
     <div className="jarvis-bg holo-scanlines relative h-full" data-grid={appearance.grid}>
       <Starfield accent={ACCENTS[appearance.accent].hex} motion={appearance.motion} />
+      <Toasts />
       <div className="relative z-10 h-full">
         {status === 'no-token' || status === 'unauthorized' ? (
           <ConnectScreen />

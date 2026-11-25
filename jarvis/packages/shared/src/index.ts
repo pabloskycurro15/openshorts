@@ -133,6 +133,9 @@ export interface JarvisEvents {
   'audit.appended': AuditEntry;
   'emergency.changed': { lockdown: boolean; by: Principal };
   'task.updated': { taskId: string; status: string; subtaskId?: string; subtaskStatus?: string };
+  'connector.event': { connector: string; event: string; data: Record<string, unknown> };
+  'automation.run': { automationId: string; runId: string; status: AutomationRunStatus; name: string };
+  'notification': { title: string; body: string; source: string };
 }
 export type JarvisEventName = keyof JarvisEvents;
 
@@ -448,4 +451,74 @@ export interface ConnectorInfo {
   operations: { name: string; description: string; risk: RiskLevel }[];
   stats: { calls: number; errors: number; lastUsed: string | null };
   recent: { ts: string; operation: string; outcome: 'ok' | 'error' | 'info'; detail: string }[];
+}
+
+// ───────────────────────── Automatizaciones (Fase 9) ─────────────────────────
+
+const HHMM = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Hora HH:MM');
+export const AutomationTrigger = z.discriminatedUnion('type', [
+  /** Cada día (o ciertos días: 1 = lunes … 7 = domingo) a una hora local. */
+  z.object({ type: z.literal('daily'), time: HHMM, days: z.array(z.number().int().min(1).max(7)).min(1).max(7).default([1, 2, 3, 4, 5, 6, 7]) }),
+  z.object({ type: z.literal('interval'), minutes: z.number().int().min(5).max(10080) }),
+  /** Una sola vez, fecha y hora local «AAAA-MM-DDTHH:MM». */
+  z.object({ type: z.literal('once'), at: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/, 'Fecha AAAA-MM-DDTHH:MM') }),
+  /** Al recibir un WhatsApp (opcionalmente de alguien o con cierto texto). */
+  z.object({ type: z.literal('whatsapp'), from: z.string().max(120).optional(), contains: z.string().max(200).optional() }),
+  /** Al llegar un correo que cumpla una búsqueda de Gmail (se comprueba cada 5 min). */
+  z.object({ type: z.literal('gmail'), query: z.string().min(1).max(300) }),
+  /** Condición del equipo: CPU o memoria por encima de un % durante X minutos. */
+  z.object({ type: z.literal('condition'), metric: z.enum(['cpu', 'memory']), above: z.number().min(1).max(100), forMinutes: z.number().int().min(1).max(120) }),
+  z.object({ type: z.literal('manual') }),
+]);
+export type AutomationTrigger = z.infer<typeof AutomationTrigger>;
+
+export const AutomationStep = z.object({ tool: z.string().min(3).max(80), args: z.record(z.string(), z.unknown()).default({}) });
+export const AutomationAction = z.discriminatedUnion('mode', [
+  /** JARVIS (IA) sigue unas instrucciones usando solo las herramientas elegidas. */
+  z.object({ mode: z.literal('ai'), instructions: z.string().min(5).max(4000), tools: z.array(z.string().min(3).max(80)).max(40).default([]) }),
+  /** Secuencia fija de herramientas, sin IA (sin coste). Admite {{event.campo}}, {{last}}, {{date}}, {{time}}. */
+  z.object({ mode: z.literal('steps'), steps: z.array(AutomationStep).min(1).max(10) }),
+]);
+export type AutomationAction = z.infer<typeof AutomationAction>;
+
+export const AutomationInput = z.object({
+  name: z.string().trim().min(1).max(80),
+  description: z.string().max(500).default(''),
+  trigger: AutomationTrigger,
+  action: AutomationAction,
+  /** Reintentos ante fallo, solo si aún no se hizo nada con efectos. */
+  retries: z.number().int().min(0).max(3).default(1),
+  maxRunsPerDay: z.number().int().min(1).max(200).default(24),
+});
+export type AutomationInput = z.infer<typeof AutomationInput>;
+
+export type AutomationRunStatus = 'running' | 'waiting_approval' | 'ok' | 'error' | 'denied' | 'skipped' | 'cancelled';
+
+export interface AutomationRunView {
+  id: string;
+  automationId: string;
+  attempt: number;
+  trigger: string;
+  event: Record<string, unknown> | null;
+  status: AutomationRunStatus;
+  startedAt: string;
+  finishedAt: string | null;
+  log: { ts: string; level: 'info' | 'tool' | 'warn' | 'error'; text: string }[];
+  result: string | null;
+  error: string | null;
+  costUsd: number;
+}
+
+export interface AutomationView extends AutomationInput {
+  id: string;
+  enabled: boolean;
+  /** Propuesta por JARVIS: el usuario debe revisarla y activarla. */
+  proposed: boolean;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  grants: string[];
+  nextRunAt: string | null;
+  runsToday: number;
+  lastRun: AutomationRunView | null;
 }

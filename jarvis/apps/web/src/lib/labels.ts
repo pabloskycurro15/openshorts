@@ -21,6 +21,10 @@ export const EVENT_LABEL: Record<string, string> = {
   'tool.invoked': 'Herramienta ejecutada',
   'audit.appended': 'Registro de auditoría',
   'emergency.changed': 'Modo emergencia',
+  'task.updated': 'Tarea de agentes',
+  'connector.event': 'Conector',
+  'automation.run': 'Automatización',
+  'notification': 'Aviso',
 };
 
 export const PRINCIPAL_LABEL: Record<string, string> = {

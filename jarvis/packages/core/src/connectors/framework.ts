@@ -5,6 +5,7 @@ import type { SecretVault } from '../security/vault';
 import type { AuditLog } from '../security/audit';
 import type { Logger } from '../kernel/logger';
 import type { ToolDefinition, ToolRegistry } from '../tools/registry';
+import type { EventBus } from '../kernel/events';
 
 export interface FieldDef { key: string; label: string; secret: boolean; required: boolean; placeholder?: string; help?: string; default?: string }
 
@@ -26,6 +27,8 @@ export interface ConnectorCtx {
   /** Conversar con JARVIS desde un canal externo (Telegram, WhatsApp). Devuelve la respuesta. */
   converse(text: string, channel: string): Promise<string>;
   lockdown(): boolean;
+  /** Publica un evento del conector (p. ej. WhatsApp recibido) para las automatizaciones. */
+  emit(event: string, data: Record<string, unknown>): void;
   /** Resolver una ruta dentro de las carpetas autorizadas. */
   resolvePath(path: string, folderId?: string): string;
   fetch: typeof fetch;
@@ -73,7 +76,7 @@ export class ConnectorManager {
     private audit: AuditLog,
     private tools: ToolRegistry,
     private logger: Logger,
-    private base: Omit<ConnectorCtx, 'id' | 'get' | 'set' | 'log' | 'secret' | 'getSecret' | 'setSecret' | 'baseUrl'> & { secret(name: string): string | null; port: number },
+    private base: Omit<ConnectorCtx, 'id' | 'get' | 'set' | 'log' | 'secret' | 'getSecret' | 'setSecret' | 'baseUrl' | 'emit'> & { secret(name: string): string | null; port: number; bus: EventBus },
   ) {
     this.url = `http://127.0.0.1:${base.port}`;
   }
@@ -120,6 +123,7 @@ export class ConnectorManager {
       setSecret: (key, value) => { if (value === null) this.vault.delete(`connector.${def.id}.${key}`); else this.vault.set(`connector.${def.id}.${key}`, value); },
       baseUrl: () => this.url,
       log: (op, outcome, detail) => this.log(def.id, op, outcome, detail),
+      emit: (event, data) => this.base.bus.emit('connector.event', { connector: def.id, event, data }),
     };
   }
 

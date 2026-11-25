@@ -37,8 +37,9 @@ describe('API HTTP', () => {
   it('lista herramientas con su JSON Schema y las invoca', async () => {
     const { app, auth } = await setup();
     const tools = (await app.inject({ url: '/api/tools', headers: auth })).json();
-    expect(tools[0]).toMatchObject({ name: 'system.info', risk: 'low', sideEffects: false });
-    expect(tools[0].parameters.type).toBe('object');
+    const info = tools.find((t: { name: string }) => t.name === 'system.info');
+    expect(info).toMatchObject({ name: 'system.info', risk: 'low', sideEffects: false });
+    expect(info.parameters.type).toBe('object');
     const r = await app.inject({ method: 'POST', url: '/api/tools/invoke', headers: auth, payload: { tool: 'system.info' } });
     expect(r.json().status).toBe('ok');
   });

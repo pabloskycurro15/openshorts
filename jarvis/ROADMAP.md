@@ -19,7 +19,7 @@ Anthropic, que requiere la clave del usuario (ver TESTING.md).
 | 6 | Memoria: categorías, búsqueda híbrida FTS5 + vectores, administración | ✅ Completada |
 | 7 | Multiagente: coordinador, agentes especializados, supervisión | ✅ Completada |
 | 8 | Conectores: extensiones, almacén de credenciales, integraciones prioritarias | ✅ Completada* (Google, WhatsApp, Telegram, GitHub, Netlify, OpenShorts) |
-| 9 | Automatizaciones: motor, programador, rutinas, historial | Pendiente |
+| 9 | Automatizaciones: motor, programador, rutinas, historial | ✅ Completada |
 | 10 | iOS (Capacitor) y PWA, autenticación, sincronización | Pendiente |
 | 11 | Seguridad avanzada y mantenimiento: cifrado, copias, diagnóstico, actualizaciones | Pendiente |
 | 12 | Validación integral, instalador Windows, compilación iOS, despliegue PWA | Pendiente |

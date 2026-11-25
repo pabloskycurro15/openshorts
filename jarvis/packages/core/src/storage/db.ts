@@ -184,6 +184,41 @@ const MIGRATIONS: string[] = [
   );
   CREATE INDEX connector_log_c ON connector_log(connector, id);
   `,
+  // 7 — automatizaciones y su historial
+  `
+  CREATE TABLE automations (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT NOT NULL DEFAULT '',
+    trigger TEXT NOT NULL,
+    action TEXT NOT NULL,
+    enabled INTEGER NOT NULL DEFAULT 0,
+    proposed INTEGER NOT NULL DEFAULT 0,
+    created_by TEXT NOT NULL,
+    retries INTEGER NOT NULL DEFAULT 1,
+    max_runs_per_day INTEGER NOT NULL DEFAULT 24,
+    grants TEXT NOT NULL DEFAULT '[]',
+    state TEXT NOT NULL DEFAULT '{}',
+    next_run_at TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+  CREATE TABLE automation_runs (
+    id TEXT PRIMARY KEY,
+    automation_id TEXT NOT NULL,
+    attempt INTEGER NOT NULL DEFAULT 1,
+    trigger_label TEXT NOT NULL,
+    event TEXT,
+    status TEXT NOT NULL,
+    started_at TEXT NOT NULL,
+    finished_at TEXT,
+    log TEXT NOT NULL DEFAULT '[]',
+    result TEXT,
+    error TEXT,
+    cost_usd REAL NOT NULL DEFAULT 0
+  );
+  CREATE INDEX automation_runs_a ON automation_runs(automation_id, started_at);
+  `,
 ];
 
 export function openDatabase(file: string): Database {

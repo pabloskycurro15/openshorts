@@ -238,3 +238,12 @@ Electron. En Node 22 muestra un aviso «experimental» (silenciado); en Node 24 
   sube JARVIS) además de lectura.
 - Mientras la app esté en modo prueba Google pide reautorizar cada 7 días; publicarla exigiría verificación de
   Google (ámbitos restringidos de Gmail), innecesaria para uso personal.
+
+## ADR-024 · Automatizaciones con identidad y permisos propios ✅
+- Programador en el propio núcleo (comprobación cada 30 s, hora local); lo que no se ejecutó con JARVIS apagado
+  no se recupera en bloque (se recalcula la siguiente).
+- Dos modos: «pasos» (sin IA, deterministas y gratis) e «IA» (instrucciones + lista cerrada de herramientas). Se
+  recomienda «pasos» siempre que no haga falta razonar.
+- Cada automatización es un principal `automation:<id>`: el motor de permisos ya existente decide; activar = el
+  usuario concede los ámbitos mostrados. Sin código especial de seguridad aparte.
+- Eventos de conectores por el bus (`connector.event`); Gmail por sondeo (sin push, que exigiría Pub/Sub de pago).

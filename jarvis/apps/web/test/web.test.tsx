@@ -115,6 +115,7 @@ function mockCore(validToken: string) {
       : path.startsWith('/api/health') ? health
       : path.startsWith('/api/approvals') ? []
       : path.startsWith('/api/connectors') ? connectors
+      : path.startsWith('/api/automations/scopes') ? { scopes: ['notify.send'] }
       : path.startsWith('/api/tools/invoke') ? { status: 'ok', output: { platform: 'linux', release: '6', arch: 'x64', hostname: 'pc', cpu: { model: 'x', cores: 4, loadAvg: [1, 1, 1] }, memory: { totalBytes: 100, freeBytes: 50 }, uptimeSec: 60 } }
       : [];
     return new Response(JSON.stringify(body), { status: 200 });
@@ -155,12 +156,23 @@ describe('App', () => {
   });
 
   it('las secciones futuras dicen claramente que no funcionan aún', async () => {
+    const { PlannedSection } = await import('../src/sections/Planned');
+    render(<PlannedSection section={{ id: 'x', label: 'Futura', icon: SECTIONS[0]!.icon, phase: 99, summary: 's', planned: ['Algo'] }} />);
+    expect(screen.getByText('Disponible en la Fase 99')).toBeTruthy();
+    expect(screen.getByText(/todavía no funciona/)).toBeTruthy();
+  });
+
+  it('Automatizaciones: plantillas y editor con permisos previstos', async () => {
     mockCore('t');
     window.localStorage.setItem('jarvis.token', JSON.stringify('t'));
     window.location.hash = '/automatizaciones';
     await renderApp();
-    await waitFor(() => expect(screen.getByText('Disponible en la Fase 9')).toBeTruthy());
-    expect(screen.getByText(/todavía no funciona/)).toBeTruthy();
+    await waitFor(() => expect(screen.getByText('Resumen matinal')).toBeTruthy());
+    expect(screen.getByText(/Todavía no tienes automatizaciones/)).toBeTruthy();
+    fireEvent.click(screen.getByText('Alerta del equipo'));
+    await waitFor(() => expect(screen.getByText('Guardar y activar')).toBeTruthy());
+    expect((screen.getByLabelText('Métrica') as HTMLSelectElement).value).toBe('cpu');
+    await waitFor(() => expect(screen.getByText('notify.send')).toBeTruthy());
   });
 
   it('Conectores: los no oficiales exigen aceptar el riesgo; WhatsApp muestra el QR', async () => {

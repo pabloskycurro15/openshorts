@@ -108,6 +108,16 @@ El logger censura campos `token`, `apiKey`, `password`, `secret` y la cabecera `
   memoria; «Desconectar» lo revoca en Google. Enviar correo = crítico (siempre confirma, 20/h); por defecto JARVIS
   prepara borradores.
 
+### Automatizaciones (Fase 9)
+- Solo el usuario crea, edita, activa, ejecuta y borra; JARVIS y los agentes solo proponen (quedan desactivadas).
+- Identidad `automation:<id>`; al activar, el usuario ve y concede exactamente los permisos de las herramientas
+  elegidas (y los del disparador). Editar retira los permisos; borrar los revoca.
+- Riesgo alto o crítico: la ejecución se detiene, avisa y espera la confirmación (caduca a los 10 min).
+- Una automatización no puede crear automatizaciones ni encargar tareas a agentes (sin escalada encadenada).
+- Con IA: intervalo mínimo 30 min y límite diario de ejecuciones (coste acotado; además del presupuesto mensual).
+- Reintentos solo si la ejecución fallida no llegó a hacer nada con efectos.
+- Emergencia: cancela las ejecuciones en curso y omite las nuevas.
+
 ## Pendiente (con fase prevista)
 | Medida | Fase |
 |---|---|

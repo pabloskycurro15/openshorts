@@ -79,7 +79,15 @@
       y la página de vuelta rechaza un «state» falso.
 - [ ] Autorización real con la cuenta del usuario: requiere que cree su cliente OAuth (gratis) en Google Cloud.
 
+## 2026-11-25 — Fase 9 (automatizaciones)
+- [x] Motor, programador, disparadores, acciones IA/pasos, permisos por automatización, historial, reintentos.
+- [x] Verificado en Chromium con el núcleo real: plantilla → editor → permisos previstos → guardar y activar →
+      ejecutar → aviso emergente e historial paso a paso.
+- [ ] Disparadores de WhatsApp y Gmail con cuentas reales: cuando se vinculen los conectores (al final, como
+      acordó el usuario).
+
 ## Decisiones tomadas por el usuario
+- Los conectores (WhatsApp, Telegram, Google…) se vinculan con las cuentas reales al terminar todas las fases.
 - WhatsApp con su número personal mediante conexión no oficial, aceptando el riesgo de bloqueo («da igual las
   consecuencias»). Medidas igualmente: confirmación en cada envío, 15/hora, sin envíos masivos. El número no se
   guarda en el código ni en el repositorio: se introduce en la app.

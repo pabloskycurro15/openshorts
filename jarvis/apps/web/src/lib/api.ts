@@ -7,6 +7,8 @@ import type {
   ElevenLabsSettings,
   AgentInfo,
   ConnectorInfo,
+  AutomationView,
+  AutomationRunView,
   TaskView,
   Memory,
   MemoryHit,
@@ -131,6 +133,16 @@ export class CoreClient {
   testConnector = (id: string) => this.req<{ ok: boolean; detail: string }>(`/api/connectors/${id}/test`, { method: 'POST', body: '{}' });
   deleteConnectorCredentials = (id: string) => this.req<{ ok: boolean }>(`/api/connectors/${id}/credentials`, { method: 'DELETE' });
   connectorAction = (id: string, action: string, body: Record<string, unknown> = {}) => this.req<Record<string, unknown>>(`/api/connectors/${id}/actions/${action}`, { method: 'POST', body: JSON.stringify(body) });
+
+  // ── Automatizaciones ──
+  automations = () => this.req<AutomationView[]>('/api/automations');
+  automationRuns = (id: string) => this.req<AutomationRunView[]>(`/api/automations/${id}/runs`);
+  automationScopes = (input: unknown) => this.req<{ scopes: string[] }>('/api/automations/scopes', { method: 'POST', body: JSON.stringify(input) });
+  createAutomation = (input: unknown, enable = false) => this.req<AutomationView>('/api/automations', { method: 'POST', body: JSON.stringify({ ...(input as object), enable }) });
+  updateAutomation = (id: string, input: unknown) => this.req<AutomationView>(`/api/automations/${id}`, { method: 'PUT', body: JSON.stringify(input) });
+  setAutomationEnabled = (id: string, enabled: boolean) => this.req<AutomationView>(`/api/automations/${id}/enabled`, { method: 'POST', body: JSON.stringify({ enabled }) });
+  runAutomation = (id: string) => this.req<AutomationRunView | { started: true }>(`/api/automations/${id}/run`, { method: 'POST', body: '{}' });
+  deleteAutomation = (id: string) => this.req<{ deleted: boolean }>(`/api/automations/${id}`, { method: 'DELETE' });
 
   // ── Memoria ──
   memories = (o: { q?: string; category?: string; status?: string } = {}) => {
