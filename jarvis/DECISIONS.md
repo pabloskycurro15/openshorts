@@ -105,6 +105,21 @@ AES-256-GCM con el nombre del secreto como dato autenticado; clave maestra en ar
 datos (`MasterKeyProvider` intercambiable: en la Fase 5, Electron `safeStorage`/DPAPI). Protege frente a
 filtraciones de la base de datos o de copias; no frente a quien controle por completo la cuenta del usuario.
 
+## ADR-020 · Memoria híbrida local ✅
+- **Almacenamiento:** SQLite (misma base de datos), tabla `memories` + `memory_links`; índices FTS5
+  (`unicode61 remove_diacritics 2`) y de trigramas (texto normalizado sin tildes) para fragmentos y errores.
+- **Significado:** `Xenova/paraphrase-multilingual-MiniLM-L12-v2` (384 dimensiones, q8) con transformers.js y ONNX
+  Runtime nativo en el núcleo; vectores guardados como BLOB; búsqueda por coseno (suficiente para miles de
+  recuerdos). Elegido frente a `multilingual-e5-small` por separar mejor lo relevante (prueba en español).
+  Opcional y desactivado por defecto (descarga de ~120 MB que decide el usuario).
+- **Fusión:** RRF de las tres listas, ajustada por confianza y estado; corte relativo (≥ 60 % del mejor) para
+  evitar ruido semántico.
+- **Reglas:** confirmado solo si el usuario lo pide en su mensaje (lo comprueba el núcleo, no el modelo);
+  sugerencias para lo demás; sensible y personal requieren permiso cada vez («aprobar siempre» no lo cubre);
+  auditoría con metadatos, nunca contenido.
+- **Escritorio:** transformers.js y onnxruntime-node fuera del paquete y desempaquetados del asar; excluidos
+  caché, librerías CUDA/TensorRT y binarios de otros sistemas (app de 1,5 GB → 274 MB sin comprimir).
+
 ## ADR-019 · Varios proveedores y repartidor automático ✅ (decisión del usuario: «repártelo como veas mejor»)
 - **Proveedores:** Anthropic (Claude), OpenAI (GPT-6.1 Terra, API Responses) y Google (Gemini, nivel gratuito de
   AI Studio, API generateContent). El plan gratuito de ChatGPT no tiene API (automatizar la web incumple sus

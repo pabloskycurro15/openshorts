@@ -24,6 +24,9 @@ const ACTION = /\b(archivo|archivos|carpeta|fichero|documento|abre|abrir|cierra|
 const SIMPLE = /^(hola|buenas|buenos dias|buenas (tardes|noches)|gracias|vale|ok|adios|hasta luego|que tal|como estas)\b|\b(que hora|que dia|fecha|chiste|traduce|resume (esto|en una frase)|define|que significa|sinonimo|cuanto es \d)/;
 const SENSITIVE = /\b(contrasena|password|clave|pin|dni|nie|pasaporte|tarjeta|iban|cuenta bancaria|banco|nomina|salud|medico|diagnostico|enfermedad|medicacion|terapia|abogado|denuncia|direccion de casa|telefono personal|secreto)\b/;
 
+/** ¿El texto contiene datos sensibles? (contraseñas, banco, salud, identidad…) */
+export const isSensitive = (text: string) => SENSITIVE.test(norm(text));
+
 export function classify(message: string): Omit<RouteDecision, 'chain'> {
   const m = norm(message);
   const sensitive = SENSITIVE.test(m);

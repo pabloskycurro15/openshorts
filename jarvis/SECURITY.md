@@ -76,6 +76,12 @@ El logger censura campos `token`, `apiKey`, `password`, `secret` y la cabecera `
   con datos sensibles (contraseñas, banco, salud, documentos de identidad…) nunca se le envían.
 - OpenAI en modo sin estado (`store: false`): no se guardan respuestas en sus servidores.
 
+### Memoria (Fase 6)
+- Todo en local (SQLite y modelo de significado); los textos no salen del equipo salvo cuando el modelo de IA los
+  recibe al buscar (y lo personal solo con permiso explícito cada vez).
+- El usuario ve, edita y borra todo lo que JARVIS recuerda; las deducciones quedan como sugerencias.
+- Detección de datos sensibles al guardar; auditoría sin contenido.
+
 ## Pendiente (con fase prevista)
 | Medida | Fase |
 |---|---|

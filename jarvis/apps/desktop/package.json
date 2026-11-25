@@ -1,6 +1,6 @@
 {
   "name": "@jarvis/desktop",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "private": true,
   "description": "JARVIS — aplicación de escritorio",
   "author": "JARVIS",
@@ -26,7 +26,16 @@
     },
     "files": [
       "dist/**",
-      "package.json"
+      "package.json",
+      "!**/node_modules/@huggingface/transformers/.cache/**",
+      "!**/node_modules/onnxruntime-web/**",
+      "!**/node_modules/@huggingface/transformers/dist/*.web*",
+      "!**/node_modules/@huggingface/transformers/dist/transformers.js",
+      "!**/node_modules/@huggingface/transformers/dist/transformers.min.js",
+      "!**/node_modules/@huggingface/transformers/dist/ort-*",
+      "!**/node_modules/onnxruntime-node/bin/napi-v*/linux/*/libonnxruntime_providers_cuda*",
+      "!**/node_modules/onnxruntime-node/bin/napi-v*/linux/*/libonnxruntime_providers_tensorrt*",
+      "!**/*.map"
     ],
     "extraResources": [
       {
@@ -44,7 +53,10 @@
       "target": [
         "nsis"
       ],
-      "icon": "build/icon.png"
+      "icon": "build/icon.png",
+      "files": [
+        "!**/node_modules/onnxruntime-node/bin/napi-v*/{linux,darwin}/**"
+      ]
     },
     "nsis": {
       "oneClick": false,
@@ -60,9 +72,20 @@
         "dir"
       ],
       "icon": "build/icon.png",
-      "category": "Utility"
+      "category": "Utility",
+      "files": [
+        "!**/node_modules/onnxruntime-node/bin/napi-v*/{win32,darwin}/**"
+      ]
     },
     "electronVersion": "45.5.0",
-    "executableName": "JARVIS"
+    "executableName": "JARVIS",
+    "asarUnpack": [
+      "**/node_modules/onnxruntime-node/**",
+      "**/node_modules/sharp/**",
+      "**/node_modules/@img/**"
+    ]
+  },
+  "dependencies": {
+    "@huggingface/transformers": "^4.3.2"
   }
 }

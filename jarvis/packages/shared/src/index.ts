@@ -306,3 +306,70 @@ export const VoiceEventRequest = z.object({
 });
 
 export const TtsRequest = z.object({ text: z.string().trim().min(1).max(2500) });
+
+// ───────────────────────── Memoria (Fase 6) ─────────────────────────
+
+export const MemoryCategory = z.enum(['short_term', 'long_term', 'personal', 'project', 'document', 'context', 'relational', 'visual']);
+export type MemoryCategory = z.infer<typeof MemoryCategory>;
+
+export const MEMORY_CATEGORY_LABEL: Record<MemoryCategory, string> = {
+  short_term: 'Corto plazo',
+  long_term: 'Largo plazo',
+  personal: 'Personal',
+  project: 'Proyectos',
+  document: 'Documental',
+  context: 'Contextual',
+  relational: 'Relacional',
+  visual: 'Visual',
+};
+
+export interface Memory {
+  id: string;
+  category: MemoryCategory;
+  title: string;
+  content: string;
+  project: string | null;
+  tags: string[];
+  /** Origen: «usuario», «conversación:<id>», «herramienta:<nombre>»… */
+  source: string;
+  /** 0-1: seguridad de que el recuerdo es cierto. */
+  confidence: number;
+  /** Confirmado por el usuario, o sugerido por JARVIS (pendiente de confirmar). */
+  status: 'confirmed' | 'suggested';
+  sensitive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  expiresAt: string | null;
+  hasEmbedding: boolean;
+}
+
+export interface MemoryLink { fromId: string; toId: string; relation: string; createdAt: string; otherTitle?: string }
+
+export interface MemoryHit extends Memory {
+  score: number;
+  matchedBy: ('texto' | 'parcial' | 'significado' | 'reciente')[];
+}
+
+export const MemorySettings = z.object({
+  /** JARVIS puede proponer recuerdos por su cuenta (siempre como sugerencias). */
+  autoSuggest: z.boolean(),
+  /** Uso de recuerdos personales: solo si el usuario lo pide (por defecto) o siempre. */
+  personalUse: z.enum(['on_request', 'always']),
+  /** Búsqueda por significado con un modelo local (~120 MB, se descarga una vez). */
+  semantic: z.boolean(),
+  /** Horas que dura un recuerdo de corto plazo. */
+  shortTermHours: z.number().int().min(1).max(24 * 30),
+});
+export type MemorySettings = z.infer<typeof MemorySettings>;
+
+export const MemoryInput = z.object({
+  category: MemoryCategory,
+  title: z.string().trim().min(1).max(200),
+  content: z.string().trim().min(1).max(20_000),
+  project: z.string().trim().max(100).nullable().optional(),
+  tags: z.array(z.string().trim().min(1).max(40)).max(20).optional(),
+  confidence: z.number().min(0).max(1).optional(),
+});
+export type MemoryInput = z.infer<typeof MemoryInput>;
+
+export interface SemanticStatus { state: 'off' | 'idle' | 'loading' | 'ready' | 'error'; model: string; error: string | null; indexed: number; total: number }

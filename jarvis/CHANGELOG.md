@@ -2,6 +2,15 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versionado semántico.
 
+## [0.8.0] — 2026-11-25
+### Añadido
+- Memoria (Fase 6): recuerdos con 8 categorías, relaciones, búsqueda híbrida (palabras, fragmentos, significado
+  local), sugerencias, reglas de privacidad, herramientas para JARVIS y sección Memoria.
+- Migración 4. 11 pruebas nuevas (175 en total). Verificación real del modelo en Node, navegador y escritorio.
+
+### Cambiado
+- App de escritorio: dependencias de IA local empaquetadas aparte y sin binarios innecesarios (274 MB).
+
 ## [0.7.0] — 2026-11-25
 ### Añadido
 - Proveedores OpenAI (GPT-6.1 Terra, API Responses sin estado) y Google Gemini (nivel gratuito).

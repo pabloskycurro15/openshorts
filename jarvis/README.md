@@ -4,8 +4,8 @@ Asistente personal inteligente multimodal: núcleo local seguro, voz, memoria, a
 conectores, automatizaciones y control autorizado del ordenador, con clientes de
 escritorio (Windows 11), iOS y PWA.
 
-> **Estado actual: Fases 1–5B completadas (núcleo, interfaz holográfica, cerebro IA, voz local con palabra de
-> activación, control del equipo y app de escritorio).** Siguiente: memoria (Fase 6). ver [ROADMAP.md](ROADMAP.md) y [PROGRESS.md](PROGRESS.md).
+> **Estado actual: Fases 1–6 completadas (núcleo, interfaz holográfica, varios cerebros con repartidor, voz local
+> con palabra de activación, control del equipo, app de escritorio y memoria).** Siguiente: multiagente (Fase 7). ver [ROADMAP.md](ROADMAP.md) y [PROGRESS.md](PROGRESS.md).
 > Este documento solo describe lo que existe y está probado.
 
 ## Qué funciona hoy
@@ -48,7 +48,9 @@ escritorio (Windows 11), iOS y PWA.
 - Voz 100 % local (Fase 5B): Whisper en tu equipo (el audio no sale) y palabra de activación «Jarvis».
 - Varios cerebros con repartidor automático (0.7): Gemini gratis para lo sencillo, GPT-6.1 Terra para lo
   intermedio, Claude Opus para lo complejo y Claude para las acciones; respaldo automático si uno falla.
-- 164 pruebas automatizadas (ver [TESTING.md](TESTING.md)).
+- Memoria (Fase 6): 8 categorías, origen, fecha, confianza, relaciones; búsqueda híbrida (palabras, fragmentos con
+  errores y significado con un modelo local); sugerencias que confirmas tú; recuerdos personales solo si lo pides.
+- 175 pruebas automatizadas (ver [TESTING.md](TESTING.md)).
 
 ## Instalar la app de escritorio en Windows 11
 
@@ -62,7 +64,7 @@ escritorio (Windows 11), iOS y PWA.
    npm install
    npm run dist:win
    ```
-3. Ejecuta `jarvis\apps\desktop\release\JARVIS-Setup-0.7.0.exe`. Windows SmartScreen avisará de que el
+3. Ejecuta `jarvis\apps\desktop\release\JARVIS-Setup-0.8.0.exe`. Windows SmartScreen avisará de que el
    instalador no está firmado: «Más información» → «Ejecutar de todas formas» (firmarlo requiere un certificado de pago).
 
 Para probar sin instalar: `npm run desktop` (desde `jarvis/`).

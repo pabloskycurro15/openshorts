@@ -9,6 +9,8 @@ import type { AuditLog } from '../security/audit';
 export interface ToolContext {
   principal: Principal;
   signal: AbortSignal;
+  /** Contexto de la conversación (lo aporta el motor, no el modelo). */
+  context?: { lastUserText?: string; conversationId?: string };
 }
 
 /** Definición de una herramienta. Toda acción de JARVIS sobre el mundo pasa por aquí. */
@@ -41,6 +43,7 @@ interface PendingCall {
   tool: ToolDefinition;
   args: unknown;
   scopes: string[];
+  context?: ToolContext['context'];
   principal: Principal;
   timer: NodeJS.Timeout;
 }
@@ -49,6 +52,7 @@ export interface InvokeOptions {
   signal?: AbortSignal;
   /** El usuario está presente y puede confirmar (conversación). Ver PermissionEngine. */
   interactive?: boolean;
+  context?: ToolContext['context'];
 }
 
 export type ApprovalDecision = 'approved' | 'approved_always' | 'denied';
@@ -139,8 +143,8 @@ export class ToolRegistry {
     const verdict = this.permissions.check({ principal, scopes, risk: tool.risk, sideEffects: tool.sideEffects, interactive: opts.interactive });
 
     if (verdict.decision === 'deny') return this.finish(principal, name, args, { status: 'denied', reason: verdict.reason });
-    if (verdict.decision === 'ask') return this.requestApproval(principal, tool, args, scopes, verdict.reason);
-    return this.run(principal, tool, args, signal);
+    if (verdict.decision === 'ask') return this.requestApproval(principal, tool, args, scopes, verdict.reason, opts.context);
+    return this.run(principal, tool, args, signal, opts.context);
   }
 
   listApprovals(status?: ApprovalRequest['status']): ApprovalRequest[] {
@@ -198,7 +202,7 @@ export class ToolRegistry {
       if (call.tool.sideEffects && this.permissions.isLockdown()) {
         result = this.finish(call.principal, call.tool.name, call.args, { status: 'denied', reason: 'Modo emergencia activo' });
       } else {
-        result = await this.run(call.principal, call.tool, call.args, new AbortController().signal);
+        result = await this.run(call.principal, call.tool, call.args, new AbortController().signal, call.context);
       }
     }
     this.settle(id, result);
@@ -219,7 +223,7 @@ export class ToolRegistry {
     return ids.length;
   }
 
-  private requestApproval(principal: Principal, tool: ToolDefinition, args: unknown, scopes: string[], reason: string): ToolResult {
+  private requestApproval(principal: Principal, tool: ToolDefinition, args: unknown, scopes: string[], reason: string, context?: ToolContext['context']): ToolResult {
     const id = randomUUID();
     this.db
       .prepare(
@@ -229,7 +233,7 @@ export class ToolRegistry {
       .run(id, principal.kind, principal.id, tool.name, JSON.stringify(args), JSON.stringify(scopes), tool.risk, reason, new Date().toISOString());
     const timer = setTimeout(() => this.expire(id), this.approvalTtlMs);
     timer.unref();
-    this.pending.set(id, { tool, args, scopes, principal, timer });
+    this.pending.set(id, { tool, args, scopes, principal, timer, context });
     this.bus.emit('approval.requested', this.getApproval(id)!);
     return this.finish(principal, tool.name, args, { status: 'pending_approval', approvalId: id });
   }
@@ -248,9 +252,9 @@ export class ToolRegistry {
     return this.getApproval(id)!;
   }
 
-  private async run(principal: Principal, tool: ToolDefinition, args: unknown, signal: AbortSignal): Promise<ToolResult> {
+  private async run(principal: Principal, tool: ToolDefinition, args: unknown, signal: AbortSignal, context?: ToolContext['context']): Promise<ToolResult> {
     try {
-      const output = await tool.execute(args, { principal, signal });
+      const output = await tool.execute(args, { principal, signal, context });
       return this.finish(principal, tool.name, args, { status: 'ok', output });
     } catch (err) {
       return this.finish(principal, tool.name, args, { status: 'error', error: err instanceof Error ? err.message : String(err) });

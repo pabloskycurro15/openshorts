@@ -206,7 +206,7 @@ export class ChatEngine {
             r = { status: 'denied', reason: 'Cancelado por el usuario' };
           } else {
             emit({ type: 'tool_call', id: t.id, tool: t.name, input: t.input });
-            r = await tools.invoke(JARVIS_PRINCIPAL, t.name, t.input, { interactive: true, signal: ctrl.signal });
+            r = await tools.invoke(JARVIS_PRINCIPAL, t.name, t.input, { interactive: true, signal: ctrl.signal, context: { lastUserText: input.message, conversationId: conv.id } });
             if (r.status === 'pending_approval') {
               const a = tools.getApproval(r.approvalId);
               const def = tools.get(t.name);

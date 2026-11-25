@@ -1,6 +1,6 @@
 {
   "name": "@jarvis/core",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "private": true,
   "type": "module",
   "exports": {
@@ -14,6 +14,7 @@
     "@anthropic-ai/sdk": "^1.14.0",
     "@fastify/static": "^10.1.12",
     "@fastify/websocket": "^11.3.7",
+    "@huggingface/transformers": "^4.3.2",
     "@jarvis/shared": "0.1.0",
     "fastify": "^5.12.8",
     "pino": "^10.4.0",

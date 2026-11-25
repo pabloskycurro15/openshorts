@@ -8,7 +8,7 @@
 
 ## Resultados reales (2026-11-25, Linux x64, Node 22.23)
 
-`npm run check` → typecheck OK (núcleo, web y escritorio), lint OK (0 avisos), **164/164 pruebas superadas**.
+`npm run check` → typecheck OK (núcleo, web y escritorio), lint OK (0 avisos), **175/175 pruebas superadas**.
 
 | Archivo | Pruebas | Cubre |
 |---|---|---|
@@ -25,6 +25,7 @@
 | `control.test.ts` | 16 | Config solo por el usuario, rutas absolutas, existentes, sin raíz de disco, ids únicos; rutas: `..`, absolutas externas, enlaces simbólicos; archivos: listar, leer, crear (sin sobrescribir), sobrescribir con copia y confirmación, borrar a papelera, solo lectura, rechazo sin preguntar, «aprobar siempre» = carpeta, binarios y tamaño; apps autorizadas sin shell y cierre; URLs solo http(s) con `rundll32`; comandos de lista blanca ejecutados de verdad; tiempo máximo; procesos reales; análisis de PowerShell/ps/ventanas; scripts sin inyección; ventanas solo Windows; CPU real |
 | `server.test.ts` (ampliado) | +2 | API de control; servido de la interfaz con CSP y API protegida |
 | `apps/desktop/test/master-key.test.ts` | 2 | Clave maestra cifrada por el sistema, recuperable y nunca en claro; rechazo de archivos no cifrados por el sistema |
+| `memory.test.ts` | 11 | CRUD, confirmación solo por el usuario, relaciones, auditoría sin contenido; sensible; caducidad; búsqueda sin tildes, prefijos y con errores (trigramas); significado (embedder simulado); filtros, personal excluido, sugerencias puntúan menos; «recuerda que…» → confirmado / deducción → sugerencia; sensible y personal piden permiso siempre; uso personal «siempre»; sin propuestas; borrar = riesgo alto; API |
 | `router.test.ts` | 25 | Clasificación (7 casos), acciones y datos sensibles; cadenas por nivel, sensibles fuera del gratis, Gemini desactivable, solo proveedores con clave, pausa; motor: cupo agotado en los dos Gemini → Haiku con aviso y pausa, modelo guardado por mensaje; modelo fijo; claves por proveedor; adaptador OpenAI (petición sin estado, texto, llamada, uso con caché, reenvío del razonamiento cifrado, errores de saldo/límite/clave); adaptador Gemini (esquemas, petición, firma reenviada intacta, respuesta de función, cupo 429, bloqueo); precios |
 | `apps/web/test/vad.test.ts` | 13 | Detector de voz (silencio, frase con margen, ruidos cortos, frases largas, adaptación a ruido constante); palabra de activación (9 casos, incluidas variantes y falsos positivos) |
 | `apps/web/test/voice.test.tsx` | 9 | Texto para voz; troceado por frases (abreviaturas, código); reconocimiento (sin soporte, parciales y final es-ES, permiso denegado, silencio); síntesis (cola, ajustes, fin, cancelación); voz por defecto |
@@ -88,6 +89,14 @@ Audio generado en local con un modelo TTS español (MMS) e inyectado como micró
 Claves de Anthropic, OpenAI y Google guardadas y verificadas desde Configuración → «Hola» → Gemini 3.5 Flash-Lite,
 0 $ → explicación del IVA → GPT-6.1 Terra, 0,0012 $ → «Planifica una estrategia…» → Claude Opus 5.5, 0,0076 $ →
 cupo de Gemini agotado → avisos y respuesta de Claude Haiku → 0 errores.
+
+### Memoria con el modelo real (Fase 6)
+- Node: 5 recuerdos; «¿de qué trabajo?» → Profesión, «¿qué bebo al despertar?» → Desayuno, «la página del
+  restaurante de la costa» → Bar La Marina, «¿qué vehículo tengo?» → Coche, «raqueta» → Deporte (todo por
+  significado, sin palabras en común).
+- Navegador: crear 4 recuerdos desde la interfaz, «malga agenci» → Profesión (fragmentos), relación
+  Profesión → Bar La Marina, activar significado (4 s) y las tres búsquedas por significado correctas; 0 errores.
+- App de escritorio empaquetada (Electron 45): el motor nativo carga, descarga el modelo e indexa; búsqueda correcta.
 
 ## No probado todavía
 - **Llamadas reales a OpenAI y Gemini** (formatos según su documentación oficial, probados contra simuladores).

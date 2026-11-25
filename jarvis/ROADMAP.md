@@ -16,8 +16,8 @@ Anthropic, que requiere la clave del usuario (ver TESTING.md).
 | 4 | Voz: STT, TTS, interrupción, conversación continua (palabra de activación → Fase 5) | ✅ Completada |
 | 5A | App de escritorio Windows (Electron) y control del equipo con listas blancas | ✅ Completada* |
 | 5B | Voz 100 % local (Whisper) y palabra de activación «Jarvis» | ✅ Completada* |
-| 6 | Memoria: categorías, búsqueda híbrida FTS5 + vectores, administración | ⏳ Siguiente |
-| 7 | Multiagente: coordinador, agentes especializados, supervisión | Pendiente |
+| 6 | Memoria: categorías, búsqueda híbrida FTS5 + vectores, administración | ✅ Completada |
+| 7 | Multiagente: coordinador, agentes especializados, supervisión | ⏳ Siguiente |
 | 8 | Conectores: extensiones, almacén de credenciales, integraciones prioritarias | Pendiente |
 | 9 | Automatizaciones: motor, programador, rutinas, historial | Pendiente |
 | 10 | iOS (Capacitor) y PWA, autenticación, sincronización | Pendiente |
@@ -91,9 +91,21 @@ Anthropic, que requiere la clave del usuario (ver TESTING.md).
 - [x] Indicador naranja de escucha local; auditoría de activación y detecciones.
 - [ ] Probar con micrófono real en Windows (el entorno de pruebas usa audio sintetizado en español).
 
-### Fase 6 (propuesta) — Memoria
-- Tablas de recuerdos con 8 categorías, origen, fecha, confianza y relaciones.
-- Búsqueda híbrida: FTS5 (texto) + vectores (embeddings locales con transformers.js) + filtros.
-- Herramientas `memory.*` con permisos; recuerdos sensibles requieren confirmación para guardarse.
-- Regla: los recuerdos personales solo se usan para personalizar si el usuario lo pide (configurable).
-- Sección Memoria: buscar, crear, editar, borrar, ver origen y relaciones.
+### Fase 6 ✅ — Memoria
+- [x] Migración 4: recuerdos (8 categorías, origen, fecha, confianza, estado, sensible, caducidad), relaciones,
+      índices FTS5 (sin tildes) y de trigramas.
+- [x] Búsqueda híbrida: palabras (BM25, prefijos) + fragmentos (trigramas, tolera errores) + significado (modelo
+      multilingüe local, ~120 MB) fusionados con RRF y ajustados por confianza/estado; filtros por categoría,
+      proyecto y estado.
+- [x] Reglas: «recuerda que…» → confirmado; deducciones → sugerencias; sensible y personal piden permiso cada vez;
+      uso personal configurable; corto plazo que caduca; auditoría sin contenido.
+- [x] Herramientas `memory.search/save/link/forget`; sección Memoria (buscar, filtrar, crear, editar, confirmar,
+      borrar, relacionar, ajustes, activar significado).
+- [x] Verificado: modelo real en Node, navegador y app de escritorio empaquetada.
+- [ ] Memoria visual con imágenes (hoy: descripciones de texto) — junto con el análisis de pantalla.
+
+### Fase 7 (propuesta) — Multiagente
+- Agente coordinador que descompone objetivos en subtareas y las asigna.
+- Agentes especializados (investigación, programación, documentos, productividad, sistema…) con permisos propios
+  (principal `agent:<nombre>`, sin escalada) y modelo según el repartidor.
+- Centro de tareas y panel de agentes: progreso, resultados, errores y consumo; detener desde emergencia.

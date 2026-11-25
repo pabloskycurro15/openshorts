@@ -108,6 +108,37 @@ const MIGRATIONS: string[] = [
   );
   CREATE INDEX voice_usage_ts ON voice_usage(ts);
   `,
+  // 4 — memoria: recuerdos, relaciones e índices de texto (palabras y trigramas)
+  `
+  CREATE TABLE memories (
+    id TEXT PRIMARY KEY,
+    category TEXT NOT NULL,
+    title TEXT NOT NULL,
+    content TEXT NOT NULL,
+    project TEXT,
+    tags TEXT NOT NULL DEFAULT '[]',
+    source TEXT NOT NULL,
+    confidence REAL NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('confirmed','suggested')),
+    sensitive INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    expires_at TEXT,
+    embedding BLOB,
+    embedding_model TEXT
+  );
+  CREATE INDEX memories_cat ON memories(category, status);
+  CREATE INDEX memories_project ON memories(project);
+  CREATE VIRTUAL TABLE memories_fts USING fts5(id UNINDEXED, title, content, tags, tokenize = 'unicode61 remove_diacritics 2');
+  CREATE VIRTUAL TABLE memories_tri USING fts5(id UNINDEXED, text, tokenize = 'trigram');
+  CREATE TABLE memory_links (
+    from_id TEXT NOT NULL REFERENCES memories(id) ON DELETE CASCADE,
+    to_id TEXT NOT NULL REFERENCES memories(id) ON DELETE CASCADE,
+    relation TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    PRIMARY KEY (from_id, to_id, relation)
+  );
+  `,
 ];
 
 export function openDatabase(file: string): Database {

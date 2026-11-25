@@ -31,14 +31,13 @@ export const SECTIONS: SectionDef[] = [
   { id: 'laboratorio', label: 'Laboratorio', icon: FlaskConical, phase: 2, summary: 'Pruebas visuales y funciones experimentales.' },
   { id: 'archivos', label: 'Archivos y proyectos', icon: FolderKanban, phase: 5, summary: 'Carpetas, aplicaciones y comandos autorizados.' },
   { id: 'comandos', label: 'Centro de comandos', icon: TerminalSquare, phase: 2, summary: 'Herramientas disponibles y ejecución manual.' },
-  { id: 'memoria', label: 'Memoria', icon: Brain, phase: 6, summary: 'Recuerdos y conocimientos.',
-    planned: ['8 categorías: corto/largo plazo, personal, proyectos, documental, contextual, relacional, visual', 'Búsqueda híbrida (texto + semántica)', 'Editar, borrar, ver origen, fecha y confianza', 'Los recuerdos personales solo se usan si lo pides'] },
+  { id: 'memoria', label: 'Memoria', icon: Brain, phase: 6, summary: 'Recuerdos y conocimientos.' },
   { id: 'agentes', label: 'Agentes', icon: Bot, phase: 7, summary: 'Equipo de agentes especializados.',
     planned: ['Coordinador + investigación, programación, documentos, productividad, automatización, análisis, sistema, integraciones', 'Permisos independientes por agente', 'Estado, progreso y consumo de cada uno'] },
   { id: 'seguridad', label: 'Seguridad y permisos', icon: ShieldCheck, phase: 2, summary: 'Confirmaciones, permisos y emergencia.' },
 ];
 
 /** Última fase completada y verificada. */
-export const CURRENT_PHASE = 5;
+export const CURRENT_PHASE = 6;
 
 export const sectionById = (id: string) => SECTIONS.find((s) => s.id === id);

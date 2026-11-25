@@ -5,6 +5,12 @@ import type {
   ChatMessageView,
   ConversationSummary,
   ElevenLabsSettings,
+  Memory,
+  MemoryHit,
+  MemoryInput,
+  MemoryLink,
+  MemorySettings,
+  SemanticStatus,
   ElevenLabsVoice,
   VoiceStatus,
   ApprovalRequest,
@@ -106,6 +112,22 @@ export class CoreClient {
   conversation = (id: string) =>
     this.req<{ conversation: ConversationSummary; messages: ChatMessageView[]; active: boolean }>(`/api/conversations/${id}`);
   deleteConversation = (id: string) => this.req<{ deleted: boolean }>(`/api/conversations/${id}`, { method: 'DELETE' });
+  // ── Memoria ──
+  memories = (o: { q?: string; category?: string; status?: string } = {}) => {
+    const p = new URLSearchParams(Object.entries(o).filter(([, v]) => v) as [string, string][]);
+    return this.req<{ items: MemoryHit[]; counts: Record<string, number> }>(`/api/memory?${p.toString()}`);
+  };
+  memory = (id: string) => this.req<{ memory: Memory; links: MemoryLink[] }>(`/api/memory/${id}`);
+  createMemory = (m: MemoryInput) => this.req<Memory>('/api/memory', { method: 'POST', body: JSON.stringify(m) });
+  updateMemory = (id: string, m: Partial<MemoryInput>) => this.req<Memory>(`/api/memory/${id}`, { method: 'PATCH', body: JSON.stringify(m) });
+  confirmMemory = (id: string) => this.req<Memory>(`/api/memory/${id}/confirm`, { method: 'POST', body: '{}' });
+  deleteMemory = (id: string) => this.req<{ deleted: boolean }>(`/api/memory/${id}`, { method: 'DELETE' });
+  linkMemory = (fromId: string, toId: string, relation: string) => this.req<MemoryLink>('/api/memory/links', { method: 'POST', body: JSON.stringify({ fromId, toId, relation }) });
+  unlinkMemory = (fromId: string, toId: string, relation: string) => this.req<{ removed: boolean }>('/api/memory/links', { method: 'DELETE', body: JSON.stringify({ fromId, toId, relation }) });
+  memorySettings = () => this.req<{ settings: MemorySettings; semantic: SemanticStatus }>('/api/memory/settings');
+  setMemorySettings = (p: Partial<MemorySettings>) => this.req<{ settings: MemorySettings; semantic: SemanticStatus }>('/api/memory/settings', { method: 'PUT', body: JSON.stringify(p) });
+  loadSemantic = () => this.req<SemanticStatus>('/api/memory/semantic/load', { method: 'POST', body: '{}' });
+
   // ── Control del equipo ──
   control = () => this.req<{ folders: { id: string; label: string; path: string; access: 'read' | 'readwrite' }[]; apps: { id: string; name: string; command: string; args: string[]; processName?: string }[]; commands: { id: string; name: string; description: string; command: string; args: string[]; cwdFolderId?: string; timeoutSec: number }[] }>('/api/control/config');
   setControl = (cfg: unknown) => this.req<Awaited<ReturnType<CoreClient['control']>>>('/api/control/config', { method: 'PUT', body: JSON.stringify(cfg) });
