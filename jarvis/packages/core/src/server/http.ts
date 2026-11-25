@@ -20,6 +20,7 @@ import { registerAgentRoutes } from './agent-routes';
 import { registerConnectorRoutes } from './connector-routes';
 import { registerAutomationRoutes } from './automation-routes';
 import { registerDeviceRoutes } from './device-routes';
+import { registerMaintenanceRoutes } from './maintenance-routes';
 import { AuthThrottle } from '../security/devices';
 
 const USER: Principal = { kind: 'user', id: 'owner' };
@@ -61,10 +62,15 @@ export async function buildServer(j: Jarvis, token: string): Promise<FastifyInst
       return;
     }
     throttle.fail(req.ip);
+    j.bus.emit('security.auth_failed', { ip: req.ip, path: req.url.split('?')[0]! });
     return reply.code(401).send({ error: 'No autorizado' });
   });
   // Los códigos de vinculación erróneos también cuentan como intentos fallidos.
-  app.addHook('onResponse', async (req) => { if ((req as typeof req & { authFailed?: boolean }).authFailed) throttle.fail(req.ip); });
+  app.addHook('onResponse', async (req) => {
+    if (!(req as typeof req & { authFailed?: boolean }).authFailed) return;
+    throttle.fail(req.ip);
+    j.bus.emit('security.auth_failed', { ip: req.ip, path: req.url.split('?')[0]! });
+  });
 
   app.setErrorHandler((err: { statusCode?: number; message: string; name?: string }, _req, reply) => {
     const status = err.name === 'ZodError' ? 400 : err.statusCode ?? 500;
@@ -147,6 +153,7 @@ export async function buildServer(j: Jarvis, token: string): Promise<FastifyInst
   registerConnectorRoutes(app, j);
   registerAutomationRoutes(app, j);
   registerDeviceRoutes(app, j);
+  registerMaintenanceRoutes(app, j);
 
   app.get('/api/events', { websocket: true }, (socket) => {
     const off = j.bus.onAny((env) => {

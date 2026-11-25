@@ -256,3 +256,11 @@ Electron. En Node 22 muestra un aviso «experimental» (silenciado); en Node 24 
 - Acceso fuera de casa con Tailscale (HTTPS y red privada, gratis) en lugar de abrir puertos o un servidor en la
   nube. La PWA es la vía principal en iPhone (instalable y con push, sin Mac ni pagos); la app Capacitor queda
   preparada para quien tenga Xcode.
+
+## ADR-026 · Copias cifradas en el cliente, destino externo opcional ✅
+- Formato propio y simple (cabecera + scrypt + AES-256-GCM + gzip de manifiesto y archivos), sin dependencias.
+- La clave maestra viaja dentro de la copia (protegida por la frase): sin ella los secretos no se podrían leer en
+  otro equipo. Restaurar en caliente sería arriesgado: se prepara y se aplica al arrancar.
+- Supabase Storage como destino externo porque el usuario lo tiene y lo autorizó; solo ve datos cifrados. Con el
+  plan gratuito lleno (2 proyectos activos) no se crea nada automáticamente.
+- Vigilancia con reglas fijas y explicables (no «IA»): predecibles, sin falsos positivos opacos y sin coste.

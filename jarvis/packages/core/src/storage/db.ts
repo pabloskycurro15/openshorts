@@ -239,6 +239,29 @@ const MIGRATIONS: string[] = [
     created_at TEXT NOT NULL
   );
   `,
+  // 9 — copias de seguridad y alertas de seguridad
+  `
+  CREATE TABLE backups (
+    id TEXT PRIMARY KEY,
+    file TEXT NOT NULL,
+    location TEXT NOT NULL CHECK (location IN ('local','supabase')),
+    created_at TEXT NOT NULL,
+    size INTEGER NOT NULL,
+    verified INTEGER NOT NULL DEFAULT 0,
+    verify_detail TEXT,
+    auto INTEGER NOT NULL DEFAULT 0
+  );
+  CREATE TABLE security_alerts (
+    id TEXT PRIMARY KEY,
+    ts TEXT NOT NULL,
+    level TEXT NOT NULL CHECK (level IN ('info','warning','critical')),
+    rule TEXT NOT NULL,
+    title TEXT NOT NULL,
+    detail TEXT NOT NULL,
+    action TEXT,
+    acknowledged INTEGER NOT NULL DEFAULT 0
+  );
+  `,
 ];
 
 export function openDatabase(file: string): Database {

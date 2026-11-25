@@ -6,6 +6,7 @@ import { useConnection, useCoreData } from '../lib/connection';
 import { core } from '../lib/api';
 import { PRINCIPAL_LABEL, RISK_LABEL, timeAgo } from '../lib/labels';
 import { DevicesPanel } from '../components/DevicesPanel';
+import { AlertsPanel } from '../components/MaintenancePanels';
 
 const RISK_TONE = { low: 'ok', medium: 'warn', high: 'danger', critical: 'danger' } as const;
 
@@ -116,6 +117,8 @@ export function SecuritySection() {
           {verify && <span role="status" className={`text-sm ${verify.startsWith('✔') ? 'text-ok' : 'text-danger'}`}>{verify}</span>}
         </div>
       </Panel>
+
+      <AlertsPanel />
 
       <DevicesPanel />
 

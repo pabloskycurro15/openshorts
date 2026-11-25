@@ -95,7 +95,16 @@
 - [ ] En un iPhone real: instalar la PWA (requiere Tailscale u otro HTTPS) y recibir una notificación.
 - [ ] Compilar la app nativa: necesita un Mac con Xcode (no disponible aquí).
 
+## 2026-11-25 — Fase 11 (seguridad avanzada y mantenimiento)
+- [x] Copias cifradas con restauración verificada (también en «otro equipo» en las pruebas), automáticas y con
+      retención; vigilancia de actividad sospechosa; diagnóstico; limpieza; actualizaciones.
+- [x] Verificado en Chromium: frase → copia creada y verificada → verificación manual → diagnóstico completo.
+- [ ] Supabase: el plan gratuito del usuario ya tiene 2 proyectos activos (máximo). No se ha pausado ninguno sin
+      su permiso; la copia externa queda lista para conectarla al final (pausar uno o usar un contenedor en un
+      proyecto existente).
+
 ## Decisiones tomadas por el usuario
+- Supabase permitido para lo que haga falta (fase 11: destino externo de copias cifradas).
 - Los conectores (WhatsApp, Telegram, Google…) se vinculan con las cuentas reales al terminar todas las fases.
 - WhatsApp con su número personal mediante conexión no oficial, aceptando el riesgo de bloqueo («da igual las
   consecuencias»). Medidas igualmente: confirmación en cada envío, 15/hora, sin envíos masivos. El número no se

@@ -136,6 +136,8 @@ export interface JarvisEvents {
   'connector.event': { connector: string; event: string; data: Record<string, unknown> };
   'automation.run': { automationId: string; runId: string; status: AutomationRunStatus; name: string };
   'notification': { title: string; body: string; source: string };
+  'security.alert': SecurityAlert;
+  'security.auth_failed': { ip: string; path: string };
 }
 export type JarvisEventName = keyof JarvisEvents;
 
@@ -522,3 +524,59 @@ export interface AutomationView extends AutomationInput {
   runsToday: number;
   lastRun: AutomationRunView | null;
 }
+
+// ───────────────────────── Seguridad avanzada y mantenimiento (Fase 11) ─────────────────────────
+
+export interface SecurityAlert {
+  id: string;
+  ts: string;
+  level: 'info' | 'warning' | 'critical';
+  rule: string;
+  title: string;
+  detail: string;
+  /** Medida automática tomada (p. ej. «Modo emergencia activado»). */
+  action: string | null;
+  acknowledged: boolean;
+}
+
+export const BackupSettings = z.object({
+  /** Copia automática diaria. */
+  auto: z.boolean(),
+  time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+  /** Cuántas copias conservar (locales y externas). */
+  keep: z.number().int().min(1).max(60),
+  /** Carpeta de las copias (vacía = carpeta de datos/backups). */
+  dir: z.string().max(500),
+  /** Incluir la sesión de WhatsApp (permite restaurar sin volver a escanear el QR). */
+  includeWhatsapp: z.boolean(),
+  /** Subir también a Supabase Storage (cifrada antes de salir del equipo). */
+  offsite: z.boolean(),
+  supabaseUrl: z.string().max(200),
+  supabaseBucket: z.string().regex(/^[a-z0-9][a-z0-9_-]{1,62}$/),
+});
+export type BackupSettings = z.infer<typeof BackupSettings>;
+
+export interface BackupView {
+  id: string;
+  file: string;
+  location: 'local' | 'supabase';
+  createdAt: string;
+  size: number;
+  verified: boolean;
+  verifyDetail: string | null;
+  auto: boolean;
+}
+
+export interface BackupStatus {
+  settings: BackupSettings;
+  hasPassphrase: boolean;
+  hasSupabaseKey: boolean;
+  dir: string;
+  backups: BackupView[];
+  lastOk: string | null;
+  nextAuto: string | null;
+  restorePending: boolean;
+}
+
+export interface DiagnosticCheck { id: string; label: string; status: 'ok' | 'warn' | 'error'; detail: string }
+export interface DiagnosticsReport { generatedAt: string; version: string; checks: DiagnosticCheck[] }

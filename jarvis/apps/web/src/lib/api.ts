@@ -9,6 +9,11 @@ import type {
   ConnectorInfo,
   AutomationView,
   AutomationRunView,
+  BackupSettings,
+  BackupStatus,
+  BackupView,
+  DiagnosticsReport,
+  SecurityAlert,
   TaskView,
   Memory,
   MemoryHit,
@@ -165,6 +170,24 @@ export class CoreClient {
   pushTest = () => this.req<{ sent: number; removed: number; failed: number }>('/api/push/test', { method: 'POST', body: '{}' });
   remote = () => this.req<RemoteStatus>('/api/remote');
   setRemote = (patch: Partial<Pick<RemoteStatus, 'mode' | 'port' | 'publicUrl'>>) => this.req<RemoteStatus>('/api/remote', { method: 'PUT', body: JSON.stringify(patch) });
+
+  // ── Mantenimiento y seguridad avanzada ──
+  backups = () => this.req<BackupStatus>('/api/backups');
+  backupSettings = (patch: Partial<BackupSettings>) => this.req<BackupSettings>('/api/backups/settings', { method: 'PUT', body: JSON.stringify(patch) });
+  backupPassphrase = (passphrase: string) => this.req<{ ok: boolean }>('/api/backups/passphrase', { method: 'PUT', body: JSON.stringify({ passphrase }) });
+  backupSupabaseKey = (key: string | null) => this.req<{ ok: boolean }>('/api/backups/supabase-key', { method: 'PUT', body: JSON.stringify({ key }) });
+  backupSupabaseTest = () => this.req<{ ok: boolean; detail: string }>('/api/backups/supabase-test', { method: 'POST', body: '{}' });
+  createBackup = () => this.req<BackupView>('/api/backups', { method: 'POST', body: '{}' });
+  verifyBackup = (id: string) => this.req<BackupView>(`/api/backups/${id}/verify`, { method: 'POST', body: '{}' });
+  restoreBackup = (id: string, passphrase?: string) => this.req<{ detail: string; createdAt: string; jarvisVersion: string }>(`/api/backups/${id}/restore`, { method: 'POST', body: JSON.stringify(passphrase ? { passphrase } : {}) });
+  cancelRestore = () => this.req<{ ok: boolean }>('/api/backups/restore/cancel', { method: 'POST', body: '{}' });
+  deleteBackup = (id: string) => this.req<{ deleted: boolean }>(`/api/backups/${id}`, { method: 'DELETE' });
+  diagnostics = () => this.req<DiagnosticsReport>('/api/diagnostics');
+  cleanup = (vacuum: boolean) => this.req<Record<string, number>>('/api/maintenance/cleanup', { method: 'POST', body: JSON.stringify({ vacuum }) });
+  updates = () => this.req<{ current: string; latest: string | null; newer: boolean; url: string | null; notes: string | null; detail: string }>('/api/updates');
+  alerts = () => this.req<{ alerts: SecurityAlert[]; unacknowledged: number; autoLockdown: boolean }>('/api/security/alerts');
+  ackAlerts = (id?: string) => this.req<{ acknowledged: number }>('/api/security/alerts/ack', { method: 'POST', body: JSON.stringify(id ? { id } : {}) });
+  setAutoLockdown = (on: boolean) => this.req<{ autoLockdown: boolean }>('/api/security/auto-lockdown', { method: 'PUT', body: JSON.stringify({ on }) });
 
   // ── Automatizaciones ──
   automations = () => this.req<AutomationView[]>('/api/automations');

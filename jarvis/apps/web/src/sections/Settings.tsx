@@ -5,6 +5,7 @@ import { AiSettingsPanel } from './AiSettings';
 import { Button, Panel } from '../components/ui';
 import { ACCENTS, useSettings, type AccentId, type Appearance } from '../lib/settings';
 import { useConnection, type LinkStatus } from '../lib/connection';
+import { BackupPanel, DiagnosticsPanel } from '../components/MaintenancePanels';
 
 function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
@@ -72,6 +73,8 @@ export function SettingsSection() {
         <AiSettingsPanel />
         <VoiceSettingsPanel />
       </div>
+      <BackupPanel />
+      <DiagnosticsPanel />
     </div>
   );
 }

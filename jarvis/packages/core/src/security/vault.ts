@@ -10,6 +10,8 @@ import type { Database } from '../storage/db';
  */
 export interface MasterKeyProvider {
   getKey(): Buffer;
+  /** Sustituir la clave (al restaurar una copia de seguridad en otro equipo). */
+  setKey?(key: Buffer): void;
   readonly description: string;
 }
 
@@ -30,6 +32,13 @@ export class FileMasterKey implements MasterKeyProvider {
       fs.writeFileSync(this.file, this.key, { mode: 0o600 });
     }
     return this.key;
+  }
+
+  setKey(key: Buffer) {
+    if (key.length !== 32) throw new Error('Clave maestra no válida');
+    fs.mkdirSync(path.dirname(this.file), { recursive: true });
+    fs.writeFileSync(this.file, key, { mode: 0o600 });
+    this.key = Buffer.from(key);
   }
 }
 

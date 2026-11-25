@@ -108,6 +108,18 @@ El logger censura campos `token`, `apiKey`, `password`, `secret` y la cabecera `
   memoria; «Desconectar» lo revoca en Google. Enviar correo = crítico (siempre confirma, 20/h); por defecto JARVIS
   prepara borradores.
 
+### Copias de seguridad y vigilancia (Fase 11)
+- Copias cifradas con la frase del usuario (scrypt N=2^15 + AES-256-GCM autenticado); la frase se guarda en el
+  almacén cifrado para las copias automáticas. Incluyen la clave maestra (protegida por la frase) para poder
+  restaurar en otro equipo. Archivos 0600 en carpeta 0700. Cada copia se verifica descifrándola y abriendo su
+  base de datos (`integrity_check`).
+- Supabase (opcional): solo sube el archivo cifrado a un contenedor privado; la clave de Supabase se guarda
+  cifrada y nunca sale por la API.
+- Restaurar exige al usuario y se aplica al arrancar; la base de datos anterior se conserva aparte.
+- Vigilancia: reglas explicables con ventanas de tiempo; alertas guardadas y notificadas; ante lo crítico, modo
+  emergencia automático (configurable). Auditoría verificada cada hora.
+- Diagnóstico sin secretos; la limpieza nunca borra la auditoría.
+
 ### Dispositivos y acceso remoto (Fase 10)
 - Sin contraseñas: vincular requiere un código de 8 caracteres (alfabeto sin ambigüedades, ~40 bits) generado en
   un dispositivo ya autorizado; válido 10 min, un solo uso, 5 intentos. Cada dispositivo recibe un token de
@@ -135,8 +147,6 @@ El logger censura campos `token`, `apiKey`, `password`, `secret` y la cabecera `
 | Medida | Fase |
 |---|---|
 | Clave maestra en iOS (Keychain) | 10 |
-| Cifrado en reposo de datos sensibles y copias de seguridad cifradas con restauración verificada | 11 |
-| Detección de operaciones sospechosas (frecuencia anómala, patrones) | 11 |
 | Panel de emergencia en la interfaz (la API ya existe) | 2 |
 
 ## Normas para desarrolladores

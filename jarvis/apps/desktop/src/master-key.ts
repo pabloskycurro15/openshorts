@@ -31,4 +31,11 @@ export class SafeStorageMasterKey implements MasterKeyProvider {
     if (this.key.length !== 32) throw new Error('Clave maestra corrupta');
     return this.key;
   }
+
+  setKey(key: Buffer) {
+    if (key.length !== 32) throw new Error('Clave maestra no válida');
+    fs.mkdirSync(path.dirname(this.file), { recursive: true });
+    fs.writeFileSync(this.file, this.storage.encryptString(key.toString('base64')), { mode: 0o600 });
+    this.key = Buffer.from(key);
+  }
 }

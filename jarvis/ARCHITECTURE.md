@@ -57,6 +57,7 @@ jarvis/
 │       │   ├── voice/       ElevenLabs (vía núcleo)
 │       │   ├── memory/      store (híbrido), embedder (modelo local), tools
 │       │   ├── agents/      definitions (8 agentes), tasks (coordinador y ejecución), tools
+│       │   ├── maintenance/ backup (copias cifradas), diagnostics (diagnóstico, limpieza, actualizaciones)
 │       │   ├── notify/      push (Web Push, VAPID)
 │       │   ├── automations/ manager (programador, disparadores, ejecución), tools
 │       │   ├── connectors/  framework (ConnectorManager), google (OAuth), whatsapp, telegram, github, netlify, openshorts, zip, http
@@ -121,6 +122,12 @@ Todas las rutas salvo `/api/ping` requieren `Authorization: Bearer <token>`.
 | GET / DELETE | `/api/devices[/:id]` · `/api/me` | Dispositivos vinculados / quién soy |
 | GET / POST | `/api/push/{key,subscribe,unsubscribe,test}` | Notificaciones push |
 | GET / PUT | `/api/remote` | Acceso en red local y dirección HTTPS pública |
+| GET / POST | `/api/backups` | Estado y lista / crear copia (verificada) |
+| PUT | `/api/backups/{settings,passphrase,supabase-key}` | Ajustes, frase y clave de Supabase |
+| POST | `/api/backups/:id/{verify,restore}` · `/api/backups/supabase-test` | Verificar / preparar restauración / probar Supabase |
+| GET | `/api/diagnostics` · `/api/updates` | Diagnóstico / actualizaciones |
+| POST | `/api/maintenance/cleanup` | Limpieza y optimización |
+| GET / POST / PUT | `/api/security/{alerts,alerts/ack,auto-lockdown}` | Alertas de actividad sospechosa |
 | GET | `/oauth/:id/callback` | Vuelta de OAuth (sin token; protegida por «state» de un solo uso) |
 | GET / POST | `/api/tasks` | Tareas / encargar un objetivo `{goal}` |
 | GET / DELETE | `/api/tasks/:id` | Detalle con subtareas y registro / borrar |

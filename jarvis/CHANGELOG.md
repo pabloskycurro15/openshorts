@@ -2,6 +2,18 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versionado semántico.
 
+## [0.14.0] — 2026-11-25
+### Añadido
+- Copias de seguridad (Fase 11): base de datos (copia en caliente), clave maestra y opcionalmente la sesión de
+  WhatsApp, cifradas con la frase del usuario (scrypt + AES-256-GCM); verificación con restauración de prueba
+  (integridad SQLite); copia diaria automática; retención; restauración en otro equipo (se aplica al reiniciar y
+  guarda los datos anteriores); destino externo opcional en Supabase Storage (contenedor privado, solo cifrado).
+- Vigilancia de actividad sospechosa: ráfagas de acciones, denegaciones repetidas, intentos de escalada, accesos
+  fallidos, dispositivos nuevos, red local activada y auditoría manipulada (comprobación cada hora); modo
+  emergencia automático ante lo crítico (desactivable); avisos en app, escritorio y móvil. Migración 9.
+- Diagnóstico del sistema (12 comprobaciones, sin secretos), limpieza y optimización (la auditoría nunca se
+  borra) y comprobación de actualizaciones en GitHub Releases. 10 pruebas nuevas (236 en total).
+
 ## [0.13.0] — 2026-11-25
 ### Añadido
 - iPhone y PWA (Fase 10): vinculación de dispositivos con código de un solo uso y QR, token propio por
