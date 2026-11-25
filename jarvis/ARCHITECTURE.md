@@ -52,7 +52,9 @@ jarvis/
 │       │   ├── kernel/      events, modules, config, logger
 │       │   ├── security/    permissions, audit, auth
 │       │   ├── tools/       registry + builtin/ (system)
-│       │   ├── storage/     SQLite y migraciones
+│       │   ├── storage/     node:sqlite (envoltorio) y migraciones
+│       │   ├── control/     control del equipo: config (listas blancas), paths, fs-tools, os-tools, platform
+│       │   ├── voice/       ElevenLabs (vía núcleo)
 │       │   ├── ai/          provider, anthropic, pricing, budget, conversations, engine, prompt, service
 │       │   ├── server/      API REST + WebSocket
 │       │   ├── app.ts       composición del núcleo
@@ -62,7 +64,7 @@ jarvis/
     ├── web/             Interfaz React (✔ Fase 2): src/components (AICore, Shell…), src/sections (15),
     │                    src/lib (cliente API, conexión WebSocket, ajustes, router),
     │                    src/voice (✔ Fase 4: reconocimiento, síntesis, troceado por frases, VoiceProvider)
-    ├── desktop/         (Fase 5) Electron
+    ├── desktop/         ✔ Electron: src/main.ts (núcleo integrado, ventana, bandeja), preload.ts, master-key.ts
     └── ios/             (Fase 10) Capacitor
 ```
 
@@ -99,6 +101,7 @@ Todas las rutas salvo `/api/ping` requieren `Authorization: Bearer <token>`.
 | PUT | `/api/voice/elevenlabs/settings` | `{enabled?, voiceId?, modelId?, stability?, similarity?}` |
 | GET | `/api/voice/elevenlabs/voices` | Voces disponibles |
 | POST | `/api/voice/tts` | `{text}` → audio MP3 (solo si está activado) |
+| GET / PUT | `/api/control/config` | Listas blancas de carpetas, aplicaciones y comandos (solo el usuario) |
 | WS | `/api/events?token=` | Flujo de eventos (`assistant.state`, `approval.*`, `tool.invoked`...) |
 
 ## Modelo de datos (migración 1)
@@ -109,6 +112,11 @@ Todas las rutas salvo `/api/ping` requieren `Authorization: Bearer <token>`.
 - `settings` — clave/valor (p. ej. `security.lockdown`).
 
 Las migraciones se versionan con `PRAGMA user_version` y nunca se editan una vez publicadas.
+
+## Herramientas del módulo «control» (Fase 5A)
+`fs.folders`, `fs.list`, `fs.read_text` (bajo) · `fs.create_file`, `fs.make_dir`, `app.open`, `browser.open_url`,
+`window.focus`, `window.minimize` (medio) · `fs.overwrite_file`, `fs.move`, `fs.delete`, `app.close`,
+`command.run` (alto) · `app.list`, `command.list`, `system.processes`, `window.list` (bajo).
 
 ## Migración 2 (Fase 3)
 - `secrets` — secretos cifrados (iv, tag, ciphertext).

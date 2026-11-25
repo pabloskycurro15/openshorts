@@ -16,6 +16,7 @@ import type {
   ToolResult,
 } from '@jarvis/shared';
 import { readStore, writeStore } from './storage';
+import { desktop } from './desktop';
 
 const TOKEN_KEY = 'jarvis.token';
 
@@ -30,7 +31,8 @@ export class ApiError extends Error {
  * En la app de escritorio (Fase 5) lo inyectará Electron y no habrá que escribirlo.
  */
 export class CoreClient {
-  constructor(private base = '', private token: string | null = readStore<string | null>(TOKEN_KEY, null)) {}
+  // En la app de escritorio el token llega por el preload (nunca se guarda en el navegador).
+  constructor(private base = '', private token: string | null = desktop()?.token ?? readStore<string | null>(TOKEN_KEY, null)) {}
 
   get hasToken() {
     return !!this.token;
@@ -38,7 +40,7 @@ export class CoreClient {
 
   setToken(token: string | null) {
     this.token = token;
-    writeStore(TOKEN_KEY, token);
+    if (!desktop()) writeStore(TOKEN_KEY, token);
   }
 
   eventsUrl(): string {
@@ -101,6 +103,9 @@ export class CoreClient {
   conversation = (id: string) =>
     this.req<{ conversation: ConversationSummary; messages: ChatMessageView[]; active: boolean }>(`/api/conversations/${id}`);
   deleteConversation = (id: string) => this.req<{ deleted: boolean }>(`/api/conversations/${id}`, { method: 'DELETE' });
+  // ── Control del equipo ──
+  control = () => this.req<{ folders: { id: string; label: string; path: string; access: 'read' | 'readwrite' }[]; apps: { id: string; name: string; command: string; args: string[]; processName?: string }[]; commands: { id: string; name: string; description: string; command: string; args: string[]; cwdFolderId?: string; timeoutSec: number }[] }>('/api/control/config');
+  setControl = (cfg: unknown) => this.req<Awaited<ReturnType<CoreClient['control']>>>('/api/control/config', { method: 'PUT', body: JSON.stringify(cfg) });
   voiceEvent = (event: 'mic_on' | 'mic_off' | 'mic_denied' | 'handsfree_on' | 'handsfree_off', processor?: string) =>
     this.req<{ ok: boolean }>('/api/voice/event', { method: 'POST', body: JSON.stringify({ event, processor }) });
   voiceStatus = () => this.req<VoiceStatus>('/api/voice/status');
@@ -153,7 +158,7 @@ export interface SystemInfo {
   release: string;
   arch: string;
   hostname: string;
-  cpu: { model: string; cores: number; loadAvg: number[] };
+  cpu: { model: string; cores: number; usagePercent?: number; loadAvg: number[] };
   memory: { totalBytes: number; freeBytes: number };
   uptimeSec: number;
 }

@@ -1,5 +1,7 @@
 import Fastify, { type FastifyBaseLogger, type FastifyInstance } from 'fastify';
 import websocket from '@fastify/websocket';
+import fastifyStatic from '@fastify/static';
+import { ControlConfigError } from '../control/config';
 import {
   API_VERSION,
   EmergencyRequest,
@@ -29,7 +31,8 @@ export async function buildServer(j: Jarvis, token: string): Promise<FastifyInst
   await app.register(websocket);
 
   app.addHook('onRequest', async (req, reply) => {
-    if (req.url === '/api/ping') return;
+    // La interfaz estática es pública (no contiene datos); toda la API exige token.
+    if (!req.url.startsWith('/api/') || req.url === '/api/ping') return;
     const header = req.headers.authorization;
     const fromHeader = header?.startsWith('Bearer ') ? header.slice(7) : undefined;
     const fromQuery = req.url.startsWith('/api/events') ? (req.query as { token?: string }).token : undefined;
@@ -103,6 +106,16 @@ export async function buildServer(j: Jarvis, token: string): Promise<FastifyInst
     return { lockdown, cancelledApprovals: cancelled };
   });
 
+  app.get('/api/control/config', async () => j.control.get());
+  app.put('/api/control/config', async (req, reply) => {
+    try {
+      return j.control.set(USER, req.body);
+    } catch (err) {
+      if (err instanceof ControlConfigError) return reply.code(400).send({ error: err.message });
+      throw err;
+    }
+  });
+
   registerAiRoutes(app, j);
   registerVoiceRoutes(app, j);
 
@@ -113,6 +126,21 @@ export async function buildServer(j: Jarvis, token: string): Promise<FastifyInst
     socket.on('close', off);
     socket.send(JSON.stringify({ type: 'hello', ts: new Date().toISOString(), payload: { api: API_VERSION } }));
   });
+
+  if (j.config.webDir) {
+    await app.register(fastifyStatic, {
+      root: j.config.webDir,
+      index: 'index.html',
+      setHeaders: (res) => {
+        res.header('x-content-type-options', 'nosniff');
+        res.header('referrer-policy', 'no-referrer');
+        res.header(
+          'content-security-policy',
+          "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; font-src 'self' data:; connect-src 'self' ws: wss:; frame-ancestors 'none'",
+        );
+      },
+    });
+  }
 
   return app;
 }

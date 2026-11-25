@@ -1,5 +1,6 @@
 import { Link2, Palette } from 'lucide-react';
 import { VoiceSettingsPanel } from './VoiceSettings';
+import { desktop } from '../lib/desktop';
 import { AiSettingsPanel } from './AiSettings';
 import { Button, Panel } from '../components/ui';
 import { ACCENTS, useSettings, type AccentId, type Appearance } from '../lib/settings';
@@ -59,8 +60,14 @@ export function SettingsSection() {
 
       <div className="space-y-4">
         <Panel title="Conexión con el núcleo" icon={Link2}>
-          <p className="text-sm text-muted">Estado: <span className="text-ink">{LINK_LABEL[status]}</span>. El token se guarda solo en este navegador.</p>
-          <div className="mt-3"><Button tone="danger" onClick={disconnect}>Desvincular este navegador</Button></div>
+          {desktop() ? (
+            <p className="text-sm text-muted">Estado: <span className="text-ink">{LINK_LABEL[status]}</span>. Aplicación de escritorio v{desktop()!.version}: el núcleo funciona dentro de la app y la conexión es automática.</p>
+          ) : (
+            <>
+              <p className="text-sm text-muted">Estado: <span className="text-ink">{LINK_LABEL[status]}</span>. El token se guarda solo en este navegador.</p>
+              <div className="mt-3"><Button tone="danger" onClick={disconnect}>Desvincular este navegador</Button></div>
+            </>
+          )}
         </Panel>
         <AiSettingsPanel />
         <VoiceSettingsPanel />

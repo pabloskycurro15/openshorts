@@ -4,8 +4,8 @@ Asistente personal inteligente multimodal: núcleo local seguro, voz, memoria, a
 conectores, automatizaciones y control autorizado del ordenador, con clientes de
 escritorio (Windows 11), iOS y PWA.
 
-> **Estado actual: Fases 1–4 completadas (núcleo, interfaz, cerebro IA y voz).** Todavía no hay
-> control de Windows ni palabra de activación: ver [ROADMAP.md](ROADMAP.md) y [PROGRESS.md](PROGRESS.md).
+> **Estado actual: Fases 1–5A completadas (núcleo, interfaz, cerebro IA, voz, control del equipo y app de
+> escritorio).** Pendiente: voz local y palabra de activación (5B), memoria, agentes… ver [ROADMAP.md](ROADMAP.md) y [PROGRESS.md](PROGRESS.md).
 > Este documento solo describe lo que existe y está probado.
 
 ## Qué funciona hoy
@@ -38,7 +38,31 @@ escritorio (Windows 11), iOS y PWA.
   - Respuestas habladas frase a frase mientras se generan, en español de España (voz grave por defecto).
   - Interrupción (micrófono, Detener o Esc), manos libres, modo discreto, lectura de avisos importantes.
   - Ajustes de voz, velocidad, tono y volumen. ElevenLabs preparado (de pago, desactivado por defecto).
-- 106 pruebas automatizadas (ver [TESTING.md](TESTING.md)).
+- Control del equipo (Fase 5A), siempre dentro de listas blancas que defines tú:
+  - Archivos en carpetas autorizadas (leer, crear, modificar con copia, mover, borrar a la papelera de JARVIS).
+  - Aplicaciones autorizadas (abrir/cerrar), navegador (abrir webs), comandos predefinidos sin shell.
+  - Procesos y uso real de CPU; ventanas (listar, traer al frente, minimizar — solo Windows).
+- App de escritorio (Electron): núcleo integrado, conexión automática, clave maestra protegida con DPAPI,
+  bandeja del sistema, Ctrl+Alt+J, inicio con Windows, ventana aislada.
+- Sin módulos nativos: SQLite integrado de Node (se instala en Windows sin herramientas de compilación).
+- 126 pruebas automatizadas (ver [TESTING.md](TESTING.md)).
+
+## Instalar la app de escritorio en Windows 11
+
+1. Instala **Node.js 22.13 o superior** (https://nodejs.org, versión LTS) y **Git** (https://git-scm.com).
+2. En PowerShell:
+   ```powershell
+   git clone https://github.com/pabloskycurro15/openshorts.git
+   cd openshorts
+   git checkout claude/peaceful-maxwell-2nmkbw
+   cd jarvis
+   npm install
+   npm run dist:win
+   ```
+3. Ejecuta `jarvis\apps\desktop\release\JARVIS-Setup-0.5.0.exe`. Windows SmartScreen avisará de que el
+   instalador no está firmado: «Más información» → «Ejecutar de todas formas» (firmarlo requiere un certificado de pago).
+
+Para probar sin instalar: `npm run desktop` (desde `jarvis/`).
 
 ## Activar el cerebro
 
@@ -54,6 +78,7 @@ npm install
 cp .env.example .env        # opcional
 npm run dev                 # núcleo en http://127.0.0.1:7777
 npm run dev:web             # interfaz en http://127.0.0.1:5180 (en otra terminal)
+npm run desktop             # o bien: la app de escritorio (incluye núcleo e interfaz)
 npm run check               # tipos + lint + pruebas
 ```
 

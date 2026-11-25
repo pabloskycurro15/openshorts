@@ -51,10 +51,22 @@ El logger censura campos `token`, `apiKey`, `password`, `secret` y la cabecera `
 - Nada de audio continuo hacia fuera; sin palabra de activación en el navegador.
 - ElevenLabs: clave cifrada en el núcleo, desactivado por defecto, contador de caracteres enviados.
 
+### Control del equipo (Fase 5A)
+- Listas blancas de carpetas (solo lectura o lectura/escritura), aplicaciones y comandos; solo el usuario las edita
+  y cada cambio se audita.
+- Protección de rutas frente a `..`, rutas absolutas externas y enlaces simbólicos (probado).
+- Sin shell; argumentos fijos; tiempo máximo y salida recortada en comandos.
+- Riesgos: leer bajo · crear medio · modificar/mover/borrar/cerrar apps/comandos alto (siempre confirmación).
+- Papelera de JARVIS y copia previa a cualquier modificación.
+
+### App de escritorio (Fase 5A)
+- Ventana aislada sin Node; navegación externa bloqueada; CSP; token efímero; micrófono solo para JARVIS.
+- Clave maestra con DPAPI (Windows). Modo emergencia accesible desde la bandeja.
+
 ## Pendiente (con fase prevista)
 | Medida | Fase |
 |---|---|
-| Clave maestra protegida por el sistema (Windows DPAPI vía Electron / Keychain de iOS) | 5 y 10 |
+| Clave maestra en iOS (Keychain) | 10 |
 | Cuentas de usuario, contraseñas (Argon2id), sesiones y gestión de dispositivos | 10 |
 | TLS y emparejamiento de dispositivos para acceso desde iPhone/PWA | 10 |
 | Cifrado en reposo de datos sensibles y copias de seguridad cifradas con restauración verificada | 11 |

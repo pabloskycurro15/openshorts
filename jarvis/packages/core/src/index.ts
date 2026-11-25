@@ -6,6 +6,8 @@ export { ToolRegistry, defineTool, type ToolDefinition, type ToolContext } from 
 export { PermissionEngine, scopeMatches, type Grant } from './security/permissions';
 export { AuditLog } from './security/audit';
 export { buildServer } from './server/http';
+export { startJarvis, type RunningJarvis } from './server/start';
+export type { MasterKeyProvider } from './security/vault';
 export type * from './ai/provider';
 export { AnthropicProvider } from './ai/anthropic';
 export { AIService } from './ai/service';

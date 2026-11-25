@@ -32,7 +32,7 @@ export function useSystemInfo(intervalMs = 3000, keep = 60) {
         setHistory((h) => [...h, {
           t: Date.now(),
           memUsed: 1 - i.memory.freeBytes / i.memory.totalBytes,
-          load: (i.cpu.loadAvg[0] ?? 0) / Math.max(i.cpu.cores, 1),
+          load: i.cpu.usagePercent !== undefined ? i.cpu.usagePercent / 100 : (i.cpu.loadAvg[0] ?? 0) / Math.max(i.cpu.cores, 1),
         }].slice(-keep));
       } catch (err) {
         if (alive) setError(err instanceof Error ? err.message : String(err));

@@ -29,7 +29,7 @@ export function HomeSection({ navigate }: { navigate: (id: string) => void }) {
   const { data: pending } = useCoreData(() => core.approvals('pending'));
   const { data: ai } = useCoreData(() => core.aiStatus());
   const memUsed = info ? 1 - info.memory.freeBytes / info.memory.totalBytes : 0;
-  const load = info ? (info.cpu.loadAvg[0] ?? 0) / info.cpu.cores : 0;
+  const load = info ? (info.cpu.usagePercent !== undefined ? info.cpu.usagePercent / 100 : (info.cpu.loadAvg[0] ?? 0) / info.cpu.cores) : 0;
 
   return (
     <div className="mx-auto grid max-w-7xl gap-4 xl:grid-cols-[1fr_1.35fr_1fr]">

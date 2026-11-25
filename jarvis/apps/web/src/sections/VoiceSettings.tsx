@@ -6,6 +6,7 @@ import { core } from '../lib/api';
 import { useConnection } from '../lib/connection';
 import { useVoice, type VoiceSettings } from '../voice/VoiceProvider';
 import { systemVoices } from '../voice/webspeech';
+import { desktop } from '../lib/desktop';
 
 function Slider({ label, value, min, max, step, onChange, fmt }: { label: string; value: number; min: number; max: number; step: number; onChange: (v: number) => void; fmt: (v: number) => string }) {
   const id = `sl-${label}`;
@@ -106,7 +107,9 @@ export function VoiceSettingsPanel() {
           <p className="flex items-start gap-2"><ShieldCheck size={14} className="mt-0.5 shrink-0 text-accent" aria-hidden />
             <span><strong className="text-ink">Privacidad del micrófono:</strong> solo se activa cuando pulsas el micrófono (o en manos libres, tras cada respuesta), con indicador rojo visible. El audio lo procesa el <strong className="text-ink">{v.processor}</strong>, no JARVIS. Cada activación queda en el Historial.</span></p>
           <p className="mt-2">Palabra de activación «Jarvis» 100 % local: llegará con la aplicación de escritorio (Fase 5).</p>
-          {!v.recognitionSupported && <p className="mt-2 text-warn">Este navegador no admite reconocimiento de voz. Usa Chrome o Edge.</p>}
+          {!v.recognitionSupported && (desktop()
+            ? <p className="mt-2 text-warn">En la app de escritorio, el reconocimiento de voz llega con la voz 100 % local (Whisper, Fase 5B). Mientras tanto, para hablarle abre JARVIS en Chrome o Edge; las respuestas habladas sí funcionan aquí.</p>
+            : <p className="mt-2 text-warn">Este navegador no admite reconocimiento de voz. Usa Chrome o Edge.</p>)}
         </div>
 
         <fieldset>

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { defineTool } from '../registry';
 import type { JarvisModule } from '../../kernel/modules';
 import { datetimeTool } from './datetime';
+import { sampleCpuUsage } from '../../control/os-tools';
 
 /** Información real del equipo donde corre el núcleo. Solo lectura. */
 export const systemInfoTool = defineTool({
@@ -13,15 +14,16 @@ export const systemInfoTool = defineTool({
   risk: 'low',
   sideEffects: false,
   risks: [],
-  returns: 'Objeto con plataforma, versión, CPU (modelo, núcleos, carga), memoria total/libre y uptime.',
-  execute: () => {
+  returns: 'Objeto con plataforma, versión, CPU (modelo, núcleos, uso real en %, carga), memoria total/libre y uptime.',
+  execute: async () => {
+    const usagePercent = await sampleCpuUsage(250);
     const cpus = os.cpus();
     return {
       platform: os.platform(),
       release: os.release(),
       arch: os.arch(),
       hostname: os.hostname(),
-      cpu: { model: cpus[0]?.model ?? 'desconocido', cores: cpus.length, loadAvg: os.loadavg() },
+      cpu: { model: cpus[0]?.model ?? 'desconocido', cores: cpus.length, usagePercent, loadAvg: os.loadavg() },
       memory: { totalBytes: os.totalmem(), freeBytes: os.freemem() },
       uptimeSec: Math.round(os.uptime()),
     };

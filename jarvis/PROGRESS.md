@@ -39,6 +39,15 @@
 - [x] 106 pruebas; prueba de voz en Chromium real con micrófono y altavoz simulados.
 - [ ] Palabra de activación local → Fase 5 (escritorio).
 
+## 2026-11-25 — Fase 5A
+- [x] Control del equipo con listas blancas y protección de rutas; herramientas de archivos, apps, navegador,
+      comandos, procesos y ventanas.
+- [x] Migración a `node:sqlite`.
+- [x] App de escritorio Electron con DPAPI, bandeja, atajo, inicio con Windows; empaquetado verificado.
+- [x] 126 pruebas; prueba de extremo a extremo de la app de escritorio real y de la empaquetada.
+- [ ] Prueba en Windows 11 real — pendiente del usuario.
+- Decisión técnica: Fase 5 dividida en 5A/5B porque Electron no tiene reconocimiento de voz en la nube.
+
 ## Decisiones tomadas por el usuario
 - Cerebro: Claude Opus 5.5 (API de Anthropic, prepago de 5 $, sin recarga automática). Límite en JARVIS: 5 $/mes.
 

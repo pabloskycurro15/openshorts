@@ -25,6 +25,11 @@ export interface ToolDefinition<S extends z.ZodType = z.ZodType> {
   risks: string[];
   /** Qué devuelve, en lenguaje natural. */
   returns: string;
+  /**
+   * Ámbitos que se conceden con «Aprobar siempre» (por defecto, los mismos que pide).
+   * Permite conceder una carpeta entera en lugar de un archivo concreto.
+   */
+  grantScopes?: (args: z.infer<S>) => string[];
   execute(args: z.infer<S>, ctx: ToolContext): Promise<unknown> | unknown;
 }
 
@@ -124,7 +129,13 @@ export class ToolRegistry {
       return this.finish(principal, name, rawArgs, { status: 'error', error: `Argumentos no válidos: ${z.prettifyError(parsed.error)}` });
     }
     const args = parsed.data;
-    const scopes = typeof tool.permissions === 'function' ? tool.permissions(args) : tool.permissions;
+    // Calcular ámbitos puede fallar (p. ej. ruta fuera de las carpetas autorizadas): se rechaza sin preguntar.
+    let scopes: string[];
+    try {
+      scopes = typeof tool.permissions === 'function' ? tool.permissions(args) : tool.permissions;
+    } catch (err) {
+      return this.finish(principal, name, args, { status: 'error', error: err instanceof Error ? err.message : String(err) });
+    }
     const verdict = this.permissions.check({ principal, scopes, risk: tool.risk, sideEffects: tool.sideEffects, interactive: opts.interactive });
 
     if (verdict.decision === 'deny') return this.finish(principal, name, args, { status: 'denied', reason: verdict.reason });
@@ -174,7 +185,8 @@ export class ToolRegistry {
     const approval = this.setApprovalStatus(id, decision === 'denied' ? 'denied' : 'approved');
     this.audit.append({ principal: by, action: `approval.${decision}`, target: call.tool.name, outcome: 'success', details: { approvalId: id } });
     if (decision === 'approved_always' && call.principal.kind !== 'user') {
-      for (const scope of call.scopes) this.permissions.grant(by, call.principal, scope, 'allow');
+      const toGrant = call.tool.grantScopes ? call.tool.grantScopes(call.args) : call.scopes;
+      for (const scope of toGrant) this.permissions.grant(by, call.principal, scope, 'allow');
     }
     this.bus.emit('approval.resolved', approval);
 

@@ -8,7 +8,7 @@
 
 ## Resultados reales (2026-11-25, Linux x64, Node 22.23)
 
-`npm run check` → typecheck OK (núcleo y web), lint OK (0 avisos), **106/106 pruebas superadas**.
+`npm run check` → typecheck OK (núcleo, web y escritorio), lint OK (0 avisos), **126/126 pruebas superadas**.
 
 | Archivo | Pruebas | Cubre |
 |---|---|---|
@@ -22,6 +22,9 @@
 | `ai-routes.test.ts` | 6 | Estado inicial; la clave nunca sale por la API y se guarda cifrada; validación de ajustes; chat NDJSON por HTTP real, listado y borrado; chat sin clave; mensaje vacío |
 | `tools.test.ts` (ampliado) | +3 | Espera de confirmación con carrera; caducidad; agente interactivo pregunta / en segundo plano se deniega |
 | `voice.test.ts` (núcleo) | 5 | Auditoría del micrófono; ElevenLabs desactivado por defecto y no activable sin clave; con clave (contra API simulada): voces, síntesis MP3, cuerpo de la petición, contador de caracteres, la clave nunca sale; borrar clave desactiva; clave rechazada |
+| `control.test.ts` | 16 | Config solo por el usuario, rutas absolutas, existentes, sin raíz de disco, ids únicos; rutas: `..`, absolutas externas, enlaces simbólicos; archivos: listar, leer, crear (sin sobrescribir), sobrescribir con copia y confirmación, borrar a papelera, solo lectura, rechazo sin preguntar, «aprobar siempre» = carpeta, binarios y tamaño; apps autorizadas sin shell y cierre; URLs solo http(s) con `rundll32`; comandos de lista blanca ejecutados de verdad; tiempo máximo; procesos reales; análisis de PowerShell/ps/ventanas; scripts sin inyección; ventanas solo Windows; CPU real |
+| `server.test.ts` (ampliado) | +2 | API de control; servido de la interfaz con CSP y API protegida |
+| `apps/desktop/test/master-key.test.ts` | 2 | Clave maestra cifrada por el sistema, recuperable y nunca en claro; rechazo de archivos no cifrados por el sistema |
 | `apps/web/test/voice.test.tsx` | 9 | Texto para voz; troceado por frases (abreviaturas, código); reconocimiento (sin soporte, parciales y final es-ES, permiso denegado, silencio); síntesis (cola, ajustes, fin, cancelación); voz por defecto |
 | `apps/web/test/web.test.tsx` | 13 | 15 secciones con ids únicos y plan para las futuras; 8 estados del núcleo visual; utilidades; almacenamiento tolerante a fallos; App con núcleo simulado: pantalla de vinculación, panel con 15 secciones, reacción a eventos (estado y emergencia), secciones futuras honestas, token caducado |
 
@@ -55,7 +58,16 @@ núcleo en «Escuchando» → «qué hora es» → confirmación hablada («Nece
 frase a frase en es-ES con tono 0,85 → un mensaje escrito no se lee (modo «si le hablo») → manos libres reabre el
 micrófono tras responder → 4 activaciones auditadas en el Historial → 0 errores de consola.
 
+### App de escritorio (Fase 5A, Electron 45 real bajo Xvfb, con Playwright)
+Mismo guion en modo desarrollo **y con el ejecutable empaquetado** por electron-builder:
+conexión automática sin pantalla de token → la ventana no tiene Node → navegación a un sitio externo bloqueada →
+autorizar una carpeta, explorarla y previsualizar un archivo → Monitor con uso de CPU y 12 procesos reales →
+aviso honesto de voz local → 0 errores → cierre limpio. Además: `JARVIS.exe` (PE32+ x86-64) generado para Windows;
+el instalador NSIS no se pudo generar aquí (requiere Wine o Windows).
+
 ## No probado todavía
+- **Windows 11 real**: instalador, DPAPI, control de ventanas (PowerShell + user32), cierre por nombre de proceso,
+  apertura de URLs con `rundll32`, inicio con Windows. Solo hay pruebas de la lógica y del análisis de salidas.
 - **Voz con micrófono y altavoces reales** (Chrome/Edge en tu equipo): el entorno de pruebas no tiene audio.
 - **Conversación con la API real de Anthropic**: requiere la clave del usuario. Al configurarla, «Probar conexión»
   hace una consulta gratuita y el primer mensaje confirmará el flujo completo.

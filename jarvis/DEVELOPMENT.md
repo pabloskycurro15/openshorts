@@ -1,7 +1,7 @@
 # Guía de desarrollo
 
 ## Requisitos
-Node.js ≥ 22. En Windows, `better-sqlite3` usa binarios precompilados (si no, instalar las Build Tools de Visual Studio).
+Node.js ≥ 22.13 (usa el SQLite integrado; no hace falta compilar nada).
 
 ## Comandos (desde `jarvis/`)
 | Comando | Acción |
@@ -12,6 +12,8 @@ Node.js ≥ 22. En Windows, `better-sqlite3` usa binarios precompilados (si no, 
 | `npm run lint` | ESLint, 0 avisos permitidos |
 | `npm test` | Vitest |
 | `npm run check` | Las tres anteriores (obligatorio antes de cada commit) |
+| `npm run desktop` | Compila y abre la app de escritorio |
+| `npm run dist:win` | Genera el instalador de Windows (ejecutar en Windows) |
 
 ## Convenciones
 - TypeScript estricto (`noUncheckedIndexedAccess`), ESM, `import type` para tipos.

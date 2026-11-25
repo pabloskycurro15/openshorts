@@ -101,6 +101,33 @@ AES-256-GCM con el nombre del secreto como dato autenticado; clave maestra en ar
 datos (`MasterKeyProvider` intercambiable: en la Fase 5, Electron `safeStorage`/DPAPI). Protege frente a
 filtraciones de la base de datos o de copias; no frente a quien controle por completo la cuenta del usuario.
 
+## ADR-015 · SQLite integrado de Node en lugar de better-sqlite3 ✅ (sustituye parte de ADR-006)
+**Problema:** better-sqlite3 es un módulo nativo: hay que compilarlo por separado para Node y para Electron, y en
+Windows suele exigir las herramientas de compilación de Visual Studio.
+**Decisión:** `node:sqlite` (integrado en Node ≥ 22.13 y en Electron 45 / Node 24) tras un envoltorio mínimo
+(`storage/sqlite.ts`) con la misma API que usaba el proyecto. FTS5 verificado.
+**Consecuencias:** cero dependencias nativas; instalación trivial en Windows; el mismo núcleo funciona dentro de
+Electron. En Node 22 muestra un aviso «experimental» (silenciado); en Node 24 es estable.
+
+## ADR-016 · Modelo de seguridad de la app de escritorio ✅
+- El núcleo corre en el proceso principal; la ventana carga la interfaz servida por el propio núcleo
+  (`127.0.0.1`) con CSP estricta.
+- Ventana con `contextIsolation`, `sandbox` y sin Node. El preload solo expone `{token, version, platform}` y solo
+  a páginas del mismo origen. Token efímero por arranque (no se guarda en disco).
+- Navegación fuera de JARVIS bloqueada (los enlaces se abren en el navegador). Solo se concede el permiso de
+  micrófono, y solo a JARVIS.
+- Clave maestra cifrada con DPAPI (`safeStorage`); si el sistema no ofrece almacén seguro, se usa el archivo 0600.
+
+## ADR-017 · Control del equipo por listas blancas ✅
+- Lo que no está autorizado no existe: carpetas, aplicaciones y comandos los define el usuario (solo él).
+- Rutas resueltas con `realpath` (incluye enlaces) y comprobadas contra la carpeta; prohibido autorizar la raíz
+  de un disco. Una ruta no válida se rechaza **sin** pedir confirmación.
+- Procesos sin shell y con argumentos fijos definidos por el usuario: el modelo solo elige un id.
+- Borrar = mover a la papelera de JARVIS; modificar guarda copia previa.
+- «Aprobar siempre» concede la carpeta entera (lectura o escritura), no todo el disco; el riesgo alto vuelve a
+  preguntar siempre.
+- Ventanas vía PowerShell + user32 (EncodedCommand; identificadores solo numéricos).
+
 ## ADR-011 · Voz ✅
 - Base gratuita: Web Speech API (reconocimiento y síntesis del sistema).
 - Voz premium masculina, profunda y cinematográfica: ElevenLabs (ya usado en OpenShorts; de pago).
@@ -115,7 +142,8 @@ filtraciones de la base de datos o de copias; no frente a quien controle por com
 - ElevenLabs a través del núcleo (la clave nunca llega al navegador); voz por defecto «Adam», modelo
   `eleven_multilingual_v2`. Desactivado por defecto.
 - Ajustes de voz por dispositivo (localStorage): cada equipo tiene sus voces y su micrófono.
-- Palabra de activación: Fase 5 (escritorio), por no ser viable de forma local y en segundo plano en el navegador.
+- Palabra de activación y reconocimiento local: Fase 5B. En Electron no existe el servicio de voz en la nube del
+  navegador, así que el escritorio necesita Whisper local (más privado, además).
 
 ## ADR-012 · Detalles de la interfaz ✅
 - **React 19 + Vite 8 + Tailwind 4** (tokens de diseño en CSS con `@theme`; acento como variable de tiempo de

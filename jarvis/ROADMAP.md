@@ -2,6 +2,9 @@
 
 Cada fase solo se da por terminada cuando cumple sus criterios de aceptación **verificados**.
 
+\* Fase 5A: verificado en Linux con Electron real y empaquetado; falta la prueba en Windows 11 real (control de
+ventanas, DPAPI, instalador), que debe hacer el usuario.
+
 \* Fase 3: todo verificado contra el SDK oficial y una API simulada; falta la primera prueba con la API real de
 Anthropic, que requiere la clave del usuario (ver TESTING.md).
 
@@ -11,7 +14,8 @@ Anthropic, que requiere la clave del usuario (ver TESTING.md).
 | 2 | Interfaz: identidad naranja/azul oscuro, núcleo visual, navegación, 15 secciones, temas | ✅ Completada |
 | 3 | Cerebro IA: proveedores, conversación, contexto, uso de herramientas, control de presupuesto | ✅ Completada* |
 | 4 | Voz: STT, TTS, interrupción, conversación continua (palabra de activación → Fase 5) | ✅ Completada |
-| 5 | App de escritorio Windows (Electron), control de Windows, palabra de activación local | ⏳ Siguiente |
+| 5A | App de escritorio Windows (Electron) y control del equipo con listas blancas | ✅ Completada* |
+| 5B | Voz 100 % local en escritorio (Whisper) y palabra de activación «Jarvis» | ⏳ Siguiente |
 | 6 | Memoria: categorías, búsqueda híbrida FTS5 + vectores, administración | Pendiente |
 | 7 | Multiagente: coordinador, agentes especializados, supervisión | Pendiente |
 | 8 | Conectores: extensiones, almacén de credenciales, integraciones prioritarias | Pendiente |
@@ -66,10 +70,21 @@ Anthropic, que requiere la clave del usuario (ver TESTING.md).
 - [ ] Palabra de activación local → **trasladada a la Fase 5**: en el navegador no puede funcionar en segundo plano
       ni de forma local fiable; en la app de escritorio sí (openWakeWord, modelo «hey jarvis», 100 % local).
 
-### Fase 5 (propuesta)
-- App de escritorio Windows con Electron: núcleo integrado, token automático, clave maestra con DPAPI
-  (`safeStorage`), arranque con Windows opcional, icono en la bandeja.
-- Palabra de activación «Jarvis» local con openWakeWord (ONNX), indicador permanente y desactivable.
-- Control de Windows con permisos: abrir/cerrar aplicaciones autorizadas, ventanas, navegador, archivos en
-  carpetas autorizadas, comandos de una lista blanca, procesos y rendimiento real (CPU por contadores).
-- Todo como herramientas del `ToolRegistry` con riesgos honestos y confirmaciones.
+### Fase 5A ✅*
+- [x] App de escritorio con Electron 45: núcleo integrado, token efímero entregado por preload, ventana aislada
+      (contextIsolation, sandbox, sin Node), navegación externa bloqueada, micrófono solo para JARVIS.
+- [x] Clave maestra con `safeStorage` (DPAPI en Windows); bandeja (mostrar, emergencia, iniciar con Windows,
+      salir); atajo Ctrl+Alt+J; instancia única; cierre limpio.
+- [x] Empaquetado con electron-builder: Linux probado; `JARVIS.exe` de Windows generado; instalador NSIS
+      configurado (se genera en Windows con `npm run dist:win`).
+- [x] Control del equipo con listas blancas: carpetas, aplicaciones, comandos; navegador; procesos; ventanas.
+- [x] Protección de rutas (`..`, rutas externas, enlaces simbólicos); papelera de JARVIS; copia antes de modificar.
+- [x] Uso real de CPU por contadores (también en Windows) y lista de procesos en el Monitor.
+- [x] Migración a SQLite integrado de Node (sin módulos nativos).
+- [ ] Prueba en Windows 11 real (instalador, DPAPI, ventanas, aplicaciones) — **la hace el usuario**.
+
+### Fase 5B (propuesta)
+- Reconocimiento de voz 100 % local con Whisper (ONNX/transformers.js) en la app de escritorio y en el navegador
+  como alternativa privada a Web Speech; descarga del modelo una vez, con aviso de tamaño.
+- Palabra de activación «Jarvis» local (openWakeWord, modelo «hey jarvis») solo en escritorio, desactivable,
+  con indicador permanente mientras escucha.

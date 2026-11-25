@@ -61,13 +61,13 @@ export class SecretVault {
 
   get(name: string): string | null {
     const row = this.db.prepare('SELECT iv, tag, ciphertext FROM secrets WHERE name = ?').get(name) as
-      | { iv: Buffer; tag: Buffer; ciphertext: Buffer }
+      | { iv: Uint8Array; tag: Uint8Array; ciphertext: Uint8Array }
       | undefined;
     if (!row) return null;
-    const decipher = createDecipheriv('aes-256-gcm', this.keys.getKey(), row.iv);
+    const decipher = createDecipheriv('aes-256-gcm', this.keys.getKey(), Buffer.from(row.iv));
     decipher.setAAD(Buffer.from(name));
-    decipher.setAuthTag(row.tag);
-    return Buffer.concat([decipher.update(row.ciphertext), decipher.final()]).toString('utf8');
+    decipher.setAuthTag(Buffer.from(row.tag));
+    return Buffer.concat([decipher.update(Buffer.from(row.ciphertext)), decipher.final()]).toString('utf8');
   }
 
   has(name: string): boolean {

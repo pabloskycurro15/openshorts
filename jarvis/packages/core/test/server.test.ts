@@ -102,3 +102,32 @@ describe('token local', () => {
     if (process.platform !== 'win32') expect(statSync(`${dir}/auth-token`).mode & 0o777).toBe(0o600);
   });
 });
+
+describe('API de control y servido de la interfaz', () => {
+  it('configuración del control: lectura, validación y guardado', async () => {
+    const { app, auth } = await setup();
+    expect((await app.inject({ url: '/api/control/config', headers: auth })).json()).toEqual({ folders: [], apps: [], commands: [] });
+    const bad = await app.inject({ method: 'PUT', url: '/api/control/config', headers: auth, payload: { folders: [{ id: 'x', label: 'X', path: '/no/existe/nunca', access: 'read' }] } });
+    expect(bad.statusCode).toBe(400);
+    const dir = tmpDir();
+    const ok = await app.inject({ method: 'PUT', url: '/api/control/config', headers: auth, payload: { folders: [{ id: 'docs', label: 'Docs', path: dir, access: 'read' }] } });
+    expect(ok.statusCode).toBe(200);
+    expect(ok.json().folders[0].id).toBe('docs');
+  });
+
+  it('sirve la interfaz sin token y con cabeceras de seguridad; la API sigue protegida', async () => {
+    const webDir = tmpDir();
+    const { writeFileSync } = await import('node:fs');
+    writeFileSync(`${webDir}/index.html`, '<!doctype html><title>JARVIS</title>');
+    const { createJarvis } = await import('../src/app');
+    const { loadConfig } = await import('../src/kernel/config');
+    const j = createJarvis(loadConfig({}, { dataDir: tmpDir(), logLevel: 'silent', webDir }), { dbFile: ':memory:' });
+    await j.start();
+    app = await buildServer(j, TOKEN);
+    const page = await app.inject('/');
+    expect(page.statusCode).toBe(200);
+    expect(page.body).toContain('JARVIS');
+    expect(page.headers['content-security-policy']).toContain("default-src 'self'");
+    expect((await app.inject('/api/health')).statusCode).toBe(401);
+  });
+});

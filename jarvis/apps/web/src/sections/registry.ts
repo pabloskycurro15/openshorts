@@ -29,8 +29,7 @@ export const SECTIONS: SectionDef[] = [
   { id: 'historial', label: 'Historial', icon: History, phase: 2, summary: 'Registro de auditoría verificable.' },
   { id: 'notificaciones', label: 'Notificaciones', icon: Bell, phase: 2, summary: 'Eventos del sistema en directo.' },
   { id: 'laboratorio', label: 'Laboratorio', icon: FlaskConical, phase: 2, summary: 'Pruebas visuales y funciones experimentales.' },
-  { id: 'archivos', label: 'Archivos y proyectos', icon: FolderKanban, phase: 5, summary: 'Carpetas autorizadas y proyectos.',
-    planned: ['Explorar solo carpetas que tú autorices', 'Crear, editar y organizar archivos con confirmación', 'Proyectos de programación con su contexto'] },
+  { id: 'archivos', label: 'Archivos y proyectos', icon: FolderKanban, phase: 5, summary: 'Carpetas, aplicaciones y comandos autorizados.' },
   { id: 'comandos', label: 'Centro de comandos', icon: TerminalSquare, phase: 2, summary: 'Herramientas disponibles y ejecución manual.' },
   { id: 'memoria', label: 'Memoria', icon: Brain, phase: 6, summary: 'Recuerdos y conocimientos.',
     planned: ['8 categorías: corto/largo plazo, personal, proyectos, documental, contextual, relacional, visual', 'Búsqueda híbrida (texto + semántica)', 'Editar, borrar, ver origen, fecha y confianza', 'Los recuerdos personales solo se usan si lo pides'] },
@@ -40,6 +39,6 @@ export const SECTIONS: SectionDef[] = [
 ];
 
 /** Última fase completada y verificada. */
-export const CURRENT_PHASE = 4;
+export const CURRENT_PHASE = 5;
 
 export const sectionById = (id: string) => SECTIONS.find((s) => s.id === id);

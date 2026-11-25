@@ -1,5 +1,6 @@
 import type { SpeakOptions, SpeechSynthesizer } from './types';
 import { readStore } from '../lib/storage';
+import { desktop } from '../lib/desktop';
 
 /**
  * Voz premium de ElevenLabs, servida por el núcleo (la clave nunca llega al navegador).
@@ -18,7 +19,7 @@ export class ElevenLabsSynthesizer implements SpeechSynthesizer {
 
   enqueue(text: string, o: SpeakOptions) {
     if (!text) return;
-    const token = readStore<string | null>('jarvis.token', null);
+    const token = desktop()?.token ?? readStore<string | null>('jarvis.token', null);
     const gen = this.generation;
     this.queue.push(
       fetch('/api/voice/tts', {

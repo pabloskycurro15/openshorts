@@ -6,6 +6,8 @@ const ConfigSchema = z.object({
   port: z.coerce.number().int().min(0).max(65535).default(7777),
   dataDir: z.string().default('./.data'),
   logLevel: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
+  /** Carpeta con la interfaz compilada (apps/web/dist) para servirla desde el núcleo. Opcional. */
+  webDir: z.string().optional(),
 });
 export type JarvisConfig = z.infer<typeof ConfigSchema>;
 
@@ -16,7 +18,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env, overrides: Part
     port: env.JARVIS_PORT,
     dataDir: env.JARVIS_DATA_DIR,
     logLevel: env.JARVIS_LOG_LEVEL,
+    webDir: env.JARVIS_WEB_DIR,
     ...overrides,
   });
-  return { ...parsed, dataDir: path.resolve(parsed.dataDir) };
+  return { ...parsed, dataDir: path.resolve(parsed.dataDir), webDir: parsed.webDir ? path.resolve(parsed.webDir) : undefined };
 }

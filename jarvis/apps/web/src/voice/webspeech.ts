@@ -45,6 +45,9 @@ const ERRORS: Record<string, [RecognitionFailure['code'], string]> = {
 export class WebSpeechRecognizer implements SpeechRecognizer {
   private rec: SR | null = null;
   get supported() {
+    // Dentro de la app de escritorio (Electron) el servicio en la nube del navegador no existe:
+    // el reconocimiento llegará con la voz local (Whisper, Fase 5B).
+    if ((window as unknown as { jarvisDesktop?: unknown }).jarvisDesktop) return false;
     return !!recognitionCtor();
   }
   get processor() {

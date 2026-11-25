@@ -1,0 +1,68 @@
+{
+  "name": "@jarvis/desktop",
+  "version": "0.5.0",
+  "private": true,
+  "description": "JARVIS — aplicación de escritorio",
+  "author": "JARVIS",
+  "main": "dist/main.cjs",
+  "scripts": {
+    "build": "npm run build -w @jarvis/web && node build.mjs",
+    "start": "node build.mjs && electron .",
+    "dist:win": "npm run build && electron-builder --win nsis --publish never",
+    "dist:dir": "npm run build && electron-builder --dir --publish never"
+  },
+  "devDependencies": {
+    "electron": "45.5.0",
+    "electron-builder": "^26.18.0",
+    "esbuild": "^0.28.2"
+  },
+  "build": {
+    "appId": "es.jarvis.asistente",
+    "productName": "JARVIS",
+    "copyright": "JARVIS",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "../web/dist",
+        "to": "web"
+      },
+      {
+        "from": "build/icon.png",
+        "to": "icon.png"
+      }
+    ],
+    "npmRebuild": false,
+    "asar": true,
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "shortcutName": "JARVIS",
+      "createDesktopShortcut": true,
+      "runAfterFinish": true,
+      "artifactName": "JARVIS-Setup-${version}.${ext}"
+    },
+    "linux": {
+      "target": [
+        "dir"
+      ],
+      "icon": "build/icon.png",
+      "category": "Utility"
+    },
+    "electronVersion": "45.5.0",
+    "executableName": "JARVIS"
+  }
+}

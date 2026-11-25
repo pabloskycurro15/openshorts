@@ -1,8 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import BetterSqlite3 from 'better-sqlite3';
+import { Database } from './sqlite';
 
-export type Database = BetterSqlite3.Database;
+export type { Database };
 
 /**
  * Migraciones en orden. Nunca editar una migración ya publicada: añadir una nueva.
@@ -112,7 +112,7 @@ const MIGRATIONS: string[] = [
 
 export function openDatabase(file: string): Database {
   if (file !== ':memory:') fs.mkdirSync(path.dirname(file), { recursive: true });
-  const db = new BetterSqlite3(file);
+  const db = new Database(file);
   db.pragma('journal_mode = WAL');
   db.pragma('foreign_keys = ON');
   migrate(db);

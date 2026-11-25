@@ -14,6 +14,7 @@ import { CommandsSection } from './sections/Commands';
 import { SettingsSection } from './sections/Settings';
 import { PlannedSection } from './sections/Planned';
 import { ConversationSection } from './sections/Conversation';
+import { FilesSection } from './sections/Files';
 
 export function App() {
   const { status } = useConnection();
@@ -31,6 +32,7 @@ export function App() {
       case 'laboratorio': return <LabSection />;
       case 'comandos': return <CommandsSection />;
       case 'configuracion': return <SettingsSection />;
+      case 'archivos': return <FilesSection />;
       case 'conversacion': return <ConversationSection navigate={navigate} />;
       default: return <PlannedSection section={section} />;
     }
