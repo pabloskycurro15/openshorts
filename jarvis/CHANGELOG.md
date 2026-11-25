@@ -9,7 +9,7 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
   sensibles; modo «Automático» por defecto.
 - Claves por proveedor (`/api/ai/keys/:provider`), etiqueta del modelo en cada respuesta, selector con
   «Automático», tabla del reparto en Configuración.
-- 25 pruebas nuevas (175 en total) y prueba en navegador con los tres proveedores simulados.
+- 25 pruebas nuevas (164 en total) y prueba en navegador con los tres proveedores simulados.
 
 ## [0.6.0] — 2026-11-25
 ### Añadido

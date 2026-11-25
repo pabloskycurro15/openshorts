@@ -8,7 +8,7 @@
 
 ## Resultados reales (2026-11-25, Linux x64, Node 22.23)
 
-`npm run check` → typecheck OK (núcleo, web y escritorio), lint OK (0 avisos), **175/175 pruebas superadas**.
+`npm run check` → typecheck OK (núcleo, web y escritorio), lint OK (0 avisos), **164/164 pruebas superadas**.
 
 | Archivo | Pruebas | Cubre |
 |---|---|---|

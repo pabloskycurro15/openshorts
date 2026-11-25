@@ -48,7 +48,7 @@ escritorio (Windows 11), iOS y PWA.
 - Voz 100 % local (Fase 5B): Whisper en tu equipo (el audio no sale) y palabra de activación «Jarvis».
 - Varios cerebros con repartidor automático (0.7): Gemini gratis para lo sencillo, GPT-6.1 Terra para lo
   intermedio, Claude Opus para lo complejo y Claude para las acciones; respaldo automático si uno falla.
-- 175 pruebas automatizadas (ver [TESTING.md](TESTING.md)).
+- 164 pruebas automatizadas (ver [TESTING.md](TESTING.md)).
 
 ## Instalar la app de escritorio en Windows 11
 
