@@ -219,6 +219,26 @@ const MIGRATIONS: string[] = [
   );
   CREATE INDEX automation_runs_a ON automation_runs(automation_id, started_at);
   `,
+  // 8 — dispositivos vinculados y suscripciones de notificaciones push
+  `
+  CREATE TABLE devices (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    platform TEXT NOT NULL,
+    token_hash TEXT NOT NULL UNIQUE,
+    created_at TEXT NOT NULL,
+    last_seen_at TEXT,
+    last_ip TEXT,
+    revoked_at TEXT
+  );
+  CREATE TABLE push_subscriptions (
+    id TEXT PRIMARY KEY,
+    device_id TEXT,
+    endpoint TEXT NOT NULL UNIQUE,
+    keys TEXT NOT NULL,
+    created_at TEXT NOT NULL
+  );
+  `,
 ];
 
 export function openDatabase(file: string): Database {

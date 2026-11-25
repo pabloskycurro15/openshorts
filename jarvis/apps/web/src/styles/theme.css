@@ -48,6 +48,12 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* iPhone (PWA a pantalla completa / app nativa): respetar la muesca y la barra de inicio */
+#root {
+  box-sizing: border-box;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
 /* Fondo: degradado profundo + rejilla técnica opcional */
 .jarvis-bg {
   background:

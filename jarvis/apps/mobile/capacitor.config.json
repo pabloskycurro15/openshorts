@@ -1,0 +1,13 @@
+{
+  "appId": "app.jarvis.assistant",
+  "appName": "JARVIS",
+  "webDir": "../web/dist",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#050A14",
+    "limitsNavigationsToAppBoundDomains": false
+  },
+  "server": {
+    "iosScheme": "capacitor"
+  }
+}

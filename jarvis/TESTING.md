@@ -8,7 +8,7 @@
 
 ## Resultados reales (2026-11-25, Linux x64, Node 22.23)
 
-`npm run check` → typecheck OK (núcleo, web y escritorio), lint OK (0 avisos), **218/218 pruebas superadas**.
+`npm run check` → typecheck OK (núcleo, web y escritorio), lint OK (0 avisos), **226/226 pruebas superadas**.
 
 | Archivo | Pruebas | Cubre |
 |---|---|---|
@@ -33,7 +33,8 @@
 | `connectors.test.ts` | 10 | Marco: herramientas ocultas sin activar, secretos cifrados y fuera de la API, credencial errónea rechazada, registro y estadísticas, borrar credenciales; GitHub: issue con confirmación; ZIP válido (CRC, deflate, sin ocultos); Netlify: ruta fuera rechazada sin preguntar, confirmación, ZIP enviado; OpenShorts: clave de Gemini del almacén; Telegram: solo chat autorizado, pendientes y autorización; WhatsApp: teléfonos, QR, código, órdenes solo desde ti mismo (por LID), sin bucles, mensajes ajenos nunca son órdenes, leer con permiso, envío crítico siempre confirmado, límite 15/h; emergencia; API HTTP |
 | `google.test.ts` | 7 | Correo RFC 2822 con UTF-8 y extracción de texto; OAuth: URL con PKCE y redirección local, «state» de un solo uso, verificador comprobado, token cifrado y fuera de la API, cuenta, revocación; renovación y token revocado; Gmail (permiso, búsqueda, lectura multiparte, borrador, envío crítico siempre confirmado); Calendar (zona local, 1 h por defecto, día completo); Drive (consulta escapada, exportar Documento, subir solo desde carpetas autorizadas en multipart); vuelta OAuth por HTTP |
 | `automations.test.ts` | 14 | Próxima ejecución (diaria por días, intervalo, una vez); plantillas; solo el usuario activa y JARVIS propone; permisos exactos concedidos y revocados; validaciones (herramientas, 30 min con IA, sin automatizaciones encadenadas); riesgo alto espera confirmación y avisa; sin permiso → pregunta → denegada; programador diario y «una vez»; WhatsApp con filtros y plantillas del evento; condición de CPU sostenida con rearme; Gmail con línea base y sondeo cada 5 min; reintento seguro y sin reintento tras efectos; límite diario, emergencia; modo IA con herramientas acotadas, identidad, coste; API HTTP |
-| `apps/web/test/web.test.tsx` | 16 | 15 secciones con ids únicos y plan para las futuras; 8 estados del núcleo visual; utilidades; almacenamiento tolerante a fallos; App con núcleo simulado: pantalla de vinculación, panel con 15 secciones, reacción a eventos (estado y emergencia), secciones futuras honestas, token caducado |
+| `devices.test.ts` | 7 | Código de un solo uso → token propio (solo su huella en la BD), `/api/me`, revocación; 5 códigos erróneos invalidan y fallos repetidos → 429; CORS solo para la app nativa; VAPID persistente, avisos y confirmaciones por push, caducadas borradas; solo servicios push reales; cifrado Web Push real contra servicio local HTTPS; red local apagada por defecto, segundo puerto con la misma autenticación (HTTP y WebSocket), QR con la dirección HTTPS |
+| `apps/web/test/web.test.tsx` | 17 | 15 secciones con ids únicos y plan para las futuras; 8 estados del núcleo visual; utilidades; almacenamiento tolerante a fallos; App con núcleo simulado: pantalla de vinculación, panel con 15 secciones, reacción a eventos (estado y emergencia), secciones futuras honestas, token caducado |
 
 ### Conectores con servicios reales (Fase 8A)
 - WhatsApp: Baileys contra los servidores reales de WhatsApp → QR recibido (Node), mostrado en Chromium y en la app

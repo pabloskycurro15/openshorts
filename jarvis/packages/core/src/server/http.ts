@@ -19,6 +19,8 @@ import { registerMemoryRoutes } from './memory-routes';
 import { registerAgentRoutes } from './agent-routes';
 import { registerConnectorRoutes } from './connector-routes';
 import { registerAutomationRoutes } from './automation-routes';
+import { registerDeviceRoutes } from './device-routes';
+import { AuthThrottle } from '../security/devices';
 
 const USER: Principal = { kind: 'user', id: 'owner' };
 
@@ -34,17 +36,35 @@ export async function buildServer(j: Jarvis, token: string): Promise<FastifyInst
   });
   await app.register(websocket);
 
+  const throttle = new AuthThrottle();
+  // Orígenes de la app nativa (Capacitor). La web servida por el núcleo es del mismo origen y no necesita CORS.
+  const NATIVE_ORIGINS = new Set(['capacitor://localhost', 'ionic://localhost']);
   app.addHook('onRequest', async (req, reply) => {
-    // La interfaz estática es pública (no contiene datos); toda la API exige token.
+    const origin = req.headers.origin;
+    if (origin && NATIVE_ORIGINS.has(origin) && req.url.startsWith('/api/')) {
+      void reply.header('access-control-allow-origin', origin).header('vary', 'origin')
+        .header('access-control-allow-headers', 'authorization, content-type').header('access-control-allow-methods', 'GET, POST, PUT, DELETE');
+      if (req.method === 'OPTIONS') return reply.code(204).send();
+    }
+    // La interfaz estática es pública (no contiene datos); toda la API exige token o dispositivo vinculado.
     if (!req.url.startsWith('/api/') || req.url === '/api/ping') return;
+    if (throttle.blocked(req.ip)) return reply.code(429).send({ error: 'Demasiados intentos fallidos. Espera unos minutos.' });
+    if (req.url === '/api/pair/complete') return;
     const header = req.headers.authorization;
     const fromHeader = header?.startsWith('Bearer ') ? header.slice(7) : undefined;
     const fromQuery = req.url.startsWith('/api/events') ? (req.query as { token?: string }).token : undefined;
     const provided = fromHeader ?? fromQuery;
-    if (!provided || !tokensEqual(provided, token)) {
-      return reply.code(401).send({ error: 'No autorizado' });
+    if (provided && tokensEqual(provided, token)) return;
+    const device = provided && provided.length >= 32 && provided.length <= 64 ? j.devices.authenticate(provided, req.ip) : null;
+    if (device) {
+      (req as typeof req & { device?: typeof device }).device = device;
+      return;
     }
+    throttle.fail(req.ip);
+    return reply.code(401).send({ error: 'No autorizado' });
   });
+  // Los códigos de vinculación erróneos también cuentan como intentos fallidos.
+  app.addHook('onResponse', async (req) => { if ((req as typeof req & { authFailed?: boolean }).authFailed) throttle.fail(req.ip); });
 
   app.setErrorHandler((err: { statusCode?: number; message: string; name?: string }, _req, reply) => {
     const status = err.name === 'ZodError' ? 400 : err.statusCode ?? 500;
@@ -126,6 +146,7 @@ export async function buildServer(j: Jarvis, token: string): Promise<FastifyInst
   registerAgentRoutes(app, j);
   registerConnectorRoutes(app, j);
   registerAutomationRoutes(app, j);
+  registerDeviceRoutes(app, j);
 
   app.get('/api/events', { websocket: true }, (socket) => {
     const off = j.bus.onAny((env) => {

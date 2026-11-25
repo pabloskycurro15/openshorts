@@ -28,8 +28,13 @@ import type {
 } from '@jarvis/shared';
 import { readStore, writeStore } from './storage';
 import { desktop } from './desktop';
+import { isNative } from './platform';
 
 const TOKEN_KEY = 'jarvis.token';
+const CORE_URL_KEY = 'jarvis.coreUrl';
+
+export interface DeviceInfo { id: string; name: string; platform: string; createdAt: string; lastSeenAt: string | null; lastIp: string | null; push: boolean }
+export interface RemoteStatus { mode: 'off' | 'lan'; port: number; listening: boolean; error: string | null; addresses: string[]; urls: string[]; publicUrl: string | null }
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
@@ -43,7 +48,8 @@ export class ApiError extends Error {
  */
 export class CoreClient {
   // En la app de escritorio el token llega por el preload (nunca se guarda en el navegador).
-  constructor(private base = '', private token: string | null = desktop()?.token ?? readStore<string | null>(TOKEN_KEY, null)) {}
+  // En la app nativa la interfaz no la sirve el núcleo: su dirección se guarda al vincular.
+  constructor(private base = isNative() ? readStore<string>(CORE_URL_KEY, '') : '', private token: string | null = desktop()?.token ?? readStore<string | null>(TOKEN_KEY, null)) {}
 
   get hasToken() {
     return !!this.token;
@@ -54,10 +60,22 @@ export class CoreClient {
     if (!desktop()) writeStore(TOKEN_KEY, token);
   }
 
+  get baseUrl() {
+    return this.base;
+  }
+
+  /** Dirección del núcleo (solo app nativa o pruebas); vacía = mismo origen. */
+  setBase(url: string) {
+    this.base = url.replace(/\/+$/, '');
+    writeStore(CORE_URL_KEY, this.base);
+  }
+
   eventsUrl(): string {
+    const q = `/api/events?token=${encodeURIComponent(this.token ?? '')}`;
+    if (/^https?:\/\//.test(this.base)) return `${this.base.replace(/^http/, 'ws')}${q}`;
     const loc = window.location;
     const proto = loc.protocol === 'https:' ? 'wss:' : 'ws:';
-    return `${proto}//${loc.host}${this.base}/api/events?token=${encodeURIComponent(this.token ?? '')}`;
+    return `${proto}//${loc.host}${this.base}${q}`;
   }
 
   private async req<T>(path: string, init: RequestInit = {}): Promise<T> {
@@ -133,6 +151,20 @@ export class CoreClient {
   testConnector = (id: string) => this.req<{ ok: boolean; detail: string }>(`/api/connectors/${id}/test`, { method: 'POST', body: '{}' });
   deleteConnectorCredentials = (id: string) => this.req<{ ok: boolean }>(`/api/connectors/${id}/credentials`, { method: 'DELETE' });
   connectorAction = (id: string, action: string, body: Record<string, unknown> = {}) => this.req<Record<string, unknown>>(`/api/connectors/${id}/actions/${action}`, { method: 'POST', body: JSON.stringify(body) });
+
+  // ── Dispositivos, push y acceso remoto ──
+  me = () => this.req<{ kind: 'local' | 'device'; device: DeviceInfo | null }>('/api/me');
+  pairStart = () => this.req<{ code: string; expiresAt: string; link: string | null; qr: string | null }>('/api/pair/start', { method: 'POST', body: '{}' });
+  pairCancel = () => this.req<{ ok: boolean }>('/api/pair/cancel', { method: 'POST', body: '{}' });
+  pairComplete = (code: string, name: string, platform: string) => this.req<{ deviceId: string; token: string }>('/api/pair/complete', { method: 'POST', body: JSON.stringify({ code, name, platform }) });
+  devices = () => this.req<DeviceInfo[]>('/api/devices');
+  revokeDevice = (id: string) => this.req<{ revoked: boolean }>(`/api/devices/${id}`, { method: 'DELETE' });
+  pushKey = () => this.req<{ publicKey: string; subscriptions: number }>('/api/push/key');
+  pushSubscribe = (sub: PushSubscriptionJSON) => this.req<{ subscribed: boolean }>('/api/push/subscribe', { method: 'POST', body: JSON.stringify(sub) });
+  pushUnsubscribe = (endpoint: string) => this.req<{ removed: boolean }>('/api/push/unsubscribe', { method: 'POST', body: JSON.stringify({ endpoint }) });
+  pushTest = () => this.req<{ sent: number; removed: number; failed: number }>('/api/push/test', { method: 'POST', body: '{}' });
+  remote = () => this.req<RemoteStatus>('/api/remote');
+  setRemote = (patch: Partial<Pick<RemoteStatus, 'mode' | 'port' | 'publicUrl'>>) => this.req<RemoteStatus>('/api/remote', { method: 'PUT', body: JSON.stringify(patch) });
 
   // ── Automatizaciones ──
   automations = () => this.req<AutomationView[]>('/api/automations');

@@ -2,6 +2,17 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versionado semántico.
 
+## [0.13.0] — 2026-11-25
+### Añadido
+- iPhone y PWA (Fase 10): vinculación de dispositivos con código de un solo uso y QR, token propio por
+  dispositivo (solo su huella SHA-256 en la base de datos), revocación, freno contra fuerza bruta. Migración 8.
+- Acceso desde la red local (segundo puerto, misma autenticación, HTTP y WebSocket) y dirección HTTPS pública
+  (Tailscale) para el QR.
+- Notificaciones push web con claves VAPID propias (avisos de automatizaciones y confirmaciones pendientes).
+- PWA instalable: manifiesto, iconos, service worker (interfaz sin conexión, nunca la API), márgenes seguros.
+- Proyecto iOS con Capacitor 8 (`apps/mobile`), permisos de micrófono y red local, icono; CORS solo para la app.
+- Guía `IPHONE.md`. 8 pruebas nuevas (226 en total).
+
 ## [0.12.0] — 2026-11-25
 ### Añadido
 - Automatizaciones (Fase 9): disparadores por hora (días de la semana), intervalo, una vez, WhatsApp recibido

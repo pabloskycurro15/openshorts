@@ -92,10 +92,13 @@ const connectors = [
     status: {}, operations: [], stats: { calls: 0, errors: 0, lastUsed: null }, recent: [] },
 ];
 
+const pairBodies: Record<string, unknown>[] = [];
+
 function mockCore(validToken: string) {
   vi.stubGlobal('WebSocket', FakeWS);
   vi.stubGlobal('fetch', vi.fn(async (url: string, init?: RequestInit) => {
     const auth = (init?.headers as Record<string, string> | undefined)?.authorization;
+    if (String(url) === '/api/pair/complete') { pairBodies.push(JSON.parse(String(init?.body))); return new Response(JSON.stringify({ deviceId: 'd1', token: validToken }), { status: 200 }); }
     if (auth !== `Bearer ${validToken}`) return new Response(JSON.stringify({ error: 'No autorizado' }), { status: 401 });
     const path = String(url);
     if (path === '/api/chat') {
@@ -137,7 +140,20 @@ describe('App', () => {
   it('sin token muestra la pantalla de vinculación', async () => {
     mockCore('buen-token');
     await renderApp();
+    expect(screen.getByLabelText('Código de vinculación')).toBeTruthy();
+    fireEvent.click(screen.getByRole('tab', { name: /Con token/ }));
     expect(screen.getByLabelText('Token de acceso')).toBeTruthy();
+  });
+
+  it('vincular con el código del enlace (QR): obtiene su propio token y entra', async () => {
+    mockCore('token-del-iphone');
+    window.location.hash = '/pair?code=ABCD2345';
+    await renderApp();
+    expect((screen.getByLabelText('Código de vinculación') as HTMLInputElement).value).toBe('ABCD2345');
+    fireEvent.click(screen.getByRole('button', { name: 'Vincular' }));
+    await waitFor(() => expect(screen.getAllByText('Núcleo en línea').length).toBeGreaterThan(0));
+    expect(pairBodies[0]).toMatchObject({ code: 'ABCD2345', platform: 'web' });
+    expect(JSON.parse(window.localStorage.getItem('jarvis.token')!)).toBe('token-del-iphone');
   });
 
   it('con token válido muestra el panel con las 15 secciones y reacciona a eventos', async () => {
@@ -242,6 +258,6 @@ describe('App', () => {
     mockCore('nuevo');
     window.localStorage.setItem('jarvis.token', JSON.stringify('viejo'));
     await renderApp();
-    await waitFor(() => expect(screen.getByText('El token guardado ya no es válido.')).toBeTruthy());
+    await waitFor(() => expect(screen.getByText(/ya no es válido/)).toBeTruthy());
   });
 });

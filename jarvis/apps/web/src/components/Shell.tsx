@@ -65,7 +65,7 @@ export function Shell({ route, navigate, children }: { route: string; navigate: 
         </div>
         <div>
           <div className="holo-text holo-flicker font-display text-lg font-bold tracking-[0.3em]">JARVIS</div>
-          <div className="text-[10px] tracking-widest text-dim uppercase">v0.12 · Fase 9</div>
+          <div className="text-[10px] tracking-widest text-dim uppercase">v0.13 · Fase 10</div>
         </div>
       </div>
       <ul className="flex-1 space-y-0.5 overflow-y-auto px-2 pb-4">

@@ -3,6 +3,7 @@ import type { JarvisConfig } from '../kernel/config';
 import { createJarvis, type Jarvis } from '../app';
 import { buildServer } from './http';
 import { loadOrCreateToken } from '../security/auth';
+import { RemoteAccess } from './remote';
 import type { MasterKeyProvider } from '../security/vault';
 
 export interface RunningJarvis {
@@ -25,6 +26,8 @@ export async function startJarvis(config: JarvisConfig, opts: { masterKey?: Mast
   await server.listen({ host: config.host, port: config.port });
   const addr = server.server.address() as { port: number };
   jarvis.connectors.setBaseUrl(`http://${config.host}:${addr.port}`);
+  jarvis.remote = new RemoteAccess(server, jarvis.db, jarvis.audit, jarvis.logger, addr.port + 1);
+  await jarvis.remote.apply();
   let closed = false;
   return {
     jarvis,

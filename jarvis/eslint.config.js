@@ -3,7 +3,7 @@ import tseslint from 'typescript-eslint';
 import reactHooks from 'eslint-plugin-react-hooks';
 
 export default tseslint.config(
-  { ignores: ['**/dist/**', '**/node_modules/**', '**/.data/**', '**/release/**', '**/public/ort/**'] },
+  { ignores: ['apps/mobile/ios/**', '**/dist/**', '**/node_modules/**', '**/.data/**', '**/release/**', '**/public/ort/**'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
@@ -20,5 +20,6 @@ export default tseslint.config(
       'react-hooks/exhaustive-deps': 'warn',
     },
   },
+  { files: ['apps/web/public/sw.js'], languageOptions: { globals: { self: 'readonly', caches: 'readonly', fetch: 'readonly', URL: 'readonly' } } },
   { files: ['**/*.mjs'], languageOptions: { globals: { console: 'readonly', process: 'readonly' } }, rules: { 'no-console': 'off' } },
 );

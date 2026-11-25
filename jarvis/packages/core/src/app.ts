@@ -32,8 +32,11 @@ import { getSetting, setSetting } from './storage/db';
 import { ConversationBusyError } from './ai/engine';
 import { AutomationManager } from './automations/manager';
 import { createAutomationTools } from './automations/tools';
+import { DeviceRegistry } from './security/devices';
+import { PushService, type PushSender } from './notify/push';
+import type { RemoteAccess } from './server/remote';
 
-export const VERSION = '0.12.0';
+export const VERSION = '0.13.0';
 
 export interface Jarvis {
   version: string;
@@ -53,6 +56,10 @@ export interface Jarvis {
   tasks: TaskManager;
   connectors: ConnectorManager;
   automations: AutomationManager;
+  devices: DeviceRegistry;
+  push: PushService;
+  /** Lo crea el servidor al escuchar (no existe en pruebas sin servidor). */
+  remote?: RemoteAccess;
   /** Conversar con JARVIS desde un canal externo (Telegram, WhatsApp). */
   converse(text: string, channel: string): Promise<string>;
   start(): Promise<void>;
@@ -60,7 +67,7 @@ export interface Jarvis {
 }
 
 /** Composición del núcleo: crea los servicios y registra los módulos incorporados. */
-export function createJarvis(config: JarvisConfig, opts: { dbFile?: string; extraModules?: JarvisModule[]; providerFactory?: ProviderFactory; providerFactories?: Partial<Record<ProviderId, ProviderFactory>>; voiceBaseUrl?: string; platform?: Platform; masterKey?: MasterKeyProvider; embedder?: Embedder | null; connectors?: ConnectorDef[]; fetch?: typeof fetch } = {}): Jarvis {
+export function createJarvis(config: JarvisConfig, opts: { dbFile?: string; extraModules?: JarvisModule[]; providerFactory?: ProviderFactory; providerFactories?: Partial<Record<ProviderId, ProviderFactory>>; voiceBaseUrl?: string; platform?: Platform; masterKey?: MasterKeyProvider; embedder?: Embedder | null; connectors?: ConnectorDef[]; fetch?: typeof fetch; pushSender?: PushSender; pushAnyHost?: boolean } = {}): Jarvis {
   const logger = createLogger(config.logLevel);
   const bus = new EventBus((err, event) => logger.error({ err, event }, 'Error en suscriptor de evento'));
   const db = openDatabase(opts.dbFile ?? path.join(config.dataDir, 'jarvis.db'));
@@ -132,11 +139,16 @@ export function createJarvis(config: JarvisConfig, opts: { dbFile?: string; extr
   const automations = new AutomationManager(db, tools, permissions, audit, bus, ai, { budget: ai.budget, tools, audit, bus, markUnavailable: (c) => ai.markUnavailable(c) }, logger);
   for (const t of createAutomationTools(automations, bus)) tools.register(t);
   bus.on('emergency.changed', ({ lockdown }) => { if (lockdown) automations.cancelAll(); });
+  const devices = new DeviceRegistry(db, audit);
+  const push = new PushService(db, vault, logger, opts.pushSender, opts.pushAnyHost);
+  // Avisos al móvil: notificaciones de automatizaciones y confirmaciones pendientes (solo título y herramienta).
+  bus.on('notification', (n) => { void push.sendAll({ title: n.title, body: n.body, url: '/#/notificaciones', tag: 'aviso' }).catch(() => undefined); });
+  bus.on('approval.requested', (a) => { void push.sendAll({ title: 'JARVIS necesita tu confirmación', body: `${a.tool} (riesgo ${a.risk})`, url: '/#/seguridad', tag: `aprobacion-${a.id}` }).catch(() => undefined); });
   for (const c of opts.connectors ?? [googleConnector(), whatsappConnector(), telegramConnector(), githubConnector(), netlifyConnector(), openshortsConnector()]) connectors.register(c);
 
   const core = { kind: 'core', id: 'kernel' } as const;
   return {
-    version: VERSION, config, logger, bus, db, audit, permissions, tools, modules, vault, ai, voice, control, memory, tasks, connectors, automations, converse,
+    version: VERSION, config, logger, bus, db, audit, permissions, tools, modules, vault, ai, voice, control, memory, tasks, connectors, automations, devices, push, converse,
     async start() {
       audit.append({ principal: core, action: 'core.start', outcome: 'success', details: { version: VERSION } });
       await modules.startAll({ config, logger, bus, db, tools, permissions, audit });
@@ -145,6 +157,7 @@ export function createJarvis(config: JarvisConfig, opts: { dbFile?: string; extr
       bus.emit('assistant.state', { state: 'idle' });
     },
     async stop() {
+      await this.remote?.close();
       automations.stop();
       await connectors.stopAll();
       await modules.stopAll();

@@ -108,6 +108,19 @@ El logger censura campos `token`, `apiKey`, `password`, `secret` y la cabecera `
   memoria; «Desconectar» lo revoca en Google. Enviar correo = crítico (siempre confirma, 20/h); por defecto JARVIS
   prepara borradores.
 
+### Dispositivos y acceso remoto (Fase 10)
+- Sin contraseñas: vincular requiere un código de 8 caracteres (alfabeto sin ambigüedades, ~40 bits) generado en
+  un dispositivo ya autorizado; válido 10 min, un solo uso, 5 intentos. Cada dispositivo recibe un token de
+  256 bits; en la base de datos solo se guarda su SHA-256. Revocación individual inmediata.
+- Freno de fuerza bruta: 10 fallos (token o código) desde una IP en 10 min → 429 durante 10 min.
+- El núcleo solo escucha en 127.0.0.1. «Red local» abre un segundo puerto en 0.0.0.0 (HTTP sin cifrar; aviso al
+  activarlo). Para fuera de casa se recomienda Tailscale (`tailscale serve`): HTTPS y red privada, nada expuesto.
+- CORS solo para la app nativa (`capacitor://localhost`); la web la sirve el propio núcleo (mismo origen).
+- Push: claves VAPID propias (privada cifrada en el almacén); solo título y texto breve; solo servicios push de
+  navegadores (Apple, Google, Mozilla, Microsoft); las suscripciones caducadas se borran.
+- El service worker nunca guarda en caché la API ni datos: solo los archivos de la interfaz.
+- App iOS: ATS solo permite HTTP hacia la red local (`NSAllowsLocalNetworking`).
+
 ### Automatizaciones (Fase 9)
 - Solo el usuario crea, edita, activa, ejecuta y borra; JARVIS y los agentes solo proponen (quedan desactivadas).
 - Identidad `automation:<id>`; al activar, el usuario ve y concede exactamente los permisos de las herramientas
@@ -122,8 +135,6 @@ El logger censura campos `token`, `apiKey`, `password`, `secret` y la cabecera `
 | Medida | Fase |
 |---|---|
 | Clave maestra en iOS (Keychain) | 10 |
-| Cuentas de usuario, contraseñas (Argon2id), sesiones y gestión de dispositivos | 10 |
-| TLS y emparejamiento de dispositivos para acceso desde iPhone/PWA | 10 |
 | Cifrado en reposo de datos sensibles y copias de seguridad cifradas con restauración verificada | 11 |
 | Detección de operaciones sospechosas (frecuencia anómala, patrones) | 11 |
 | Panel de emergencia en la interfaz (la API ya existe) | 2 |

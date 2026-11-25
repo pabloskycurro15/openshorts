@@ -86,6 +86,15 @@
 - [ ] Disparadores de WhatsApp y Gmail con cuentas reales: cuando se vinculen los conectores (al final, como
       acordó el usuario).
 
+## 2026-11-25 — Fase 10 (iPhone y PWA)
+- [x] Vinculación, dispositivos, push, acceso en red local, PWA, proyecto Capacitor iOS.
+- [x] Verificado en Chromium: manifiesto y service worker; «PC» activa la red local y genera código + QR;
+      «iPhone 15 Pro» emulado abre el enlace por la IP de la red, se vincula, ve el panel y recibe eventos en
+      directo; al retirarle el acceso vuelve a la pantalla de vinculación. La interfaz carga sin conexión.
+- [x] Web Push con cifrado real (aes128gcm + VAPID) contra un servicio push local HTTPS.
+- [ ] En un iPhone real: instalar la PWA (requiere Tailscale u otro HTTPS) y recibir una notificación.
+- [ ] Compilar la app nativa: necesita un Mac con Xcode (no disponible aquí).
+
 ## Decisiones tomadas por el usuario
 - Los conectores (WhatsApp, Telegram, Google…) se vinculan con las cuentas reales al terminar todas las fases.
 - WhatsApp con su número personal mediante conexión no oficial, aceptando el riesgo de bloqueo («da igual las

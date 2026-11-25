@@ -1,0 +1,17 @@
+{
+  "name": "@jarvis/mobile",
+  "version": "0.13.0",
+  "private": true,
+  "description": "App nativa de iPhone (Capacitor) que envuelve la interfaz web de JARVIS.",
+  "scripts": {
+    "sync": "npm run build -w @jarvis/web && cap sync ios",
+    "open": "cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/core": "8.5.3",
+    "@capacitor/ios": "8.5.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.5.3"
+  }
+}

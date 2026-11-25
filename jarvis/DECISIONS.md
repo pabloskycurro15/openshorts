@@ -247,3 +247,12 @@ Electron. En Node 22 muestra un aviso «experimental» (silenciado); en Node 24 
 - Cada automatización es un principal `automation:<id>`: el motor de permisos ya existente decide; activar = el
   usuario concede los ámbitos mostrados. Sin código especial de seguridad aparte.
 - Eventos de conectores por el bus (`connector.event`); Gmail por sondeo (sin push, que exigiría Pub/Sub de pago).
+
+## ADR-025 · Vinculación de dispositivos en lugar de cuentas con contraseña ✅
+- JARVIS tiene un único dueño. En vez de cuentas y contraseñas (que se pueden adivinar o reutilizar), cada
+  dispositivo se vincula con un código de un solo uso mostrado en otro dispositivo ya autorizado (presencia
+  física) y recibe su propio token revocable. Sustituye a «Cuentas de usuario, contraseñas (Argon2id)».
+- Sin sincronización: el núcleo del PC es la única fuente de verdad; el móvil es otra interfaz en directo.
+- Acceso fuera de casa con Tailscale (HTTPS y red privada, gratis) en lugar de abrir puertos o un servidor en la
+  nube. La PWA es la vía principal en iPhone (instalable y con push, sin Mac ni pagos); la app Capacitor queda
+  preparada para quien tenga Xcode.

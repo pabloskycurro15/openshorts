@@ -9,6 +9,9 @@ import { App } from './App';
 import { ConnectionProvider } from './lib/connection';
 import { SettingsProvider } from './lib/settings';
 import { VoiceProvider } from './voice/VoiceProvider';
+import { registerServiceWorker } from './lib/push';
+
+registerServiceWorker();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

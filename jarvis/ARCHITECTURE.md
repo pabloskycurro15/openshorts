@@ -57,6 +57,7 @@ jarvis/
 │       │   ├── voice/       ElevenLabs (vía núcleo)
 │       │   ├── memory/      store (híbrido), embedder (modelo local), tools
 │       │   ├── agents/      definitions (8 agentes), tasks (coordinador y ejecución), tools
+│       │   ├── notify/      push (Web Push, VAPID)
 │       │   ├── automations/ manager (programador, disparadores, ejecución), tools
 │       │   ├── connectors/  framework (ConnectorManager), google (OAuth), whatsapp, telegram, github, netlify, openshorts, zip, http
 │       │   ├── ai/          provider, anthropic, pricing, budget, conversations, engine, prompt, service
@@ -115,6 +116,11 @@ Todas las rutas salvo `/api/ping` requieren `Authorization: Bearer <token>`.
 | POST | `/api/automations/:id/{enabled,run}` | Activar-desactivar (concede permisos) / ejecutar ahora |
 | GET | `/api/automations/:id/runs` | Historial de ejecuciones |
 | POST | `/api/automations/scopes` | Permisos que pediría una automatización |
+| POST | `/api/pair/{start,cancel}` | Código de vinculación (+ QR si hay dirección remota) |
+| POST | `/api/pair/complete` | Sin token: canjear el código por el token del dispositivo |
+| GET / DELETE | `/api/devices[/:id]` · `/api/me` | Dispositivos vinculados / quién soy |
+| GET / POST | `/api/push/{key,subscribe,unsubscribe,test}` | Notificaciones push |
+| GET / PUT | `/api/remote` | Acceso en red local y dirección HTTPS pública |
 | GET | `/oauth/:id/callback` | Vuelta de OAuth (sin token; protegida por «state» de un solo uso) |
 | GET / POST | `/api/tasks` | Tareas / encargar un objetivo `{goal}` |
 | GET / DELETE | `/api/tasks/:id` | Detalle con subtareas y registro / borrar |
