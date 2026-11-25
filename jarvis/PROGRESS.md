@@ -74,7 +74,10 @@
 - [x] GitHub real: un token falso se rechaza con «401 Bad credentials» (verificado contra api.github.com).
 - [ ] Vinculación real de WhatsApp, bot real de Telegram, publicación real en Netlify y OpenShorts en marcha:
       requieren que el usuario escanee el QR / cree el bot / dé los tokens desde su equipo.
-- [ ] Fase 8B: Gmail, Google Calendar y Google Drive (OAuth de Google).
+- [x] Fase 8B: Google (Gmail, Calendar, Drive) con OAuth; API simulada completa en pruebas; en navegador real la
+      tarjeta abre Google con la URL correcta (Google rechaza un cliente inventado con «invalid_client», como debe)
+      y la página de vuelta rechaza un «state» falso.
+- [ ] Autorización real con la cuenta del usuario: requiere que cree su cliente OAuth (gratis) en Google Cloud.
 
 ## Decisiones tomadas por el usuario
 - WhatsApp con su número personal mediante conexión no oficial, aceptando el riesgo de bloqueo («da igual las

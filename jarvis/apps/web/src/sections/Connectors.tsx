@@ -1,12 +1,12 @@
 import { useState, type FormEvent } from 'react';
-import { AlertTriangle, CheckCircle2, ExternalLink, GitBranch, Globe, KeyRound, MessageCircle, Send, Smartphone, Clapperboard, Cable } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, ExternalLink, GitBranch, Globe, Mail, KeyRound, MessageCircle, Send, Smartphone, Clapperboard, Cable } from 'lucide-react';
 import type { ConnectorInfo } from '@jarvis/shared';
 import { Badge, Button, Dot, Empty, ErrorNote, Panel } from '../components/ui';
 import { core } from '../lib/api';
 import { useCoreData } from '../lib/connection';
 import { timeAgo } from '../lib/labels';
 
-const ICON: Record<string, typeof Cable> = { whatsapp: MessageCircle, telegram: Send, github: GitBranch, netlify: Globe, openshorts: Clapperboard };
+const ICON: Record<string, typeof Cable> = { google: Mail, whatsapp: MessageCircle, telegram: Send, github: GitBranch, netlify: Globe, openshorts: Clapperboard };
 const RISK: Record<string, { label: string; tone: 'ok' | 'muted' | 'warn' | 'danger' }> = {
   low: { label: 'Lectura', tone: 'ok' }, medium: { label: 'Pide permiso', tone: 'muted' }, high: { label: 'Confirma', tone: 'warn' }, critical: { label: 'Confirma siempre', tone: 'danger' },
 };
@@ -25,7 +25,6 @@ export function ConnectorsSection() {
       <div className="grid gap-4 lg:grid-cols-2">
         {data.map((c) => <ConnectorCard key={c.id} c={c} refresh={refresh} />)}
       </div>
-      <p className="mt-4 text-center text-xs text-dim">Siguiente: Gmail, Google Calendar y Google Drive (requiere crear credenciales OAuth en Google Cloud).</p>
     </div>
   );
 }
@@ -118,7 +117,7 @@ function ConnectorCard({ c, refresh }: { c: ConnectorInfo; refresh: () => Promis
       <div className="mt-3 flex flex-wrap gap-2">
         {c.enabled
           ? <Button onClick={() => run(async () => { await core.disableConnector(c.id); return 'Desactivado.'; })} disabled={busy}>Desactivar</Button>
-          : <Button tone="accent" onClick={enable} disabled={busy || !accepted}>Activar</Button>}
+          : <Button tone="accent" onClick={enable} disabled={busy || !accepted || (c.id === 'google' && !c.status.authorized)}>Activar</Button>}
         {c.enabled && <Button tone="ghost" onClick={() => run(async () => { const r = await core.testConnector(c.id); if (!r.ok) throw new Error(r.detail); return r.detail; })} disabled={busy}>Probar</Button>}
         {c.fields.some((f) => f.secret && f.configured) && (
           <Button tone="ghost" onClick={() => { if (confirm(`¿Borrar las credenciales de ${c.name}? Se desactivará.`)) void run(async () => { await core.deleteConnectorCredentials(c.id); return 'Credenciales borradas.'; }); }} disabled={busy}>Borrar credenciales</Button>
@@ -126,6 +125,7 @@ function ConnectorCard({ c, refresh }: { c: ConnectorInfo; refresh: () => Promis
       </div>
       {msg && <p role="status" className={`mt-2 text-xs ${msg.ok ? 'text-emerald-300' : 'text-red-300'}`}>{msg.text}</p>}
 
+      {c.id === 'google' && <GoogleStatus c={c} run={run} busy={busy} />}
       {c.enabled && c.id === 'whatsapp' && <WhatsAppStatus c={c} run={run} busy={busy} />}
       {c.enabled && c.id === 'telegram' && <TelegramStatus c={c} run={run} busy={busy} />}
 
@@ -216,6 +216,37 @@ function TelegramStatus({ c, run, busy }: { c: ConnectorInfo; run: RunFn; busy: 
           <Button tone="accent" disabled={busy} onClick={() => run(async () => { await core.connectorAction(c.id, 'authorize', { chatId: p.chatId }); return 'Chat autorizado.'; })}>Autorizar</Button>
         </div>
       ))}
+    </div>
+  );
+}
+
+function GoogleStatus({ c, run, busy }: { c: ConnectorInfo; run: RunFn; busy: boolean }) {
+  const s = c.status as { authorized?: boolean; account?: string | null; redirectUri?: string; sendsLastHour?: number; sendLimit?: number };
+  const ready = c.fields.every((f) => !f.required || f.configured);
+  const connect = () => run(async () => {
+    const r = await core.connectorAction(c.id, 'authorize');
+    window.open(String(r.url), '_blank', 'noopener');
+    return 'Se ha abierto Google en el navegador. Autoriza y vuelve aquí.';
+  });
+  return (
+    <div className="mt-3 space-y-2 rounded-lg border border-navy-600 bg-navy-950/50 p-3 text-xs">
+      {s.authorized ? (
+        <>
+          <div className="flex items-center gap-2 text-emerald-300"><Dot tone="ok" pulse={c.enabled} />Autorizado{s.account ? ` como ${s.account}` : ''}{!c.enabled && ' · pulsa «Activar»'}</div>
+          {c.enabled && <p className="text-dim">{s.sendsLastHour ?? 0}/{s.sendLimit ?? 20} correos enviados esta hora · JARVIS prepara borradores salvo que le pidas enviar.</p>}
+          <Button tone="ghost" disabled={busy} onClick={() => { if (confirm('¿Quitar el acceso de JARVIS a tu cuenta de Google?')) void run(async () => { await core.connectorAction(c.id, 'disconnect'); return 'Acceso retirado.'; }); }}>Desconectar Google</Button>
+        </>
+      ) : (
+        <>
+          <ol className="list-decimal space-y-0.5 pl-4 text-muted">
+            <li>En Google Cloud crea un proyecto y activa las API de Gmail, Calendar y Drive.</li>
+            <li>Pantalla de consentimiento: tipo «Externo», modo prueba, y añádete como usuario de prueba.</li>
+            <li>Credenciales → ID de cliente OAuth → <b>App de escritorio</b>. Copia aquí el ID y el secreto.</li>
+          </ol>
+          <Button tone="accent" disabled={busy || !ready} onClick={connect}>Conectar con Google</Button>
+          {s.redirectUri && <p className="text-dim">Google te devolverá a <span className="font-mono">{s.redirectUri}</span> (este equipo).</p>}
+        </>
+      )}
     </div>
   );
 }

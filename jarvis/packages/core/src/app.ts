@@ -26,11 +26,12 @@ import { githubConnector } from './connectors/github';
 import { netlifyConnector } from './connectors/netlify';
 import { openshortsConnector } from './connectors/openshorts';
 import { whatsappConnector } from './connectors/whatsapp';
+import { googleConnector } from './connectors/google';
 import { resolveAuthorized } from './control/paths';
 import { getSetting, setSetting } from './storage/db';
 import { ConversationBusyError } from './ai/engine';
 
-export const VERSION = '0.10.0';
+export const VERSION = '0.11.0';
 
 export interface Jarvis {
   version: string;
@@ -119,13 +120,13 @@ export function createJarvis(config: JarvisConfig, opts: { dbFile?: string; extr
   }
 
   const connectors = new ConnectorManager(db, vault, audit, tools, logger, {
-    logger, dataDir: config.dataDir, converse,
+    logger, dataDir: config.dataDir, converse, port: config.port,
     secret: (name) => vault.get(name),
     lockdown: () => permissions.isLockdown(),
     resolvePath: (p, folderId) => resolveAuthorized(control.get().folders, p, folderId).abs,
     fetch: opts.fetch ?? ((...a) => fetch(...a)),
   });
-  for (const c of opts.connectors ?? [whatsappConnector(), telegramConnector(), githubConnector(), netlifyConnector(), openshortsConnector()]) connectors.register(c);
+  for (const c of opts.connectors ?? [googleConnector(), whatsappConnector(), telegramConnector(), githubConnector(), netlifyConnector(), openshortsConnector()]) connectors.register(c);
 
   const core = { kind: 'core', id: 'kernel' } as const;
   return {

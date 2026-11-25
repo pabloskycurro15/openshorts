@@ -230,3 +230,11 @@ Electron. En Node 22 muestra un aviso «experimental» (silenciado); en Node 24 
   oficial (WhatsApp Business Cloud API) exige un número distinto y verificación de empresa.
 - Canales externos (Telegram/WhatsApp) entran por `converse()` → `ChatEngine` con una conversación persistente por
   canal; las acciones con efectos siguen pidiendo confirmación en la app.
+
+## ADR-023 · Google con OAuth de escritorio y cliente propio del usuario ✅
+- Sin servidor intermedio: cada usuario crea su cliente OAuth «App de escritorio» (gratis). Google admite cualquier
+  puerto de 127.0.0.1 como redirección para estos clientes, así que la vuelta llega al propio núcleo.
+- PKCE + «state» de un solo uso. Ámbitos mínimos; `gmail.compose` (no `gmail.modify`) y `drive.file` (solo lo que
+  sube JARVIS) además de lectura.
+- Mientras la app esté en modo prueba Google pide reautorizar cada 7 días; publicarla exigiría verificación de
+  Google (ámbitos restringidos de Gmail), innecesaria para uso personal.

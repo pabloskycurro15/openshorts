@@ -15,7 +15,10 @@ export async function jsonFetch<T = unknown>(f: typeof fetch, url: string, init:
   let body: unknown = text;
   try { body = text ? JSON.parse(text) : null; } catch { /* texto plano */ }
   if (!res.ok) {
-    const msg = typeof body === 'object' && body !== null
+    const o = (typeof body === 'object' && body !== null ? body : {}) as { error?: unknown; error_description?: string };
+    const msg = typeof o.error === 'string' ? `${o.error}${o.error_description ? ` (${o.error_description})` : ''}`
+      : typeof (o.error as { message?: unknown } | undefined)?.message === 'string' ? (o.error as { message: string }).message
+      : typeof body === 'object' && body !== null
       ? ((body as { message?: string; description?: string; detail?: unknown; error?: unknown }).message ?? (body as { description?: string }).description ?? JSON.stringify((body as { detail?: unknown; error?: unknown }).detail ?? (body as { error?: unknown }).error ?? body))
       : String(body).slice(0, 200);
     const hint = res.status === 401 || res.status === 403 ? ' (credencial no válida o sin permisos)' : res.status === 429 ? ' (límite de uso del servicio)' : '';

@@ -35,7 +35,7 @@ export const AGENTS: AgentDef[] = [
     prompt: `${COMMON}\nTu especialidad: documentos. Redacta con estructura clara y tono profesional; crea archivos nuevos en lugar de sobrescribir.` },
   { id: 'productividad', name: 'Productividad', tier: 'simple',
     description: 'Organiza, planifica el día, recuerda cosas y abre aplicaciones o webs autorizadas.',
-    tools: ['system.datetime', 'memory.search', 'memory.save', 'app.list', 'app.open', 'browser.open_url'],
+    tools: ['system.datetime', 'memory.search', 'memory.save', 'app.list', 'app.open', 'browser.open_url', 'calendar.*', 'gmail.search', 'gmail.read', 'gmail.draft'],
     prompt: `${COMMON}\nTu especialidad: productividad. Propón planes concretos y realistas, con tiempos.` },
   { id: 'analista', name: 'Análisis', tier: 'complex',
     description: 'Analiza datos y documentos, compara opciones y saca conclusiones razonadas.',
@@ -51,8 +51,8 @@ export const AGENTS: AgentDef[] = [
     prompt: `${COMMON}\nTu especialidad: automatizar. Propón rutinas paso a paso con disparador, acciones y permisos necesarios. Aún no puedes programarlas: indícalo.`,
     availableNote: 'Programar rutinas: Fase 9' },
   { id: 'integraciones', name: 'Integraciones', tier: 'medium',
-    description: 'Usa los conectores activados: WhatsApp, Telegram, GitHub, Netlify y OpenShorts.',
-    tools: ['memory.search', 'whatsapp.*', 'telegram.*', 'github.*', 'netlify.*', 'openshorts.*'],
+    description: 'Usa los conectores activados: Google (Gmail, Calendar, Drive), WhatsApp, Telegram, GitHub, Netlify y OpenShorts.',
+    tools: ['memory.search', 'gmail.*', 'calendar.*', 'drive.*', 'whatsapp.*', 'telegram.*', 'github.*', 'netlify.*', 'openshorts.*'],
     prompt: `${COMMON}\nTu especialidad: servicios externos mediante conectores. Solo puedes usar los que el usuario haya activado; si falta uno, di cuál y que se activa en Conectores. Nunca envíes mensajes masivos ni publicidad no solicitada.` },
 ];
 

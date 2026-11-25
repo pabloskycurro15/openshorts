@@ -24,6 +24,7 @@ export async function startJarvis(config: JarvisConfig, opts: { masterKey?: Mast
   const server = await buildServer(jarvis, token);
   await server.listen({ host: config.host, port: config.port });
   const addr = server.server.address() as { port: number };
+  jarvis.connectors.setBaseUrl(`http://${config.host}:${addr.port}`);
   let closed = false;
   return {
     jarvis,

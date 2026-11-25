@@ -15,6 +15,11 @@ export interface ConnectorCtx {
   /** Secreto de otro módulo (p. ej. la clave de Gemini para OpenShorts). */
   secret(name: string): string | null;
   set(field: string, value: string): void;
+  /** Secretos propios del conector que no son campos (p. ej. el token de actualización OAuth). */
+  getSecret(key: string): string | null;
+  setSecret(key: string, value: string | null): void;
+  /** Dirección local del núcleo (para redirecciones OAuth). */
+  baseUrl(): string;
   log(operation: string, outcome: 'ok' | 'error' | 'info', detail: string): void;
   logger: Logger;
   dataDir: string;
@@ -39,10 +44,17 @@ export interface ConnectorDef {
   test(ctx: ConnectorCtx): Promise<{ ok: boolean; detail: string }>;
   start?(ctx: ConnectorCtx): Promise<void>;
   stop?(): Promise<void>;
-  status?(): Record<string, unknown>;
+  status?(ctx: ConnectorCtx): Record<string, unknown>;
   /** Acciones del usuario desde la interfaz (emparejar, autorizar un chat, cerrar sesión...). */
   actions?: Record<string, (ctx: ConnectorCtx, body: Record<string, unknown>) => Promise<unknown>>;
+  /** Secretos extra que se borran con «Borrar credenciales». */
+  secretKeys?: string[];
+  /** Vuelta del navegador tras autorizar (OAuth). Devuelve un mensaje para el usuario. */
+  oauthCallback?(ctx: ConnectorCtx, query: Record<string, string>): Promise<string>;
 }
+
+/** Nombre corto de la operación para el registro («github.repos» → «repos»; «gmail.send» en google → «gmail.send»). */
+export const opName = (connectorId: string, tool: string) => (tool.startsWith(`${connectorId}.`) ? tool.slice(connectorId.length + 1) : tool);
 
 /**
  * Centro de conectores: cada conector es una extensión con su manifiesto, campos de
@@ -53,6 +65,7 @@ export interface ConnectorDef {
 export class ConnectorManager {
   private defs = new Map<string, ConnectorDef>();
   private running = new Set<string>();
+  private url: string;
 
   constructor(
     private db: Database,
@@ -60,15 +73,22 @@ export class ConnectorManager {
     private audit: AuditLog,
     private tools: ToolRegistry,
     private logger: Logger,
-    private base: Omit<ConnectorCtx, 'id' | 'get' | 'set' | 'log' | 'secret'> & { secret(name: string): string | null },
-  ) {}
+    private base: Omit<ConnectorCtx, 'id' | 'get' | 'set' | 'log' | 'secret' | 'getSecret' | 'setSecret' | 'baseUrl'> & { secret(name: string): string | null; port: number },
+  ) {
+    this.url = `http://127.0.0.1:${base.port}`;
+  }
+
+  /** La fija el servidor al escuchar (el puerto real puede ser efímero). */
+  setBaseUrl(url: string) {
+    this.url = url.replace('://0.0.0.0', '://127.0.0.1').replace('://localhost', '://127.0.0.1').replace(/\/+$/, '');
+  }
 
   register(def: ConnectorDef) {
     if (this.defs.has(def.id)) throw new Error(`Conector duplicado: ${def.id}`);
     this.defs.set(def.id, def);
     const ctx = this.ctx(def);
     for (const t of def.tools(ctx)) {
-      const op = t.name.slice(def.id.length + 1);
+      const op = opName(def.id, t.name);
       this.tools.register({
         ...t,
         available: () => this.isEnabled(def.id),
@@ -96,6 +116,9 @@ export class ConnectorManager {
         return this.config(def.id)[field] ?? f?.default;
       },
       set: (field, value) => this.setConfig(def.id, { [field]: value }),
+      getSecret: (key) => this.vault.get(`connector.${def.id}.${key}`),
+      setSecret: (key, value) => { if (value === null) this.vault.delete(`connector.${def.id}.${key}`); else this.vault.set(`connector.${def.id}.${key}`, value); },
+      baseUrl: () => this.url,
       log: (op, outcome, detail) => this.log(def.id, op, outcome, detail),
     };
   }
@@ -168,6 +191,7 @@ export class ConnectorManager {
     const def = this.get(id);
     await this.disable(by, id);
     for (const f of def.fields) if (f.secret) this.vault.delete(`connector.${id}.${f.key}`);
+    for (const k of def.secretKeys ?? []) this.vault.delete(`connector.${id}.${k}`);
     this.audit.append({ principal: by, action: 'connector.credentials.delete', target: id, outcome: 'success' });
   }
 
@@ -202,6 +226,21 @@ export class ConnectorManager {
     return fn(this.ctx(def), body);
   }
 
+  /** Vuelta de OAuth: sin token de JARVIS (la hace el navegador), protegida por «state» de un solo uso. */
+  async oauthCallback(id: string, query: Record<string, string>): Promise<string> {
+    const def = this.get(id);
+    if (!def.oauthCallback) throw new Error('Este conector no usa OAuth');
+    try {
+      const msg = await def.oauthCallback(this.ctx(def), query);
+      this.audit.append({ principal: { kind: 'user', id: 'owner' }, action: 'connector.oauth', target: id, outcome: 'success' });
+      this.log(id, 'autorizar', 'info', msg);
+      return msg;
+    } catch (err) {
+      this.log(id, 'autorizar', 'error', (err as Error).message);
+      throw err;
+    }
+  }
+
   async test(id: string) {
     const def = this.get(id);
     return def.test(this.ctx(def)).catch((err: Error) => ({ ok: false, detail: err.message }));
@@ -215,7 +254,7 @@ export class ConnectorManager {
     return [...this.defs.values()].map((def) => {
       const ctx = this.ctx(def);
       const tools = def.tools(ctx);
-      const ops = tools.map((t) => t.name.slice(def.id.length + 1));
+      const ops = tools.map((t) => opName(def.id, t.name));
       // Estadísticas de uso: solo operaciones de herramientas (no activaciones ni conexiones).
       const st = this.db.prepare(`SELECT COUNT(*) AS calls, SUM(outcome = 'error') AS errors, MAX(ts) AS last FROM connector_log WHERE connector = ? AND operation IN (${ops.map(() => '?').join(',') || "''"})`).get(def.id, ...ops) as { calls: number; errors: number | null; last: string | null };
       const recent = this.db.prepare('SELECT ts, operation, outcome, detail FROM connector_log WHERE connector = ? ORDER BY id DESC LIMIT 8').all(def.id) as ConnectorInfo['recent'];
@@ -223,7 +262,7 @@ export class ConnectorManager {
         id: def.id, name: def.name, description: def.description, official: def.official, warning: def.warning ?? null, docsUrl: def.docsUrl,
         fields: def.fields.map((f) => ({ key: f.key, label: f.label, secret: f.secret, required: f.required, placeholder: f.placeholder, help: f.help, configured: !!ctx.get(f.key), ...(f.secret ? {} : { value: ctx.get(f.key) ?? '' }) })),
         enabled: this.isEnabled(def.id),
-        status: def.status?.() ?? {},
+        status: def.status?.(ctx) ?? {},
         operations: tools.map((t) => ({ name: t.name, description: t.description, risk: t.risk })),
         stats: { calls: st.calls, errors: st.errors ?? 0, lastUsed: st.last },
         recent,

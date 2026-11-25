@@ -101,6 +101,12 @@ El logger censura campos `token`, `apiKey`, `password`, `secret` y la cabecera `
 - WhatsApp: los mensajes recibidos solo se guardan en memoria (no en disco); la sesión de vinculación está en
   `dataDir/whatsapp-session` (permisos 0700) y se borra al desvincular.
 - Registro de actividad por conector (`connector_log`) además de la auditoría encadenada.
+- Google: OAuth con cliente propio del usuario, PKCE S256 y «state» aleatorio de un solo uso (10 min); la vuelta
+  (`/oauth/google/callback`) es la única ruta sin token de JARVIS y solo acepta un «state» emitido por el núcleo;
+  página de respuesta con CSP `default-src 'none'`. Permisos mínimos (Gmail lectura + redactar, eventos de
+  Calendar, Drive lectura + archivos creados por JARVIS). Token de actualización cifrado; el de acceso solo en
+  memoria; «Desconectar» lo revoca en Google. Enviar correo = crítico (siempre confirma, 20/h); por defecto JARVIS
+  prepara borradores.
 
 ## Pendiente (con fase prevista)
 | Medida | Fase |

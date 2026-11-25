@@ -20,6 +20,39 @@ function Planned({ icon: Icon, title, phase }: { icon: typeof Bot; title: string
   );
 }
 
+type CalEvent = { id: string; title: string; start: string; allDay: boolean };
+
+/** Próximos eventos de Google Calendar (si el conector está activado). */
+function Agenda({ navigate }: { navigate: (id: string) => void }) {
+  const { data: conns } = useCoreData(() => core.connectors(), [], 60_000);
+  const enabled = !!conns?.find((c) => c.id === 'google' && c.enabled);
+  const { data: events } = useCoreData(async () => {
+    if (!enabled) return null;
+    const r = await core.invoke('calendar.events', { limit: 4 });
+    return r.status === 'ok' ? (r.output as CalEvent[]) : null;
+  }, [enabled], 300_000);
+  if (!enabled) {
+    return (
+      <button type="button" onClick={() => navigate('conectores')} className="flex w-full items-center gap-2 text-left text-xs text-muted hover:text-ink">
+        <CalendarDays size={13} className="shrink-0 text-dim" aria-hidden /><span className="flex-1 truncate">Calendario: conecta Google</span>
+      </button>
+    );
+  }
+  const fmt = (e: CalEvent) => {
+    const d = new Date(e.allDay ? `${e.start}T00:00:00` : e.start);
+    const day = d.toDateString() === new Date().toDateString() ? 'Hoy' : d.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric' });
+    return e.allDay ? day : `${day} ${d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`;
+  };
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center gap-2 text-xs text-muted"><CalendarDays size={13} className="text-accent" aria-hidden />Agenda</div>
+      {events?.length ? events.map((e) => (
+        <div key={e.id} className="flex gap-2 pl-5 text-xs"><span className="shrink-0 font-mono text-accent-soft">{fmt(e)}</span><span className="truncate">{e.title}</span></div>
+      )) : <div className="pl-5 text-[11px] text-dim">{events ? 'Nada en los próximos 7 días.' : 'Cargando…'}</div>}
+    </div>
+  );
+}
+
 export function HomeSection({ navigate }: { navigate: (id: string) => void }) {
   const { status, lockdown, internet, feed } = useConnection();
   const assistant = useDisplayState();
@@ -118,7 +151,7 @@ export function HomeSection({ navigate }: { navigate: (id: string) => void }) {
           </ul>
         ) : <p className="text-sm text-muted">Sin eventos todavía.</p>}
         <div className="mt-4 space-y-1.5 border-t border-navy-700 pt-3">
-          <Planned icon={CalendarDays} title="Calendario" phase={8} />
+          <Agenda navigate={navigate} />
           <Planned icon={CloudSun} title="Tiempo" phase={8} />
           <Planned icon={Workflow} title="Automatizaciones" phase={9} />
         </div>

@@ -2,6 +2,15 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versionado semántico.
 
+## [0.11.0] — 2026-11-25
+### Añadido
+- Conector Google (Fase 8B) con OAuth 2.0 de escritorio (PKCE, «state» de un solo uso, vuelta a 127.0.0.1):
+  Gmail (buscar, leer, borradores, enviar con confirmación siempre y 20/h), Calendar (ver y crear eventos con la
+  zona horaria local) y Drive (buscar, leer Documentos/Hojas/Presentaciones como texto, subir desde carpetas
+  autorizadas). Token de actualización cifrado; renovación automática; si Google lo revoca, pide reconectar.
+- Agenda real de Google Calendar en Inicio. Agentes de productividad e integraciones con Gmail/Calendar/Drive.
+- Errores de APIs externas más legibles. 7 pruebas nuevas (203 en total).
+
 ## [0.10.0] — 2026-11-25
 ### Añadido
 - Conectores (Fase 8, primera parte): marco común (manifiesto, credenciales cifradas en el almacén, activación solo
