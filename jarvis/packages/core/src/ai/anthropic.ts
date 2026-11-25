@@ -100,7 +100,9 @@ export class AnthropicProvider implements AIProvider {
       max_tokens: 64000,
       system: req.system,
       messages: toApiMessages(req.messages),
-      tools: req.tools.length ? toApiTools(req.tools) : undefined,
+      tools: req.tools.length || req.webSearch
+        ? [...toApiTools(req.tools), ...(req.webSearch ? [{ type: 'web_search_20260209' as const, name: 'web_search' as const, max_uses: req.webSearch.maxUses }] : [])]
+        : undefined,
       output_config: { effort: req.effort },
       // Caché automática del prefijo (instrucciones + herramientas + historial): abarata cada turno.
       cache_control: { type: 'ephemeral' },
@@ -129,6 +131,7 @@ export class AnthropicProvider implements AIProvider {
         outputTokens: u.output_tokens,
         cacheReadTokens: u.cache_read_input_tokens ?? 0,
         cacheWriteTokens: u.cache_creation_input_tokens ?? 0,
+        webSearches: u.server_tool_use?.web_search_requests ?? 0,
       },
       servedModel: message.model,
     };

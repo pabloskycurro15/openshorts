@@ -10,7 +10,7 @@ import { AnthropicProvider } from './anthropic';
 import { OpenAIProvider } from './openai';
 import { GeminiProvider } from './gemini';
 import { ALL_MODELS, GOOGLE_MODELS } from './pricing';
-import { route, type RouteCandidate, type RouteDecision } from './router';
+import { chainForTier, route, type RouteCandidate, type RouteDecision, type Tier } from './router';
 
 export type ProviderId = 'anthropic' | 'openai' | 'google';
 export type ProviderFactory = (apiKey: string) => AIProvider;
@@ -81,6 +81,19 @@ export class AIService {
     }
     const decision = route(message, { settings, configured: this.configured(), freeModels: GOOGLE_MODELS.map((m) => m.id), coolingDown: this.cooling });
     return { decision, candidates: decision.chain.map(toPlanned).filter((x): x is PlannedCandidate => !!x), auto: true };
+  }
+
+  /** Plan para un agente: nivel conocido; respeta un modelo fijado por el usuario. */
+  planTier(tier: Tier, o: { web?: boolean; action?: boolean } = {}): Plan {
+    const settings = this.budget.getSettings();
+    if (settings.model !== 'auto') return this.plan('');
+    const chain = chainForTier(tier, { settings, configured: this.configured(), freeModels: GOOGLE_MODELS.map((m) => m.id), coolingDown: this.cooling, ...o });
+    const candidates = chain.map((c) => {
+      const provider = this.getProvider(c.provider as ProviderId);
+      const model = ALL_MODELS.find((m) => m.id === c.model && m.provider === c.provider);
+      return provider && model ? { provider, model } : null;
+    }).filter((x): x is PlannedCandidate => !!x);
+    return { decision: { tier, reason: 'asignado por el coordinador', sensitive: false, action: !!o.action, web: !!o.web, chain }, candidates, auto: true };
   }
 
   setApiKey(by: Principal, apiKey: string, provider: ProviderId = 'anthropic'): void {

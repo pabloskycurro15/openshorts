@@ -56,6 +56,13 @@ describe('Repartidor: cadenas', () => {
   it('si el usuario desactiva Gemini gratis, no se usa', () => {
     expect(ids('Hola', all, { ...DEFAULT_AI_SETTINGS, allowFreeGoogle: false })[0]).toBe('claude-haiku-5-5');
   });
+  it('búsqueda web: solo con la opción activada, y entonces a Claude', () => {
+    const q = 'Busca en internet negocios de bares en Nerja';
+    expect(r(q).web).toBe(true);
+    expect(ids(q)[0]).toBe('gpt-6.1-terra'); // desactivada: no se fuerza Claude
+    expect(ids(q, all, { ...DEFAULT_AI_SETTINGS, webSearch: true })).toEqual(['claude-sonnet-5-5', 'claude-opus-5-5']);
+  });
+
   it('solo usa proveedores con clave', () => {
     expect(ids('Hola', new Set(['anthropic']))).toEqual(['claude-haiku-5-5', 'claude-sonnet-5-5']);
     expect(ids('Hola', new Set(['google']))).toEqual(['gemini-3.5-flash-lite', 'gemini-3.8-flash']);

@@ -82,6 +82,11 @@ El logger censura campos `token`, `apiKey`, `password`, `secret` y la cabecera `
 - El usuario ve, edita y borra todo lo que JARVIS recuerda; las deducciones quedan como sugerencias.
 - Detección de datos sensibles al guardar; auditoría sin contenido.
 
+### Multiagente (Fase 7)
+- Identidad propia por agente, herramientas acotadas, permisos independientes y sin escalada.
+- Herramienta fuera de la lista de un agente → denegada aunque el modelo la pida.
+- Emergencia: cancela tareas en curso y bloquea la creación de nuevas.
+
 ## Pendiente (con fase prevista)
 | Medida | Fase |
 |---|---|

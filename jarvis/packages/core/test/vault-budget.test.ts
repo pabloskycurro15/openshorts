@@ -53,7 +53,7 @@ describe('Budget', () => {
 
   it('valores por defecto: repartidor automático, Gemini gratis permitido, esfuerzo medio, 5 $', () => {
     expect(budget().getSettings()).toEqual(DEFAULT_AI_SETTINGS);
-    expect(DEFAULT_AI_SETTINGS).toEqual({ model: 'auto', allowFreeGoogle: true, effort: 'medium', monthlyLimitUsd: 5 });
+    expect(DEFAULT_AI_SETTINGS).toEqual({ model: 'auto', allowFreeGoogle: true, webSearch: false, webSearchMaxUses: 5, effort: 'medium', monthlyLimitUsd: 5 });
   });
 
   it('valida los ajustes', () => {

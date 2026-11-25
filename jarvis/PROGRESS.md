@@ -64,7 +64,12 @@
 - [x] Modelo de significado real verificado (Node, navegador, escritorio empaquetado).
 - Búsqueda web: preparada para la siguiente iteración, desactivada hasta que el usuario la active (coste).
 
+## 2026-11-25 — Fase 7 (multiagente) y búsqueda web
+- [x] Coordinador, agentes, tareas, API e interfaz; verificado en navegador con API simulada.
+- [x] Búsqueda web programada y desactivada (decisión del usuario: «prográmala para luego»).
+
 ## Decisiones tomadas por el usuario
+- Búsqueda web: implementada pero desactivada hasta que el usuario la active.
 - Repartir tareas entre Gemini gratis, GPT-6.1 Terra y Claude «como mejor veas» (0.7). ChatGPT gratis no tiene API.
 - Cerebro: Claude Opus 5.5 (API de Anthropic, prepago de 5 $, sin recarga automática). Límite en JARVIS: 5 $/mes.
 

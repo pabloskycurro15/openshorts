@@ -18,8 +18,10 @@ import type { Platform } from './control/platform';
 import { MemoryStore } from './memory/store';
 import { LocalEmbedder, type Embedder } from './memory/embedder';
 import { createMemoryTools } from './memory/tools';
+import { TaskManager } from './agents/tasks';
+import { createAgentTools } from './agents/tools';
 
-export const VERSION = '0.8.0';
+export const VERSION = '0.9.0';
 
 export interface Jarvis {
   version: string;
@@ -36,6 +38,7 @@ export interface Jarvis {
   voice: ElevenLabsService;
   control: ControlConfigStore;
   memory: MemoryStore;
+  tasks: TaskManager;
   start(): Promise<void>;
   stop(): Promise<void>;
 }
@@ -52,10 +55,15 @@ export function createJarvis(config: JarvisConfig, opts: { dbFile?: string; extr
   const vault = new SecretVault(db, opts.masterKey ?? new FileMasterKey(path.join(config.dataDir, 'vault.key')));
   const ai = new AIService(db, vault, audit, { ...(opts.providerFactory ? { anthropic: opts.providerFactory } : {}), ...opts.providerFactories });
   const voice = new ElevenLabsService(db, vault, audit, opts.voiceBaseUrl);
-  ai.engine = new ChatEngine({ store: ai.store, budget: ai.budget, tools, audit, bus, logger, plan: (m) => ai.plan(m), markUnavailable: (c) => ai.markUnavailable(c) });
-  // Emergencia: corta cualquier respuesta en curso.
+  ai.engine = new ChatEngine({ store: ai.store, budget: ai.budget, tools, audit, bus, logger, plan: (m) => ai.plan(m), markUnavailable: (c) => ai.markUnavailable(c),
+    webSearch: () => { const s = ai.budget.getSettings(); return s.webSearch ? { maxUses: s.webSearchMaxUses } : null; } });
+  const tasks = new TaskManager(db, ai, { budget: ai.budget, tools, audit, bus, markUnavailable: (c) => ai.markUnavailable(c) }, permissions, bus, logger);
+  // Emergencia: corta cualquier respuesta y tarea de agentes en curso.
   bus.on('emergency.changed', ({ lockdown }) => {
-    if (lockdown) ai.engine.stopAll();
+    if (lockdown) {
+      ai.engine.stopAll();
+      tasks.cancelAll();
+    }
   });
 
   const control = new ControlConfigStore(db, audit);
@@ -66,6 +74,7 @@ export function createJarvis(config: JarvisConfig, opts: { dbFile?: string; extr
     manifest: { id: 'memory', name: 'Memoria', version: '0.8.0', description: 'Recuerdos con búsqueda híbrida (palabras, fragmentos y significado local).' },
     start(ctx) {
       for (const t of createMemoryTools(memory)) ctx.tools.register(t);
+      for (const t of createAgentTools(tasks)) ctx.tools.register(t);
       memory.purgeExpired();
       const timer = setInterval(() => memory.purgeExpired(), 3600_000);
       timer.unref();
@@ -77,7 +86,7 @@ export function createJarvis(config: JarvisConfig, opts: { dbFile?: string; extr
 
   const core = { kind: 'core', id: 'kernel' } as const;
   return {
-    version: VERSION, config, logger, bus, db, audit, permissions, tools, modules, vault, ai, voice, control, memory,
+    version: VERSION, config, logger, bus, db, audit, permissions, tools, modules, vault, ai, voice, control, memory, tasks,
     async start() {
       audit.append({ principal: core, action: 'core.start', outcome: 'success', details: { version: VERSION } });
       await modules.startAll({ config, logger, bus, db, tools, permissions, audit });

@@ -132,6 +132,7 @@ export interface JarvisEvents {
   'tool.invoked': { tool: string; principal: Principal; outcome: ToolResult['status'] };
   'audit.appended': AuditEntry;
   'emergency.changed': { lockdown: boolean; by: Principal };
+  'task.updated': { taskId: string; status: string; subtaskId?: string; subtaskStatus?: string };
 }
 export type JarvisEventName = keyof JarvisEvents;
 
@@ -191,6 +192,9 @@ export const AiSettings = z.object({
   model: z.string().min(1),
   /** Permitir el nivel gratuito de Gemini para tareas sencillas (Google puede usar esos datos). */
   allowFreeGoogle: z.boolean().default(true),
+  /** Búsqueda web (Claude): desactivada hasta que el usuario la active (cuesta 10 $ por cada 1.000 búsquedas). */
+  webSearch: z.boolean().default(false),
+  webSearchMaxUses: z.number().int().min(1).max(20).default(5),
   effort: Effort,
   /** Límite de gasto mensual en USD. JARVIS se detiene al alcanzarlo. */
   monthlyLimitUsd: z.number().min(0).max(10_000),
@@ -373,3 +377,55 @@ export const MemoryInput = z.object({
 export type MemoryInput = z.infer<typeof MemoryInput>;
 
 export interface SemanticStatus { state: 'off' | 'idle' | 'loading' | 'ready' | 'error'; model: string; error: string | null; indexed: number; total: number }
+
+// ───────────────────────── Multiagente (Fase 7) ─────────────────────────
+
+export type TaskStatus = 'planning' | 'running' | 'done' | 'failed' | 'cancelled';
+export type SubtaskStatus = 'pending' | 'running' | 'waiting_approval' | 'done' | 'failed' | 'cancelled';
+
+export interface AgentInfo {
+  id: string;
+  name: string;
+  description: string;
+  tools: string[];
+  tier: 'simple' | 'medium' | 'complex';
+  enabled: boolean;
+  /** Disponible ya, o con su fase (p. ej. integraciones → Fase 8). */
+  availableNote: string | null;
+  stats: { subtasks: number; done: number; failed: number; costUsd: number; active: number };
+  grants: string[];
+}
+
+export interface SubtaskLogEntry { ts: string; kind: 'route' | 'tool' | 'approval' | 'warning' | 'error' | 'text'; text: string; approvalId?: string }
+
+export interface SubtaskView {
+  id: string;
+  index: number;
+  agentId: string;
+  title: string;
+  instructions: string;
+  status: SubtaskStatus;
+  result: string | null;
+  error: string | null;
+  model: string | null;
+  costUsd: number;
+  log: SubtaskLogEntry[];
+  startedAt: string | null;
+  finishedAt: string | null;
+}
+
+export interface TaskView {
+  id: string;
+  title: string;
+  goal: string;
+  status: TaskStatus;
+  result: string | null;
+  error: string | null;
+  costUsd: number;
+  createdAt: string;
+  updatedAt: string;
+  finishedAt: string | null;
+  subtasks: SubtaskView[];
+}
+
+export const CreateTaskRequest = z.object({ goal: z.string().trim().min(5).max(4000) });

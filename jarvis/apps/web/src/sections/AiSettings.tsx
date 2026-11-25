@@ -120,6 +120,12 @@ export function AiSettingsPanel() {
               <span className="flex items-start gap-1 text-xs text-warn"><ShieldAlert size={12} className="mt-0.5 shrink-0" aria-hidden /> En el nivel gratuito, Google puede usar esas conversaciones para mejorar sus productos. Lo sensible nunca se le envía.</span>
             </span>
           </label>
+          <label className="mb-3 flex cursor-pointer items-start gap-3 text-sm">
+            <input type="checkbox" className="mt-1 accent-[var(--accent)]" checked={!!s.settings.webSearch} onChange={(e) => run(async () => { await core.aiSettings({ webSearch: e.target.checked }); return e.target.checked ? 'Búsqueda web activada.' : 'Búsqueda web desactivada.'; })} />
+            <span>Búsqueda web (con Claude)
+              <span className="block text-xs text-dim">Permite buscar en internet (noticias, negocios, precios…). Cuesta unos 0,01 $ por búsqueda más el texto leído; máximo {s.settings.webSearchMaxUses ?? 5} búsquedas por respuesta. Desactivada por defecto.</span>
+            </span>
+          </label>
           <div className="text-xs text-dim">O fija un modelo concreto:</div>
           <div className="mt-2 space-y-1.5">
             {s.models.map((m) => {

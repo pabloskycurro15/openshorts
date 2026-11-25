@@ -50,7 +50,7 @@ describe('API de IA', () => {
     expect((await app.inject({ method: 'PUT', url: '/api/ai/settings', headers: auth, payload: { model: 'gpt-9' } })).statusCode).toBe(400);
     expect((await app.inject({ method: 'PUT', url: '/api/ai/settings', headers: auth, payload: { monthlyLimitUsd: -3 } })).statusCode).toBe(400);
     const ok = await app.inject({ method: 'PUT', url: '/api/ai/settings', headers: auth, payload: { model: 'claude-sonnet-5-5', monthlyLimitUsd: 10 } });
-    expect(ok.json()).toEqual({ model: 'claude-sonnet-5-5', allowFreeGoogle: true, effort: 'medium', monthlyLimitUsd: 10 });
+    expect(ok.json()).toEqual({ model: 'claude-sonnet-5-5', allowFreeGoogle: true, webSearch: false, webSearchMaxUses: 5, effort: 'medium', monthlyLimitUsd: 10 });
     expect((await app.inject({ method: 'PUT', url: '/api/ai/settings', headers: auth, payload: { model: 'auto' } })).json().model).toBe('auto');
   });
 

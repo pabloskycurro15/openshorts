@@ -17,8 +17,8 @@ Anthropic, que requiere la clave del usuario (ver TESTING.md).
 | 5A | App de escritorio Windows (Electron) y control del equipo con listas blancas | ✅ Completada* |
 | 5B | Voz 100 % local (Whisper) y palabra de activación «Jarvis» | ✅ Completada* |
 | 6 | Memoria: categorías, búsqueda híbrida FTS5 + vectores, administración | ✅ Completada |
-| 7 | Multiagente: coordinador, agentes especializados, supervisión | ⏳ Siguiente |
-| 8 | Conectores: extensiones, almacén de credenciales, integraciones prioritarias | Pendiente |
+| 7 | Multiagente: coordinador, agentes especializados, supervisión | ✅ Completada |
+| 8 | Conectores: extensiones, almacén de credenciales, integraciones prioritarias | ⏳ Siguiente |
 | 9 | Automatizaciones: motor, programador, rutinas, historial | Pendiente |
 | 10 | iOS (Capacitor) y PWA, autenticación, sincronización | Pendiente |
 | 11 | Seguridad avanzada y mantenimiento: cifrado, copias, diagnóstico, actualizaciones | Pendiente |
@@ -104,8 +104,19 @@ Anthropic, que requiere la clave del usuario (ver TESTING.md).
 - [x] Verificado: modelo real en Node, navegador y app de escritorio empaquetada.
 - [ ] Memoria visual con imágenes (hoy: descripciones de texto) — junto con el análisis de pantalla.
 
-### Fase 7 (propuesta) — Multiagente
-- Agente coordinador que descompone objetivos en subtareas y las asigna.
-- Agentes especializados (investigación, programación, documentos, productividad, sistema…) con permisos propios
-  (principal `agent:<nombre>`, sin escalada) y modelo según el repartidor.
-- Centro de tareas y panel de agentes: progreso, resultados, errores y consumo; detener desde emergencia.
+### Fase 7 ✅ — Multiagente
+- [x] Bucle de razonamiento común (`ai/loop.ts`) para la conversación y los agentes.
+- [x] Coordinador: plan JSON validado (1-6 subtareas; si es ilegible, una subtarea de análisis) y síntesis final.
+- [x] 8 agentes (investigación, programación, documentos, productividad, análisis, sistema, automatización,
+      integraciones) con herramientas acotadas, identidad propia `agent:<id>` y nivel de modelo; activables.
+- [x] Cada agente recibe los resultados de los anteriores; herramientas fuera de su lista → denegadas; permisos
+      pendientes → la subtarea espera al usuario (aprobables desde el Centro de tareas).
+- [x] Coste por tarea y subtarea; cancelación; la emergencia detiene todas las tareas; tareas interrumpidas por un
+      reinicio se marcan como fallidas. Herramienta `agents.delegate` para que JARVIS encargue objetivos grandes.
+- [x] Búsqueda web (Claude) preparada y desactivada; el repartidor la usa solo si el usuario la activa.
+
+### Fase 8 (propuesta) — Conectores
+- Arquitectura de extensiones (manifiesto, operaciones como herramientas, credenciales en el almacén, aprobación
+  antes de activar, registro y errores).
+- Prioritarios: Gmail, Google Calendar, Google Drive (OAuth de Google), GitHub, Telegram (bot), OpenShorts (JARVIS
+  → clips) y Netlify (publicar webs). Cada uno con sus permisos y riesgos.

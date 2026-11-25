@@ -28,6 +28,8 @@ export function HomeSection({ navigate }: { navigate: (id: string) => void }) {
   const { data: health } = useCoreData(() => core.health(), [], 15000);
   const { data: pending } = useCoreData(() => core.approvals('pending'));
   const { data: ai } = useCoreData(() => core.aiStatus());
+  const { data: tasks } = useCoreData(() => core.tasks(), [], 6000);
+  const liveTasks = (tasks ?? []).filter((t) => t.status === 'planning' || t.status === 'running');
   const [subtitle, setSubtitle] = useState<{ text: string; live: boolean }>({ text: '', live: false });
   const [routeLabel, setRouteLabel] = useState('');
   const memUsed = info ? 1 - info.memory.freeBytes / info.memory.totalBytes : 0;
@@ -83,6 +85,22 @@ export function HomeSection({ navigate }: { navigate: (id: string) => void }) {
           </div>
         ) : <p className="text-sm text-muted">Esperando datos…</p>}
       </Panel>
+      <Panel title="Agentes trabajando" icon={Bot} actions={<Button tone="ghost" onClick={() => navigate('tareas')}>Tareas</Button>}>
+        {liveTasks.length ? (
+          <ul className="space-y-2">
+            {liveTasks.slice(0, 3).map((t) => {
+              const cur = t.subtasks.find((s) => s.status === 'running' || s.status === 'waiting_approval');
+              const done = t.subtasks.filter((s) => s.status === 'done').length;
+              return (
+                <li key={t.id} className="text-sm">
+                  <div className="flex items-center gap-2"><span className="pulse-dot h-2 w-2 rounded-full bg-accent" aria-hidden /><span className="truncate">{t.title}</span></div>
+                  <div className="ml-4 text-[11px] text-dim">{cur ? `${cur.agentId}: ${cur.title}` : 'Planificando…'} · {done}/{t.subtasks.length || '?'}</div>
+                </li>
+              );
+            })}
+          </ul>
+        ) : <p className="text-sm text-muted">Ningún agente trabajando ahora.</p>}
+      </Panel>
       <Panel title="Confirmaciones" icon={ShieldAlert}>
         {pending?.length
           ? <div className="space-y-2"><p className="text-sm">{pending.length} pendiente{pending.length > 1 ? 's' : ''}.</p><Button tone="accent" onClick={() => navigate('seguridad')}>Revisar</Button></div>
@@ -102,7 +120,6 @@ export function HomeSection({ navigate }: { navigate: (id: string) => void }) {
         <div className="mt-4 space-y-1.5 border-t border-navy-700 pt-3">
           <Planned icon={CalendarDays} title="Calendario" phase={8} />
           <Planned icon={CloudSun} title="Tiempo" phase={8} />
-          <Planned icon={Bot} title="Agentes trabajando" phase={7} />
           <Planned icon={Workflow} title="Automatizaciones" phase={9} />
         </div>
       </Panel>

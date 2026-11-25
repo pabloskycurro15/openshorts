@@ -149,9 +149,9 @@ describe('App', () => {
   it('las secciones futuras dicen claramente que no funcionan aún', async () => {
     mockCore('t');
     window.localStorage.setItem('jarvis.token', JSON.stringify('t'));
-    window.location.hash = '/agentes';
+    window.location.hash = '/conectores';
     await renderApp();
-    await waitFor(() => expect(screen.getByText('Disponible en la Fase 7')).toBeTruthy());
+    await waitFor(() => expect(screen.getByText('Disponible en la Fase 8')).toBeTruthy());
     expect(screen.getByText(/todavía no funciona/)).toBeTruthy();
   });
 

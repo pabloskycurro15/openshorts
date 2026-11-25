@@ -5,6 +5,8 @@ import type {
   ChatMessageView,
   ConversationSummary,
   ElevenLabsSettings,
+  AgentInfo,
+  TaskView,
   Memory,
   MemoryHit,
   MemoryInput,
@@ -112,6 +114,14 @@ export class CoreClient {
   conversation = (id: string) =>
     this.req<{ conversation: ConversationSummary; messages: ChatMessageView[]; active: boolean }>(`/api/conversations/${id}`);
   deleteConversation = (id: string) => this.req<{ deleted: boolean }>(`/api/conversations/${id}`, { method: 'DELETE' });
+  // ── Agentes y tareas ──
+  agents = () => this.req<AgentInfo[]>('/api/agents');
+  setAgentEnabled = (id: string, enabled: boolean) => this.req<{ enabled: boolean }>(`/api/agents/${id}`, { method: 'PUT', body: JSON.stringify({ enabled }) });
+  tasks = () => this.req<TaskView[]>('/api/tasks');
+  createTask = (goal: string) => this.req<TaskView>('/api/tasks', { method: 'POST', body: JSON.stringify({ goal }) });
+  cancelTask = (id: string) => this.req<{ cancelled: boolean }>(`/api/tasks/${id}/cancel`, { method: 'POST', body: '{}' });
+  deleteTask = (id: string) => this.req<{ deleted: boolean }>(`/api/tasks/${id}`, { method: 'DELETE' });
+
   // ── Memoria ──
   memories = (o: { q?: string; category?: string; status?: string } = {}) => {
     const p = new URLSearchParams(Object.entries(o).filter(([, v]) => v) as [string, string][]);

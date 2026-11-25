@@ -2,6 +2,16 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versionado semántico.
 
+## [0.9.0] — 2026-11-25
+### Añadido
+- Multiagente (Fase 7): coordinador, 8 agentes especializados con identidad y permisos propios, Centro de tareas en
+  directo, panel de Agentes, «Agentes trabajando» en Inicio, herramienta `agents.delegate`. Migración 5.
+- Búsqueda web con Claude (desactivada por defecto) con límite por respuesta y coste contabilizado.
+- 10 pruebas nuevas (185 en total) y prueba de una tarea de 3 agentes en el navegador.
+
+### Cambiado
+- El bucle de razonamiento se extrae a `ai/loop.ts` y lo comparten la conversación y los agentes.
+
 ## [0.8.0] — 2026-11-25
 ### Añadido
 - Memoria (Fase 6): recuerdos con 8 categorías, relaciones, búsqueda híbrida (palabras, fragmentos, significado

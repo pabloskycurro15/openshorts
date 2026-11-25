@@ -17,6 +17,8 @@ import { PlannedSection } from './sections/Planned';
 import { ConversationSection } from './sections/Conversation';
 import { FilesSection } from './sections/Files';
 import { MemorySection } from './sections/Memory';
+import { TasksSection } from './sections/Tasks';
+import { AgentsSection } from './sections/Agents';
 
 import { useEffect } from 'react';
 
@@ -45,6 +47,8 @@ export function App() {
       case 'configuracion': return <SettingsSection />;
       case 'archivos': return <FilesSection />;
       case 'memoria': return <MemorySection />;
+      case 'tareas': return <TasksSection />;
+      case 'agentes': return <AgentsSection />;
       case 'conversacion': return <ConversationSection navigate={navigate} />;
       default: return <PlannedSection section={section} />;
     }

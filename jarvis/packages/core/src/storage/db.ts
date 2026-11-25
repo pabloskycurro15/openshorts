@@ -139,6 +139,39 @@ const MIGRATIONS: string[] = [
     PRIMARY KEY (from_id, to_id, relation)
   );
   `,
+  // 5 — multiagente: tareas, subtareas y ajustes por agente
+  `
+  CREATE TABLE tasks (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    goal TEXT NOT NULL,
+    status TEXT NOT NULL,
+    result TEXT,
+    error TEXT,
+    cost_usd REAL NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    finished_at TEXT
+  );
+  CREATE TABLE subtasks (
+    id TEXT PRIMARY KEY,
+    task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+    idx INTEGER NOT NULL,
+    agent_id TEXT NOT NULL,
+    title TEXT NOT NULL,
+    instructions TEXT NOT NULL,
+    status TEXT NOT NULL,
+    result TEXT,
+    error TEXT,
+    model TEXT,
+    cost_usd REAL NOT NULL DEFAULT 0,
+    log TEXT NOT NULL DEFAULT '[]',
+    started_at TEXT,
+    finished_at TEXT
+  );
+  CREATE INDEX subtasks_task ON subtasks(task_id, idx);
+  CREATE TABLE agent_settings (agent_id TEXT PRIMARY KEY, enabled INTEGER NOT NULL);
+  `,
 ];
 
 export function openDatabase(file: string): Database {

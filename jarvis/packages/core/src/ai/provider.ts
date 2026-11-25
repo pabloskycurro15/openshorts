@@ -30,6 +30,8 @@ export interface Usage {
   outputTokens: number;
   cacheReadTokens: number;
   cacheWriteTokens: number;
+  /** Búsquedas web realizadas (se cobran aparte: 10 $ por cada 1.000). */
+  webSearches?: number;
 }
 
 export interface TurnRequest {
@@ -38,6 +40,8 @@ export interface TurnRequest {
   messages: ChatMessage[];
   tools: ToolDescriptor[];
   effort: Effort;
+  /** Búsqueda web del proveedor (solo Anthropic, y solo si el usuario la activa). */
+  webSearch?: { maxUses: number } | null;
   signal?: AbortSignal;
   /** Fragmentos de texto según se generan (para mostrarlos en directo). */
   onText?: (delta: string) => void;

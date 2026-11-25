@@ -56,6 +56,7 @@ jarvis/
 │       │   ├── control/     control del equipo: config (listas blancas), paths, fs-tools, os-tools, platform
 │       │   ├── voice/       ElevenLabs (vía núcleo)
 │       │   ├── memory/      store (híbrido), embedder (modelo local), tools
+│       │   ├── agents/      definitions (8 agentes), tasks (coordinador y ejecución), tools
 │       │   ├── ai/          provider, anthropic, pricing, budget, conversations, engine, prompt, service
 │       │   ├── server/      API REST + WebSocket
 │       │   ├── app.ts       composición del núcleo
@@ -102,6 +103,10 @@ Todas las rutas salvo `/api/ping` requieren `Authorization: Bearer <token>`.
 | PUT | `/api/voice/elevenlabs/settings` | `{enabled?, voiceId?, modelId?, stability?, similarity?}` |
 | GET | `/api/voice/elevenlabs/voices` | Voces disponibles |
 | POST | `/api/voice/tts` | `{text}` → audio MP3 (solo si está activado) |
+| GET / PUT | `/api/agents[/:id]` | Agentes (estadísticas, permisos) y activar/desactivar |
+| GET / POST | `/api/tasks` | Tareas / encargar un objetivo `{goal}` |
+| GET / DELETE | `/api/tasks/:id` | Detalle con subtareas y registro / borrar |
+| POST | `/api/tasks/:id/cancel` | Detener |
 | GET | `/api/memory?q=&category=&project=&status=` | Búsqueda híbrida y recuentos |
 | GET / POST / PATCH / DELETE | `/api/memory[/:id]` | Detalle con relaciones, crear (confirmado), editar, borrar |
 | POST | `/api/memory/:id/confirm` | Confirmar una sugerencia |

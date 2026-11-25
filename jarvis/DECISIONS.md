@@ -105,6 +105,15 @@ AES-256-GCM con el nombre del secreto como dato autenticado; clave maestra en ar
 datos (`MasterKeyProvider` intercambiable: en la Fase 5, Electron `safeStorage`/DPAPI). Protege frente a
 filtraciones de la base de datos o de copias; no frente a quien controle por completo la cuenta del usuario.
 
+## ADR-021 · Multiagente secuencial con coordinador ✅
+- Coordinador sin herramientas (solo texto): plan JSON → subtareas en orden → síntesis. Secuencial (no en paralelo)
+  para que cada agente aproveche lo anterior y para que las confirmaciones lleguen de una en una.
+- Agente = prompt + lista de herramientas + nivel de modelo + identidad `agent:<id>`. Los permisos son por agente:
+  conceder algo al programador no lo concede al investigador. Ningún agente puede concederse nada.
+- Límite de 10 pasos por subtarea y 6 subtareas por tarea (control de coste); coste guardado como «tarea:<id>».
+- Búsqueda web: herramienta de servidor de Anthropic (`web_search_20260209`), solo con Claude y solo si el usuario
+  la activa; se cobra 0,01 $ por búsqueda además de los tokens.
+
 ## ADR-020 · Memoria híbrida local ✅
 - **Almacenamiento:** SQLite (misma base de datos), tabla `memories` + `memory_links`; índices FTS5
   (`unicode61 remove_diacritics 2`) y de trigramas (texto normalizado sin tildes) para fragmentos y errores.

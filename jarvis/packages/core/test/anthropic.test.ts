@@ -111,7 +111,8 @@ describe('Adaptador Anthropic — SDK real contra API simulada', () => {
     expect(r.stopReason).toBe('tool_use');
     expect(r.message.content).toEqual([{ type: 'text', text: 'Consulto la hora.' }, { type: 'tool_use', id: 'toolu_1', name: 'system.datetime', input: {} }]);
     expect((r.message.raw!.blocks as { type: string }[]).map((b) => b.type)).toEqual(['thinking', 'text', 'tool_use']);
-    expect(r.usage).toEqual({ inputTokens: 1200, outputTokens: 57, cacheReadTokens: 800, cacheWriteTokens: 300 });
+    expect(r.usage).toEqual({ inputTokens: 1200, outputTokens: 57, cacheReadTokens: 800, cacheWriteTokens: 300, webSearches: 0 });
+    expect((req.body.tools as { type?: string }[]).some((t) => t.type === 'web_search_20260209')).toBe(false); // apagada por defecto
     expect(r.servedModel).toBe('claude-opus-5-5');
   });
 
@@ -135,6 +136,15 @@ describe('Adaptador Anthropic — SDK real contra API simulada', () => {
     });
     const sent = captured[0]!.body.messages as { content: unknown }[];
     expect(sent[1]!.content).toEqual(raw);
+  });
+
+  it('búsqueda web: solo se envía si se activa, con su límite', async () => {
+    const { client, captured } = await fakeApi((_c, res) => {
+      res.writeHead(200, { 'content-type': 'text/event-stream' });
+      res.end(sse(turnEvents([], 'end_turn')));
+    });
+    await new AnthropicProvider('x', client).runTurn({ model: 'claude-sonnet-5-5', effort: 'low', system: 'S', tools, webSearch: { maxUses: 3 }, messages: [{ role: 'user', content: [{ type: 'text', text: 'busca' }] }] });
+    expect(captured[0]!.body.tools).toContainEqual({ type: 'web_search_20260209', name: 'web_search', max_uses: 3 });
   });
 
   it('Haiku no envía respaldo (no lo admite)', async () => {

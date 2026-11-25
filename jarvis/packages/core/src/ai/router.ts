@@ -15,13 +15,14 @@ import type { AiSettings } from '@jarvis/shared';
  */
 export type Tier = 'simple' | 'medium' | 'complex';
 export interface RouteCandidate { provider: string; model: string }
-export interface RouteDecision { tier: Tier; reason: string; sensitive: boolean; action: boolean; chain: RouteCandidate[] }
+export interface RouteDecision { tier: Tier; reason: string; sensitive: boolean; action: boolean; web: boolean; chain: RouteCandidate[] }
 
 const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
 const COMPLEX = /\b(planifica|plan de|estrategia|programa(r|me)?|codigo|script|depura|bug|refactoriza|arquitectura|crea(r|me)? (una|la|un) (web|pagina|app|aplicacion)|disena|investiga|analiza|compara|informe|paso a paso|optimiza|razona|demuestra|calcula .{20,}|negocio|contrato|presupuesto detallado)\b/;
 const ACTION = /\b(archivo|archivos|carpeta|fichero|documento|abre|abrir|cierra|cerrar|ejecuta|ejecutar|comando|borra|borrar|elimina|mueve|mover|renombra|crea (el|un) archivo|guarda|escribe en|ventana|aplicacion|programa (abierto|instalado)|proceso|navegador|pagina web de)\b/;
 const SIMPLE = /^(hola|buenas|buenos dias|buenas (tardes|noches)|gracias|vale|ok|adios|hasta luego|que tal|como estas)\b|\b(que hora|que dia|fecha|chiste|traduce|resume (esto|en una frase)|define|que significa|sinonimo|cuanto es \d)/;
+const WEB = /\b(busca(r|me)? (en )?(internet|la web|google|online)|en internet|noticias|actualidad|ultima hora|hoy en dia|precio actual|cotizacion|que tiempo hace|horario de|telefono de|direccion de|web de|negocios de|tiendas? de|bares? (de|en))\b/;
 const SENSITIVE = /\b(contrasena|password|clave|pin|dni|nie|pasaporte|tarjeta|iban|cuenta bancaria|banco|nomina|salud|medico|diagnostico|enfermedad|medicacion|terapia|abogado|denuncia|direccion de casa|telefono personal|secreto)\b/;
 
 /** ¿El texto contiene datos sensibles? (contraseñas, banco, salud, identidad…) */
@@ -31,10 +32,12 @@ export function classify(message: string): Omit<RouteDecision, 'chain'> {
   const m = norm(message);
   const sensitive = SENSITIVE.test(m);
   const action = ACTION.test(m);
-  if (COMPLEX.test(m) || m.length > 700) return { tier: 'complex', reason: m.length > 700 ? 'mensaje largo' : 'tarea compleja', sensitive, action };
-  if (action) return { tier: 'medium', reason: 'acción sobre el equipo', sensitive, action };
-  if (SIMPLE.test(m) || m.length < 90) return { tier: 'simple', reason: 'consulta sencilla', sensitive, action };
-  return { tier: 'medium', reason: 'consulta normal', sensitive, action };
+  const web = WEB.test(m);
+  if (COMPLEX.test(m) || m.length > 700) return { tier: 'complex', reason: m.length > 700 ? 'mensaje largo' : 'tarea compleja', sensitive, action, web };
+  if (action) return { tier: 'medium', reason: 'acción sobre el equipo', sensitive, action, web };
+  if (web) return { tier: 'medium', reason: 'necesita buscar en internet', sensitive, action, web };
+  if (SIMPLE.test(m) || m.length < 90) return { tier: 'simple', reason: 'consulta sencilla', sensitive, action, web };
+  return { tier: 'medium', reason: 'consulta normal', sensitive, action, web };
 }
 
 export const M = {
@@ -43,6 +46,19 @@ export const M = {
   haiku: { provider: 'anthropic', model: 'claude-haiku-5-5' },
   terra: { provider: 'openai', model: 'gpt-6.1-terra' },
 } as const;
+
+/** Cadena por nivel (la usan los agentes, que ya saben qué dificultad tiene su trabajo). */
+export function chainForTier(tier: Tier, o: { settings: AiSettings; configured: Set<string>; freeModels: string[]; coolingDown: (c: RouteCandidate) => boolean; web?: boolean; action?: boolean }): RouteCandidate[] {
+  const free = o.settings.allowFreeGoogle ? o.freeModels.map((model) => ({ provider: 'google', model })) : [];
+  let chain: RouteCandidate[];
+  if (o.web && o.settings.webSearch) chain = tier === 'complex' ? [M.opus, M.sonnet] : [M.sonnet, M.opus];
+  else if (o.action) chain = tier === 'complex' ? [M.opus, M.sonnet, M.terra] : [M.sonnet, M.opus, M.terra];
+  else if (tier === 'simple') chain = [...free, M.haiku, M.terra, M.sonnet];
+  else if (tier === 'medium') chain = [M.terra, M.sonnet, M.opus];
+  else chain = [M.opus, M.sonnet, M.terra];
+  const usable = chain.filter((x) => o.configured.has(x.provider) && !o.coolingDown(x));
+  return usable.length ? usable : chain.filter((x) => o.configured.has(x.provider));
+}
 
 /**
  * Cadena de candidatos para una tarea. `freeModels` son los modelos gratuitos de Google
@@ -55,7 +71,10 @@ export function route(
   const c = classify(message);
   const free = opts.settings.allowFreeGoogle && !c.sensitive ? opts.freeModels.map((model) => ({ provider: 'google', model })) : [];
   let chain: RouteCandidate[];
-  if (c.action) {
+  if (c.web && opts.settings.webSearch) {
+    // Solo Claude tiene la búsqueda web integrada.
+    chain = c.tier === 'complex' ? [M.opus, M.sonnet] : [M.sonnet, M.opus];
+  } else if (c.action) {
     // Las herramientas las maneja mejor Claude.
     chain = c.tier === 'complex' ? [M.opus, M.sonnet, M.terra] : [M.sonnet, M.opus, M.terra];
   } else if (c.tier === 'simple') chain = [...free, M.haiku, M.terra, M.sonnet];
