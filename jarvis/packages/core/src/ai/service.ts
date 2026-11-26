@@ -20,7 +20,7 @@ interface ProviderDef { name: string; secret: string; pattern: RegExp; hint: str
 const DEFS: Record<ProviderId, Omit<ProviderDef, 'factory'> & { factory: ProviderFactory }> = {
   anthropic: { name: 'Anthropic (Claude)', secret: 'ai.anthropic.apiKey', pattern: /^sk-ant-[A-Za-z0-9_-]{20,}$/, hint: 'empieza por «sk-ant-»', keyUrl: 'https://platform.claude.com/settings/keys', factory: (k) => new AnthropicProvider(k) },
   openai: { name: 'OpenAI (GPT)', secret: 'ai.openai.apiKey', pattern: /^sk-[A-Za-z0-9_-]{20,}$/, hint: 'empieza por «sk-»', keyUrl: 'https://platform.openai.com/api-keys', factory: (k) => new OpenAIProvider(k) },
-  google: { name: 'Google (Gemini, gratis)', secret: 'ai.google.apiKey', pattern: /^[A-Za-z0-9_-]{30,60}$/, hint: 'empieza por «AIza…»', keyUrl: 'https://aistudio.google.com/apikey', factory: (k) => new GeminiProvider(k) },
+  google: { name: 'Google (Gemini, gratis)', secret: 'ai.google.apiKey', pattern: /^(AIza[A-Za-z0-9_-]{30,40}|AQ\.[A-Za-z0-9_.-]{30,200})$/, hint: 'empieza por «AIza…» o «AQ.…»', keyUrl: 'https://aistudio.google.com/apikey', factory: (k) => new GeminiProvider(k) },
 };
 export const ANTHROPIC_KEY_SECRET = DEFS.anthropic.secret;
 const COOLDOWN_MS = 10 * 60_000;

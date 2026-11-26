@@ -2,6 +2,11 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versionado semántico.
 
+## [1.0.1] — 2026-11-26
+### Corregido
+- Se aceptan las claves de Gemini con el formato nuevo de Google («AQ.…»), además de «AIza…». Verificado con una
+  clave real: conversación con Gemini 3.5 Flash-Lite (coste 0) y uso de herramientas con confirmación.
+
 ## [1.0.0] — 2026-11-25
 ### Añadido
 - Fase 12: integración continua en GitHub Actions (pruebas en Linux y Windows reales e instalador NSIS),

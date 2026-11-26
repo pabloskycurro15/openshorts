@@ -43,7 +43,7 @@ import { SecurityMonitor } from './security/monitor';
 import { VideoStudio, createProgramTools } from './video/studio';
 import { nodePlatform } from './control/platform';
 
-export const VERSION = '1.0.0';
+export const VERSION = '1.0.1';
 
 export interface Jarvis {
   version: string;
