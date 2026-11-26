@@ -128,10 +128,17 @@ function ConnectorCard({ c, refresh }: { c: ConnectorInfo; refresh: () => Promis
       {c.id === 'google' && <GoogleStatus c={c} run={run} busy={busy} />}
       {c.id === 'spotify' && <SpotifyStatus c={c} run={run} busy={busy} />}
       {c.enabled && c.id === 'phone' && (
-        <div className="mt-3 flex flex-wrap items-center gap-3 rounded-lg border border-navy-600 bg-navy-950/50 p-3 text-xs text-muted">
-          <span>{String(c.status.callsToday ?? 0)}/{String(c.status.limit ?? 6)} llamadas hoy</span>
-          <Button tone="accent" disabled={busy} onClick={() => run(async () => { await core.connectorAction(c.id, 'test_call'); return 'Llamando a tu móvil…'; })}><Phone size={13} aria-hidden /> Llamada de prueba</Button>
-          <span>Para los buenos días: Automatizaciones → «Buenos días por teléfono».</span>
+        <div className="mt-3 space-y-2 rounded-lg border border-navy-600 bg-navy-950/50 p-3 text-xs text-muted">
+          <div className="flex flex-wrap items-center gap-3">
+            <span>{String(c.status.callsToday ?? 0)}/{String(c.status.limit ?? 6)} llamadas hoy</span>
+            {c.status.conversation ? <Badge tone="ok">Conversación activada</Badge> : <Badge tone="warn">Solo mensajes</Badge>}
+            {Number(c.status.activeCalls ?? 0) > 0 && <Badge tone="accent">En llamada</Badge>}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button tone="accent" disabled={busy} onClick={() => run(async () => { await core.connectorAction(c.id, 'test_call'); return 'Llamando a tu móvil…'; })}><Phone size={13} aria-hidden /> Llamada de prueba</Button>
+            {Boolean(c.status.conversation) && <Button disabled={busy} onClick={() => run(async () => { const r = await core.connectorAction(c.id, 'setup_inbound'); return `Listo: llama al ${String(r.number)} desde tu móvil para hablar con JARVIS.`; })}>Recibir mis llamadas</Button>}
+          </div>
+          <p>{c.status.conversation ? 'Cuando te llame, contéstale hablando. Di «adiós» para colgar.' : 'Para conversar (no solo escuchar), añade la dirección pública HTTPS de arriba.'} Buenos días: Automatizaciones → «Buenos días por teléfono».</p>
         </div>
       )}
       {c.enabled && c.id === 'adobe' && <AdobeStatus c={c} run={run} busy={busy} />}

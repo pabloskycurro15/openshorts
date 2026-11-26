@@ -56,13 +56,15 @@ export class ChatEngine {
     return this.active.size;
   }
 
-  async run(input: { conversationId?: string; message: string }, emit: (e: ChatEvent) => void, outerSignal?: AbortSignal): Promise<void> {
+  async run(input: { conversationId?: string; message: string; approvalWaitMs?: number }, emit: (e: ChatEvent) => void, outerSignal?: AbortSignal): Promise<void> {
     const { store, bus } = this.d;
     const plan = this.d.plan(input.message);
     if (!plan.candidates.length) {
-      emit({ type: 'error', message: plan.auto || !input.message
-        ? 'El cerebro no está configurado: añade al menos una clave (Anthropic, OpenAI o Gemini) en Configuración.'
-        : 'El modelo elegido no tiene clave configurada. Añádela en Configuración o elige «Automático».' });
+      emit({ type: 'error', message: plan.decision?.sensitive && plan.auto
+        ? 'Tu mensaje parece contener datos sensibles y no lo envío al Gemini gratuito (Google puede usar esos datos para mejorar sus modelos). Añade una clave de pago (Anthropic u OpenAI) o quita los datos sensibles.'
+        : plan.auto || !input.message
+          ? 'El cerebro no está configurado: añade al menos una clave (Anthropic, OpenAI o Gemini) en Configuración.'
+          : 'El modelo elegido no tiene clave configurada. Añádela en Configuración o elige «Automático».' });
       emit({ type: 'done', stopReason: 'not_configured' });
       return;
     }
@@ -93,6 +95,7 @@ export class ChatEngine {
         webSearch: this.d.webSearch(),
         context: { lastUserText: input.message, conversationId: conv.id },
         visualState: true,
+        approvalWaitMs: input.approvalWaitMs,
       });
       stopReason = r.stopReason;
     } catch (err) {

@@ -1,4 +1,5 @@
 import path from 'node:path';
+import type { ChatEvent } from '@jarvis/shared';
 import { EventBus } from './kernel/events';
 import { ModuleRegistry, type JarvisModule } from './kernel/modules';
 import { createLogger, type Logger } from './kernel/logger';
@@ -29,7 +30,7 @@ import { whatsappConnector } from './connectors/whatsapp';
 import { googleConnector } from './connectors/google';
 import { spotifyConnector } from './connectors/spotify';
 import { vintedConnector } from './connectors/vinted';
-import { phoneConnector } from './connectors/phone';
+import { PhoneBridge } from './connectors/phone';
 import { createWeatherTool } from './tools/builtin/weather';
 import { AdobeBridge } from './connectors/adobe';
 import { resolveAuthorized } from './control/paths';
@@ -45,7 +46,7 @@ import { SecurityMonitor } from './security/monitor';
 import { VideoStudio, createProgramTools } from './video/studio';
 import { nodePlatform } from './control/platform';
 
-export const VERSION = '1.1.0';
+export const VERSION = '1.2.0';
 
 export interface Jarvis {
   version: string;
@@ -71,12 +72,13 @@ export interface Jarvis {
   monitor: SecurityMonitor;
   video: VideoStudio;
   adobe: AdobeBridge;
+  phone: PhoneBridge;
   /** true si al arrancar se aplicó una restauración de copia de seguridad. */
   restored: boolean;
   /** Lo crea el servidor al escuchar (no existe en pruebas sin servidor). */
   remote?: RemoteAccess;
   /** Conversar con JARVIS desde un canal externo (Telegram, WhatsApp). */
-  converse(text: string, channel: string): Promise<string>;
+  converse(text: string, channel: string, onEvent?: (e: ChatEvent) => void): Promise<string>;
   start(): Promise<void>;
   stop(): Promise<void>;
 }
@@ -127,14 +129,16 @@ export function createJarvis(config: JarvisConfig, opts: { dbFile?: string; extr
   for (const m of opts.extraModules ?? []) modules.register(m);
 
   // Canales externos: cada canal tiene su propia conversación persistente.
-  async function converse(text: string, channel: string): Promise<string> {
+  async function converse(text: string, channel: string, onEvent?: (e: ChatEvent) => void): Promise<string> {
     const key = `channel.${channel}.conversation`;
     let conversationId = getSetting(db, key);
     if (conversationId && !ai.store.exists(conversationId)) conversationId = undefined;
     let out = '';
     let approvals = 0;
     try {
-      await ai.engine.run({ conversationId, message: text }, (e) => {
+      // Por teléfono no se puede esperar a una confirmación: queda pendiente en la app.
+      await ai.engine.run({ conversationId, message: text, approvalWaitMs: channel === 'phone' ? 4000 : undefined }, (e) => {
+        onEvent?.(e);
         if (e.type === 'start') setSetting(db, key, e.conversationId);
         else if (e.type === 'text') out += e.delta;
         else if (e.type === 'message_end') out += '\n';
@@ -173,13 +177,14 @@ export function createJarvis(config: JarvisConfig, opts: { dbFile?: string; extr
   const video = new VideoStudio(db, () => control.get(), opts.platform ?? nodePlatform);
   for (const t of [...video.tools(), ...createProgramTools(video, opts.platform ?? nodePlatform)]) tools.register(t);
   const adobe = new AdobeBridge();
+  const phone = new PhoneBridge();
   tools.register(createWeatherTool(opts.fetch));
   bus.on('security.alert', (a) => connectors.notifyAlert(a));
-  for (const c of opts.connectors ?? [googleConnector(), spotifyConnector(), phoneConnector(), whatsappConnector(), telegramConnector(), githubConnector(), netlifyConnector(), openshortsConnector(), vintedConnector(), adobe.def()]) connectors.register(c);
+  for (const c of opts.connectors ?? [googleConnector(), spotifyConnector(), phone.def(), whatsappConnector(), telegramConnector(), githubConnector(), netlifyConnector(), openshortsConnector(), vintedConnector(), adobe.def()]) connectors.register(c);
 
   const core = { kind: 'core', id: 'kernel' } as const;
   return {
-    version: VERSION, config, logger, bus, db, audit, permissions, tools, modules, vault, ai, voice, control, memory, tasks, connectors, automations, devices, push, backups, monitor, video, adobe, restored, converse,
+    version: VERSION, config, logger, bus, db, audit, permissions, tools, modules, vault, ai, voice, control, memory, tasks, connectors, automations, devices, push, backups, monitor, video, adobe, phone, restored, converse,
     async start() {
       audit.append({ principal: core, action: 'core.start', outcome: 'success', details: { version: VERSION } });
       await modules.startAll({ config, logger, bus, db, tools, permissions, audit });

@@ -13,6 +13,15 @@ export function registerConnectorRoutes(app: FastifyInstance, j: Jarvis) {
   const c = j.connectors;
   const fail = (reply: { code(n: number): { send(b: unknown): unknown } }, err: unknown) => reply.code(400).send({ error: (err as Error).message });
   app.get('/api/connectors', async () => c.list());
+  // Webhooks de Twilio (conversación por teléfono). Sin token de JARVIS: los protege la firma de Twilio.
+  for (const p of ['/phone/voice', '/phone/pin', '/phone/gather', '/phone/wait']) {
+    app.post(p, async (req, reply) => {
+      if (!j.connectors.isEnabled('phone')) return reply.code(404).type('text/xml').send('<Response><Reject/></Response>');
+      const params = (req.body && typeof req.body === 'object' ? req.body : {}) as Record<string, string>;
+      const r = await j.phone.webhook(p, req.query as Record<string, string>, params, req.headers['x-twilio-signature'] as string | undefined);
+      return reply.code(r.status).type('text/xml').send(r.body);
+    });
+  }
   // Editor de Adobe Express: página aislada (otro origen: localhost) con su propia CSP y nonce.
   app.get('/adobe-express', async (_req, reply) => {
     const nonce = randomBytes(16).toString('base64');

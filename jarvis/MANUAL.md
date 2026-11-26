@@ -25,6 +25,7 @@
 | «Cada mañana a las 8 mándame un resumen por Telegram» | JARVIS lo propone en Automatizaciones; tú lo activas |
 | «Abre Spotify», «Cierra el Bloc de notas», «¿Cuánta CPU uso?» | Control del equipo (lista blanca) |
 | «Recuerda que mi cliente X prefiere llamadas» | Memoria |
+| Llamar al número de JARVIS y hablarle | Conectores → Llamadas (con dirección pública y PIN) → «Recibir mis llamadas» |
 | «Llámame a las 7:15 con los buenos días» | Automatizaciones → «Buenos días por teléfono» (conector Llamadas, Twilio) |
 | «¿Qué tiempo hace en Nerja?» | El tiempo (Open-Meteo, gratis) |
 

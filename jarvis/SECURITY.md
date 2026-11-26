@@ -108,6 +108,14 @@ El logger censura campos `token`, `apiKey`, `password`, `secret` y la cabecera `
   memoria; «Desconectar» lo revoca en Google. Enviar correo = crítico (siempre confirma, 20/h); por defecto JARVIS
   prepara borradores.
 
+### Conversación por teléfono (1.2)
+- Los webhooks (/phone/*) son las únicas rutas públicas a través del túnel; cada petición se verifica con la firma
+  HMAC de Twilio (Auth Token) y el Account SID. Se rechazan las llamadas de cualquier número que no sea el tuyo.
+- El número de quien llama se puede falsificar: para las llamadas entrantes se recomienda PIN (4-8 cifras,
+  3 intentos). Las salientes (las inicia JARVIS hacia tu número) no lo piden.
+- Por teléfono, todo lo que necesite confirmación se queda pendiente en la app; en emergencia no atiende órdenes.
+- Túnel recomendado: Tailscale Funnel en el puerto 8443 y solo la ruta /phone (la interfaz no queda pública).
+
 ### Llamadas de teléfono (1.1)
 - Solo puede llamar al número del propietario configurado (la herramienta no acepta otro destino); máximo 6
   llamadas al día; llamadas por alertas críticas como mucho una cada 30 min. Riesgo medio (cuesta dinero): una

@@ -27,7 +27,7 @@ solo puede hacer el usuario (cuentas reales, Windows/iPhone/Mac físicos).
 | WhatsApp (no oficial) | ✅ / ⏳ | QR real de los servidores de WhatsApp (Node, Chromium, Electron); falta vincular tu teléfono |
 | Vinted (experimental) | 🧪 / ⏳ | Web simulada; con tu cookie puede fallar por su protección anti-robots |
 | Adobe Express | 🧪 / ⏳ | Puente, ticket y CSP probados; editor real necesita tu Client ID |
-| Llamadas (Twilio) y buenos días 7:15 | 🧪 / ⏳ | Mensaje real con Gemini y el tiempo real; la llamada, con Twilio simulado. Falta tu cuenta de Twilio |
+| Llamadas y conversación por teléfono (Twilio) | 🧪 / ⏳ | Conversación con tu Gemini real a través de los webhooks firmados (Twilio simulado); falta tu cuenta de Twilio y el túnel |
 | Estudio de vídeo (FFmpeg) y programas | ✅ / ⏳ | FFmpeg real (presentación, recorte, unión, miniatura); winget en Windows real |
 | Automatizaciones | ✅ | Programador, disparadores, permisos, historial; navegador (plantilla → ejecución → aviso) |
 | iPhone / PWA | ✅ / ⏳ | iPhone 15 Pro emulado vinculado por red local; PWA sin conexión; push cifrado real contra servidor local. Falta iPhone físico + Tailscale |

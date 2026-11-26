@@ -25,7 +25,7 @@ export interface ConnectorCtx {
   logger: Logger;
   dataDir: string;
   /** Conversar con JARVIS desde un canal externo (Telegram, WhatsApp). Devuelve la respuesta. */
-  converse(text: string, channel: string): Promise<string>;
+  converse(text: string, channel: string, onEvent?: (e: import('@jarvis/shared').ChatEvent) => void): Promise<string>;
   lockdown(): boolean;
   /** Publica un evento del conector (p. ej. WhatsApp recibido) para las automatizaciones. */
   emit(event: string, data: Record<string, unknown>): void;

@@ -36,6 +36,10 @@ export async function buildServer(j: Jarvis, token: string): Promise<FastifyInst
     bodyLimit: 1_000_000,
   });
   await app.register(websocket);
+  // Formularios (los webhooks de Twilio llegan como application/x-www-form-urlencoded).
+  app.addContentTypeParser('application/x-www-form-urlencoded', { parseAs: 'string', bodyLimit: 64 * 1024 }, (_req, body, done) => {
+    done(null, Object.fromEntries(new URLSearchParams(String(body))));
+  });
 
   const throttle = new AuthThrottle();
   // Orígenes de la app nativa (Capacitor). La web servida por el núcleo es del mismo origen y no necesita CORS.

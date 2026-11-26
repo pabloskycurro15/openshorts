@@ -51,11 +51,14 @@ export const M = {
 export function chainForTier(tier: Tier, o: { settings: AiSettings; configured: Set<string>; freeModels: string[]; coolingDown: (c: RouteCandidate) => boolean; web?: boolean; action?: boolean }): RouteCandidate[] {
   const free = o.settings.allowFreeGoogle ? o.freeModels.map((model) => ({ provider: 'google', model })) : [];
   let chain: RouteCandidate[];
-  if (o.web && o.settings.webSearch) chain = tier === 'complex' ? [M.opus, M.sonnet] : [M.sonnet, M.opus];
-  else if (o.action) chain = tier === 'complex' ? [M.opus, M.sonnet, M.terra] : [M.sonnet, M.opus, M.terra];
+  // Gemini gratis también es el último respaldo en tareas medias y complejas (el modelo más capaz primero):
+  // así JARVIS funciona aunque solo haya clave de Google.
+  const freeStrong = [...free].reverse();
+  if (o.web && o.settings.webSearch) chain = [...(tier === 'complex' ? [M.opus, M.sonnet] : [M.sonnet, M.opus]), ...freeStrong];
+  else if (o.action) chain = [...(tier === 'complex' ? [M.opus, M.sonnet, M.terra] : [M.sonnet, M.opus, M.terra]), ...freeStrong];
   else if (tier === 'simple') chain = [...free, M.haiku, M.terra, M.sonnet];
-  else if (tier === 'medium') chain = [M.terra, M.sonnet, M.opus];
-  else chain = [M.opus, M.sonnet, M.terra];
+  else if (tier === 'medium') chain = [M.terra, M.sonnet, M.opus, ...freeStrong];
+  else chain = [M.opus, M.sonnet, M.terra, ...freeStrong];
   const usable = chain.filter((x) => o.configured.has(x.provider) && !o.coolingDown(x));
   return usable.length ? usable : chain.filter((x) => o.configured.has(x.provider));
 }
@@ -71,15 +74,16 @@ export function route(
   const c = classify(message);
   const free = opts.settings.allowFreeGoogle && !c.sensitive ? opts.freeModels.map((model) => ({ provider: 'google', model })) : [];
   let chain: RouteCandidate[];
+  const freeStrong = [...free].reverse();
   if (c.web && opts.settings.webSearch) {
-    // Solo Claude tiene la búsqueda web integrada.
-    chain = c.tier === 'complex' ? [M.opus, M.sonnet] : [M.sonnet, M.opus];
+    // Solo Claude tiene la búsqueda web integrada; sin Claude, Gemini responde sin buscar.
+    chain = [...(c.tier === 'complex' ? [M.opus, M.sonnet] : [M.sonnet, M.opus]), ...freeStrong];
   } else if (c.action) {
-    // Las herramientas las maneja mejor Claude.
-    chain = c.tier === 'complex' ? [M.opus, M.sonnet, M.terra] : [M.sonnet, M.opus, M.terra];
+    // Las herramientas las maneja mejor Claude; Gemini gratis como último respaldo.
+    chain = [...(c.tier === 'complex' ? [M.opus, M.sonnet, M.terra] : [M.sonnet, M.opus, M.terra]), ...freeStrong];
   } else if (c.tier === 'simple') chain = [...free, M.haiku, M.terra, M.sonnet];
-  else if (c.tier === 'medium') chain = [M.terra, M.sonnet, M.opus];
-  else chain = [M.opus, M.sonnet, M.terra];
+  else if (c.tier === 'medium') chain = [M.terra, M.sonnet, M.opus, ...freeStrong];
+  else chain = [M.opus, M.sonnet, M.terra, ...freeStrong];
   const usable = chain.filter((x) => opts.configured.has(x.provider) && !opts.coolingDown(x));
   // Si todo está en pausa, mejor intentarlo igualmente que no responder.
   const fallback = chain.filter((x) => opts.configured.has(x.provider));

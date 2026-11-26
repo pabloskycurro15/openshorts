@@ -60,7 +60,14 @@ describe('Repartidor: cadenas', () => {
     const q = 'Busca en internet negocios de bares en Nerja';
     expect(r(q).web).toBe(true);
     expect(ids(q)[0]).toBe('gpt-6.1-terra'); // desactivada: no se fuerza Claude
-    expect(ids(q, all, { ...DEFAULT_AI_SETTINGS, webSearch: true })).toEqual(['claude-sonnet-5-5', 'claude-opus-5-5']);
+    expect(ids(q, all, { ...DEFAULT_AI_SETTINGS, webSearch: true })).toEqual(['claude-sonnet-5-5', 'claude-opus-5-5', 'gemini-3.8-flash', 'gemini-3.5-flash-lite']);
+  });
+
+  it('solo con Gemini gratis: también sirve para acciones y tareas medias o complejas (el más capaz primero)', () => {
+    const g = new Set(['google']);
+    expect(ids('¿Qué tiempo hace hoy en Nerja?', g)).toEqual(['gemini-3.8-flash', 'gemini-3.5-flash-lite']);
+    expect(ids('Abre la carpeta de documentos y crea un archivo', g)).toEqual(['gemini-3.8-flash', 'gemini-3.5-flash-lite']);
+    expect(ids('Planifica una estrategia para mi negocio paso a paso', g)).toEqual(['gemini-3.8-flash', 'gemini-3.5-flash-lite']);
   });
 
   it('solo usa proveedores con clave', () => {

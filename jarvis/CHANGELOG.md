@@ -2,6 +2,19 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versionado semántico.
 
+## [1.2.0] — 2026-11-26
+### Añadido
+- Conversación por teléfono: JARVIS te llama y podéis hablar, o le llamas tú a su número de Twilio. Twilio
+  convierte tu voz en texto, JARVIS responde (con sus herramientas y memoria) y Twilio lo dice con voz española;
+  se le puede interrumpir hablando; «adiós» cuelga. Respuestas largas con espera («un momento»). Webhooks
+  verificados con la firma de Twilio; solo atiende a tu número; PIN opcional para las llamadas entrantes;
+  configuración automática del número. Requiere una dirección pública HTTPS (Tailscale Funnel, solo /phone).
+
+### Corregido
+- Con solo la clave de Gemini, las acciones y las tareas medias o complejas se quedaban sin modelo: ahora Gemini
+  gratis es el último respaldo en todos los niveles (el más capaz primero). Mensaje claro cuando un mensaje con
+  datos sensibles no se envía al modelo gratuito.
+
 ## [1.1.0] — 2026-11-26
 ### Añadido
 - Llamadas de teléfono con Twilio: JARVIS te llama (solo a tu número) con voz española; máximo 6 al día;

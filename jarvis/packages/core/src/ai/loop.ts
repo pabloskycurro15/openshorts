@@ -57,6 +57,11 @@ export interface LoopOptions {
   context: { lastUserText?: string; conversationId?: string };
   /** Emitir los estados del núcleo visual (solo la conversación principal). */
   visualState?: boolean;
+  /**
+   * Cuánto esperar una confirmación antes de seguir (p. ej. por teléfono no se puede esperar).
+   * Si vence, la confirmación sigue pendiente en la app y se ejecuta cuando el usuario la dé.
+   */
+  approvalWaitMs?: number;
 }
 
 export interface LoopResult {
@@ -181,6 +186,7 @@ export async function runAgentLoop(d: LoopDeps, o: LoopOptions): Promise<LoopRes
           state('idle', 'Esperando tu confirmación');
           r = await Promise.race([
             tools.waitForApproval(r.approvalId),
+            ...(o.approvalWaitMs ? [new Promise<ToolResult>((resolve) => { const t = setTimeout(() => resolve({ status: 'denied', reason: 'Queda pendiente de la confirmación del usuario en la app; se hará cuando la dé. Díselo y continúa' }), o.approvalWaitMs); t.unref(); })] : []),
             new Promise<ToolResult>((resolve) => {
               if (o.signal.aborted) resolve({ status: 'denied', reason: 'Cancelado por el usuario' });
               o.signal.addEventListener('abort', () => resolve({ status: 'denied', reason: 'Cancelado por el usuario' }), { once: true });
