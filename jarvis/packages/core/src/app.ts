@@ -29,6 +29,8 @@ import { whatsappConnector } from './connectors/whatsapp';
 import { googleConnector } from './connectors/google';
 import { spotifyConnector } from './connectors/spotify';
 import { vintedConnector } from './connectors/vinted';
+import { phoneConnector } from './connectors/phone';
+import { createWeatherTool } from './tools/builtin/weather';
 import { AdobeBridge } from './connectors/adobe';
 import { resolveAuthorized } from './control/paths';
 import { getSetting, setSetting } from './storage/db';
@@ -43,7 +45,7 @@ import { SecurityMonitor } from './security/monitor';
 import { VideoStudio, createProgramTools } from './video/studio';
 import { nodePlatform } from './control/platform';
 
-export const VERSION = '1.0.1';
+export const VERSION = '1.1.0';
 
 export interface Jarvis {
   version: string;
@@ -171,7 +173,9 @@ export function createJarvis(config: JarvisConfig, opts: { dbFile?: string; extr
   const video = new VideoStudio(db, () => control.get(), opts.platform ?? nodePlatform);
   for (const t of [...video.tools(), ...createProgramTools(video, opts.platform ?? nodePlatform)]) tools.register(t);
   const adobe = new AdobeBridge();
-  for (const c of opts.connectors ?? [googleConnector(), spotifyConnector(), whatsappConnector(), telegramConnector(), githubConnector(), netlifyConnector(), openshortsConnector(), vintedConnector(), adobe.def()]) connectors.register(c);
+  tools.register(createWeatherTool(opts.fetch));
+  bus.on('security.alert', (a) => connectors.notifyAlert(a));
+  for (const c of opts.connectors ?? [googleConnector(), spotifyConnector(), phoneConnector(), whatsappConnector(), telegramConnector(), githubConnector(), netlifyConnector(), openshortsConnector(), vintedConnector(), adobe.def()]) connectors.register(c);
 
   const core = { kind: 'core', id: 'kernel' } as const;
   return {

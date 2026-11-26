@@ -31,6 +31,9 @@ export function describeTrigger(t: Trigger): string {
 const TRIGGER_ICON: Record<Trigger['type'], typeof Clock> = { daily: CalendarClock, interval: Clock, once: CalendarClock, whatsapp: MessageCircle, gmail: Mail, condition: Cpu, manual: Play };
 
 const TEMPLATES: { title: string; hint: string; draft: Draft }[] = [
+  { title: 'Buenos días por teléfono', hint: 'IA · 7:15 · te llama con el día', draft: { name: 'Buenos días por teléfono', description: 'Cambia TU_CIUDAD por tu ciudad o pueblo antes de guardar.', retries: 1, maxRunsPerDay: 1,
+    trigger: { type: 'daily', time: '07:15', days: [1, 2, 3, 4, 5, 6, 7] },
+    action: { mode: 'ai', instructions: 'Prepárame unos buenos días hablados de menos de 40 segundos: saluda, di la fecha, el tiempo de hoy en TU_CIUDAD, mis eventos de hoy y si tengo correos importantes sin leer (solo cuántos y de quién). Luego llámame con phone.call para decírmelo. Tono cercano y con energía. Si algún dato no está disponible, omítelo sin mencionarlo.', tools: ['weather.forecast', 'calendar.events', 'gmail.search', 'phone.call'] } } },
   { title: 'Resumen matinal', hint: 'IA · correo + agenda → Telegram', draft: { name: 'Resumen matinal', description: 'Correo sin leer y agenda del día, por Telegram.', retries: 1, maxRunsPerDay: 2,
     trigger: { type: 'daily', time: '08:00', days: [1, 2, 3, 4, 5] },
     action: { mode: 'ai', instructions: 'Busca mis correos no leídos de las últimas 24 horas (is:unread newer_than:1d) y mis eventos de hoy. Escribe un resumen breve: lo importante primero. Envíamelo por Telegram.', tools: ['gmail.search', 'gmail.read', 'calendar.events', 'telegram.send'] } } },
@@ -85,7 +88,7 @@ export function AutomationsSection() {
         <Editor initial={editing.draft} id={editing.id} tools={tools ?? []} onClose={() => { setEditing(null); void refresh(); }} />
       ) : (
         <Panel title="Nueva automatización" icon={Sparkles} actions={<Button tone="accent" onClick={() => setEditing({ id: null, draft: structuredClone(EMPTY) })}><Plus size={14} aria-hidden /> Crear desde cero</Button>}>
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {TEMPLATES.map((t) => (
               <button key={t.title} type="button" onClick={() => setEditing({ id: null, draft: structuredClone(t.draft) })}
                 className="group rounded-lg border border-navy-600 bg-navy-900/60 p-3 text-left transition hover:border-accent hover:shadow-[0_0_18px_rgb(var(--accent-rgb)/0.3)]">

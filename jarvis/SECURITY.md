@@ -108,6 +108,12 @@ El logger censura campos `token`, `apiKey`, `password`, `secret` y la cabecera `
   memoria; «Desconectar» lo revoca en Google. Enviar correo = crítico (siempre confirma, 20/h); por defecto JARVIS
   prepara borradores.
 
+### Llamadas de teléfono (1.1)
+- Solo puede llamar al número del propietario configurado (la herramienta no acepta otro destino); máximo 6
+  llamadas al día; llamadas por alertas críticas como mucho una cada 30 min. Riesgo medio (cuesta dinero): una
+  automatización activada no pide confirmación cada mañana, pero sí necesita que el usuario la active.
+- El token de Twilio se guarda cifrado; el mensaje se escapa antes de enviarlo (TwiML).
+
 ### Conectores añadidos (0.15)
 - YouTube: subir es crítico (confirma siempre), privado por defecto; solo archivos de carpetas autorizadas.
 - Programas: solo un catálogo cerrado (FFmpeg, VLC, OBS, HandBrake) desde winget; instalar es crítico.

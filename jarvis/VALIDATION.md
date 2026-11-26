@@ -27,6 +27,7 @@ solo puede hacer el usuario (cuentas reales, Windows/iPhone/Mac físicos).
 | WhatsApp (no oficial) | ✅ / ⏳ | QR real de los servidores de WhatsApp (Node, Chromium, Electron); falta vincular tu teléfono |
 | Vinted (experimental) | 🧪 / ⏳ | Web simulada; con tu cookie puede fallar por su protección anti-robots |
 | Adobe Express | 🧪 / ⏳ | Puente, ticket y CSP probados; editor real necesita tu Client ID |
+| Llamadas (Twilio) y buenos días 7:15 | 🧪 / ⏳ | Mensaje real con Gemini y el tiempo real; la llamada, con Twilio simulado. Falta tu cuenta de Twilio |
 | Estudio de vídeo (FFmpeg) y programas | ✅ / ⏳ | FFmpeg real (presentación, recorte, unión, miniatura); winget en Windows real |
 | Automatizaciones | ✅ | Programador, disparadores, permisos, historial; navegador (plantilla → ejecución → aviso) |
 | iPhone / PWA | ✅ / ⏳ | iPhone 15 Pro emulado vinculado por red local; PWA sin conexión; push cifrado real contra servidor local. Falta iPhone físico + Tailscale |
@@ -39,7 +40,8 @@ solo puede hacer el usuario (cuentas reales, Windows/iPhone/Mac físicos).
 1. Activar GitHub Actions en el fork → pruebas en Windows e instalador `JARVIS-Setup-1.0.0.exe`.
 2. Claves de IA (Gemini gratis como mínimo; Anthropic/OpenAI si quieres).
 3. Google Cloud: cliente OAuth «App de escritorio» (Gmail, Calendar, Drive, YouTube).
-4. WhatsApp: escanear el QR. Telegram: crear el bot. Spotify: Client ID. Adobe: Client ID. Vinted: cookie.
+4. Twilio (llamadas): Account SID, Auth Token, número de Twilio y verificar tu móvil.
+5. WhatsApp: escanear el QR. Telegram: crear el bot. Spotify: Client ID. Adobe: Client ID. Vinted: cookie.
 5. GitHub/Netlify: tokens. OpenShorts: dirección del servidor.
 6. Supabase: decidir qué proyecto pausar (o usar un contenedor en uno existente) y pegar URL y clave.
 7. iPhone: Tailscale + vincular + «Añadir a pantalla de inicio».

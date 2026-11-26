@@ -1,12 +1,12 @@
 import { useState, type FormEvent } from 'react';
-import { AlertTriangle, CheckCircle2, ExternalLink, GitBranch, Globe, Mail, Music, Palette, ShoppingBag, KeyRound, MessageCircle, Send, Smartphone, Clapperboard, Cable } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, ExternalLink, GitBranch, Globe, Mail, Music, Palette, Phone, ShoppingBag, KeyRound, MessageCircle, Send, Smartphone, Clapperboard, Cable } from 'lucide-react';
 import type { ConnectorInfo } from '@jarvis/shared';
 import { Badge, Button, Dot, Empty, ErrorNote, Panel } from '../components/ui';
 import { core } from '../lib/api';
 import { useCoreData } from '../lib/connection';
 import { timeAgo } from '../lib/labels';
 
-const ICON: Record<string, typeof Cable> = { google: Mail, spotify: Music, vinted: ShoppingBag, adobe: Palette, whatsapp: MessageCircle, telegram: Send, github: GitBranch, netlify: Globe, openshorts: Clapperboard };
+const ICON: Record<string, typeof Cable> = { google: Mail, spotify: Music, phone: Phone, vinted: ShoppingBag, adobe: Palette, whatsapp: MessageCircle, telegram: Send, github: GitBranch, netlify: Globe, openshorts: Clapperboard };
 const RISK: Record<string, { label: string; tone: 'ok' | 'muted' | 'warn' | 'danger' }> = {
   low: { label: 'Lectura', tone: 'ok' }, medium: { label: 'Pide permiso', tone: 'muted' }, high: { label: 'Confirma', tone: 'warn' }, critical: { label: 'Confirma siempre', tone: 'danger' },
 };
@@ -127,6 +127,13 @@ function ConnectorCard({ c, refresh }: { c: ConnectorInfo; refresh: () => Promis
 
       {c.id === 'google' && <GoogleStatus c={c} run={run} busy={busy} />}
       {c.id === 'spotify' && <SpotifyStatus c={c} run={run} busy={busy} />}
+      {c.enabled && c.id === 'phone' && (
+        <div className="mt-3 flex flex-wrap items-center gap-3 rounded-lg border border-navy-600 bg-navy-950/50 p-3 text-xs text-muted">
+          <span>{String(c.status.callsToday ?? 0)}/{String(c.status.limit ?? 6)} llamadas hoy</span>
+          <Button tone="accent" disabled={busy} onClick={() => run(async () => { await core.connectorAction(c.id, 'test_call'); return 'Llamando a tu móvil…'; })}><Phone size={13} aria-hidden /> Llamada de prueba</Button>
+          <span>Para los buenos días: Automatizaciones → «Buenos días por teléfono».</span>
+        </div>
+      )}
       {c.enabled && c.id === 'adobe' && <AdobeStatus c={c} run={run} busy={busy} />}
       {c.enabled && c.id === 'whatsapp' && <WhatsAppStatus c={c} run={run} busy={busy} />}
       {c.enabled && c.id === 'telegram' && <TelegramStatus c={c} run={run} busy={busy} />}

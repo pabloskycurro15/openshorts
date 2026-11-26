@@ -1,4 +1,4 @@
-import type { ConnectorInfo, Principal } from '@jarvis/shared';
+import type { ConnectorInfo, Principal, SecurityAlert } from '@jarvis/shared';
 import type { Database } from '../storage/db';
 import { getSetting, setSetting } from '../storage/db';
 import type { SecretVault } from '../security/vault';
@@ -56,6 +56,8 @@ export interface ConnectorDef {
   secretKeys?: string[];
   /** Vuelta del navegador tras autorizar (OAuth). Devuelve un mensaje para el usuario. */
   oauthCallback?(ctx: ConnectorCtx, query: Record<string, string>): Promise<string>;
+  /** Reacción a una alerta de seguridad (p. ej. llamar por teléfono si es crítica). */
+  onSecurityAlert?(ctx: ConnectorCtx, alert: SecurityAlert): Promise<void>;
 }
 
 /** Nombre corto de la operación para el registro («github.repos» → «repos»; «gmail.send» en google → «gmail.send»). */
@@ -244,6 +246,13 @@ export class ConnectorManager {
     } catch (err) {
       this.log(id, 'autorizar', 'error', (err as Error).message);
       throw err;
+    }
+  }
+
+  /** Reparte una alerta de seguridad a los conectores activados que la atienden. */
+  notifyAlert(alert: SecurityAlert) {
+    for (const def of this.defs.values()) {
+      if (def.onSecurityAlert && this.isEnabled(def.id)) void def.onSecurityAlert(this.ctx(def), alert).catch(() => undefined);
     }
   }
 

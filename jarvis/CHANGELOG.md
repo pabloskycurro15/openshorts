@@ -2,6 +2,15 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versionado semántico.
 
+## [1.1.0] — 2026-11-26
+### Añadido
+- Llamadas de teléfono con Twilio: JARVIS te llama (solo a tu número) con voz española; máximo 6 al día;
+  llamada automática ante alertas críticas de seguridad (una cada 30 min, desactivable); llamada de prueba.
+- El tiempo con Open-Meteo (gratis, sin clave): `weather.forecast`.
+- Plantilla «Buenos días por teléfono» a las 7:15 con el tiempo, tu agenda y el correo importante.
+- Verificado con tu Gemini real y el tiempo real de Nerja (coste 0); la llamada, con Twilio simulado.
+  4 pruebas nuevas (246 en total).
+
 ## [1.0.1] — 2026-11-26
 ### Corregido
 - Se aceptan las claves de Gemini con el formato nuevo de Google («AQ.…»), además de «AIza…». Verificado con una

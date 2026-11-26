@@ -54,6 +54,7 @@ Clientes Windows, iOS y PWA. El detalle y los criterios de aceptación de cada f
 | STT en la nube (Whisper API) | Transcripción precisa | ~0,006 USD/min | Web Speech API / Whisper local |
 | Supabase | Copia externa cifrada (opcional) | Plan gratuito (1 GB); Pro 25 USD/mes | Copias locales / disco externo |
 | Tailscale | iPhone fuera de casa con HTTPS | Gratis (uso personal) | Solo red local |
+| Twilio | Llamadas de JARVIS a tu móvil | Prueba gratis (~15 $); luego número ~1-3 $/mes + ~0,02-0,10 $/min | Avisos por Telegram/WhatsApp/push |
 | Spotify Premium | Controlar la reproducción | Suscripción del usuario | Buscar y gestionar listas funciona sin Premium |
 | Apple Developer | App iOS en el dispositivo / publicar | 99 USD/año | Simulador o instalación de 7 días con Apple ID gratuito |
 | Certificado de firma de código para Windows | Evitar avisos de SmartScreen | ~70-300 €/año | Instalador sin firmar (muestra aviso) |

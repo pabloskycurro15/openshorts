@@ -25,6 +25,8 @@
 | «Cada mañana a las 8 mándame un resumen por Telegram» | JARVIS lo propone en Automatizaciones; tú lo activas |
 | «Abre Spotify», «Cierra el Bloc de notas», «¿Cuánta CPU uso?» | Control del equipo (lista blanca) |
 | «Recuerda que mi cliente X prefiere llamadas» | Memoria |
+| «Llámame a las 7:15 con los buenos días» | Automatizaciones → «Buenos días por teléfono» (conector Llamadas, Twilio) |
+| «¿Qué tiempo hace en Nerja?» | El tiempo (Open-Meteo, gratis) |
 
 ## 4. Seguridad: lo que conviene saber
 - Todo lo que tenga efectos (enviar, publicar, borrar, instalar) **te pide confirmación**; lo crítico, siempre.
