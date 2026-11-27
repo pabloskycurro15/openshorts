@@ -162,7 +162,7 @@ export function FilesSection() {
         </ul>
         <form onSubmit={addFolder} className="mt-4 space-y-2 border-t border-navy-700 pt-3">
           <input aria-label="Nombre de la carpeta" required placeholder="Nombre (p. ej. Proyectos)" value={fForm.label} onChange={(e) => setFForm({ ...fForm, label: e.target.value })} className={input} />
-          <input aria-label="Ruta de la carpeta" required placeholder="Ruta completa (p. ej. C:\Users\Tú\Proyectos)" value={fForm.path} onChange={(e) => setFForm({ ...fForm, path: e.target.value })} className={`${input} font-mono`} />
+          <input aria-label="Ruta de la carpeta" required placeholder="Ruta completa (Windows: C:\Users\Tú\Proyectos · Mac: /Users/tú/Proyectos)" value={fForm.path} onChange={(e) => setFForm({ ...fForm, path: e.target.value })} className={`${input} font-mono`} />
           <div className="flex gap-2">
             <select aria-label="Acceso" value={fForm.access} onChange={(e) => setFForm({ ...fForm, access: e.target.value as FolderCfg['access'] })} className={input}>
               <option value="read">Solo lectura</option><option value="readwrite">Lectura y escritura</option>
@@ -187,10 +187,10 @@ export function FilesSection() {
         </ul>
         <form onSubmit={addApp} className="mt-4 space-y-2 border-t border-navy-700 pt-3">
           <input aria-label="Nombre de la aplicación" required placeholder="Nombre (p. ej. Bloc de notas)" value={aForm.name} onChange={(e) => setAForm({ ...aForm, name: e.target.value })} className={input} />
-          <input aria-label="Ejecutable" required placeholder="Ejecutable (p. ej. notepad.exe o C:\Program Files\...\app.exe)" value={aForm.command} onChange={(e) => setAForm({ ...aForm, command: e.target.value })} className={`${input} font-mono`} />
-          <textarea aria-label="Argumentos" placeholder="Argumentos fijos (uno por línea, opcional)" rows={2} value={aForm.args} onChange={(e) => setAForm({ ...aForm, args: e.target.value })} className={`${input} font-mono`} />
+          <input aria-label="Ejecutable" required placeholder="Ejecutable (Windows: notepad.exe o C:\Program Files\...\app.exe · Mac: open)" value={aForm.command} onChange={(e) => setAForm({ ...aForm, command: e.target.value })} className={`${input} font-mono`} />
+          <textarea aria-label="Argumentos" placeholder="Argumentos fijos (uno por línea, opcional; Mac: -a y en otra línea el nombre de la app, p. ej. Safari)" rows={2} value={aForm.args} onChange={(e) => setAForm({ ...aForm, args: e.target.value })} className={`${input} font-mono`} />
           <div className="flex gap-2">
-            <input aria-label="Nombre de proceso" placeholder="Proceso para cerrarla (p. ej. notepad.exe)" value={aForm.processName} onChange={(e) => setAForm({ ...aForm, processName: e.target.value })} className={`${input} font-mono`} />
+            <input aria-label="Nombre de proceso" placeholder="Proceso para cerrarla (Windows: notepad.exe · Mac: nombre de la app, p. ej. Safari)" value={aForm.processName} onChange={(e) => setAForm({ ...aForm, processName: e.target.value })} className={`${input} font-mono`} />
             <Button type="submit" tone="accent">Autorizar</Button>
           </div>
         </form>

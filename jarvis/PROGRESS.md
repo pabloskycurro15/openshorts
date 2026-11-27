@@ -114,7 +114,12 @@
 - [ ] Activar GitHub Actions en el fork para las pruebas en Windows y el instalador.
 - [ ] Conectar las cuentas reales (lista en VALIDATION.md).
 
+## 2026-11-27 — Versión para Mac (1.3.0)
+- [x] Escritorio, control del equipo y programas adaptados a macOS sin tocar Windows (Windows comprobado igual).
+- [ ] Activar Actions para obtener el `.dmg` y pasar las pruebas en un macOS real.
+
 ## Decisiones tomadas por el usuario
+- En Navidad cambia a un portátil Mac con M5: preparar la versión de Mac sin borrar nada.
 - Añadir Adobe Express, Spotify, YouTube (publicar vídeos que haga JARVIS, con programas instalables) y mensajes
   de Vinted.
 - Supabase permitido para lo que haga falta (fase 11: destino externo de copias cifradas).

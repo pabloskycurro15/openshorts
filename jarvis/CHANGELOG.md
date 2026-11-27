@@ -2,6 +2,20 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versionado semántico.
 
+## [1.3.0] — 2026-11-27
+### Añadido
+- Versión para Mac (Apple Silicon): `.dmg` y `.zip` arm64 con firma ad-hoc, icono `.icns`, permisos de micrófono,
+  Accesibilidad y Automatización; claves en el Llavero; icono en la barra de menús, atajo ⌘⌥J, Dock, «Abrir al
+  iniciar sesión» y «Mantener el equipo despierto» (por defecto en Mac).
+- Control del equipo en macOS: ventanas (listar, traer al frente, minimizar) y cierre ordenado de apps con
+  AppleScript, con los datos como argumentos (sin inyección); explica cómo dar permiso de Accesibilidad.
+- Programas en Mac con Homebrew (FFmpeg, VLC, OBS, HandBrake) y FFmpeg en las rutas de Homebrew.
+- CI: pruebas también en macOS y generación de la app de Mac. Guía `MAC.md` (instalar, pasar los datos del PC con
+  la copia de seguridad, mantenerlo despierto, compilar la app del iPhone). 4 pruebas nuevas (253 en total).
+
+### Sin cambios
+- La versión de Windows se genera igual (comprobado).
+
 ## [1.2.0] — 2026-11-26
 ### Añadido
 - Conversación por teléfono: JARVIS te llama y podéis hablar, o le llamas tú a su número de Twilio. Twilio

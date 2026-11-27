@@ -31,6 +31,7 @@ solo puede hacer el usuario (cuentas reales, Windows/iPhone/Mac físicos).
 | Estudio de vídeo (FFmpeg) y programas | ✅ / ⏳ | FFmpeg real (presentación, recorte, unión, miniatura); winget en Windows real |
 | Automatizaciones | ✅ | Programador, disparadores, permisos, historial; navegador (plantilla → ejecución → aviso) |
 | iPhone / PWA | ✅ / ⏳ | iPhone 15 Pro emulado vinculado por red local; PWA sin conexión; push cifrado real contra servidor local. Falta iPhone físico + Tailscale |
+| App de Mac (Apple Silicon) | 🧪 / ⏳ | macOS simulado (AppleScript, Homebrew); estructura de la app generada y revisada (arm64, permisos, icono); el `.dmg` firmado y las pruebas en macOS real los hace la CI |
 | App iOS nativa (Capacitor) | ⏳ | Proyecto generado; compilar requiere Mac con Xcode |
 | Copias cifradas y restauración verificada | ✅ | Restauración en «otro equipo» con clave maestra distinta en las pruebas; navegador |
 | Supabase (copia externa) | 🧪 / ⏳ | API de Storage simulada; tu plan gratuito tiene 2 proyectos activos (máximo) |

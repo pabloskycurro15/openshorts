@@ -1,6 +1,6 @@
 {
   "name": "@jarvis/desktop",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "private": true,
   "description": "JARVIS — aplicación de escritorio",
   "author": "JARVIS",
@@ -9,7 +9,8 @@
     "build": "npm run build -w @jarvis/web && node build.mjs",
     "start": "node build.mjs && electron .",
     "dist:win": "npm run build && electron-builder --win nsis --publish never",
-    "dist:dir": "npm run build && electron-builder --dir --publish never"
+    "dist:dir": "npm run build && electron-builder --dir --publish never",
+    "dist:mac": "npm run build && electron-builder --mac --publish never"
   },
   "devDependencies": {
     "electron": "45.5.0",
@@ -88,7 +89,46 @@
       "**/node_modules/onnxruntime-node/**",
       "**/node_modules/sharp/**",
       "**/node_modules/@img/**"
-    ]
+    ],
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "arm64"
+          ]
+        }
+      ],
+      "icon": "build/icon.icns",
+      "category": "public.app-category.productivity",
+      "identity": "-",
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false,
+      "darkModeSupport": true,
+      "minimumSystemVersion": "12.0",
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "JARVIS usa el micrófono solo cuando le hablas (botón o palabra «Jarvis»).",
+        "NSAppleEventsUsageDescription": "JARVIS controla las ventanas y aplicaciones que tú autorices (traer al frente, minimizar, cerrar).",
+        "NSSpeechRecognitionUsageDescription": "JARVIS transcribe lo que le dices para entender tus órdenes."
+      },
+      "files": [
+        "!**/node_modules/onnxruntime-node/bin/napi-v*/{linux,win32}/**",
+        "!**/node_modules/onnxruntime-node/bin/napi-v*/darwin/x64/**",
+        "!**/node_modules/@img/*-{linux,linuxmusl,win32}-*/**",
+        "!**/node_modules/@img/*-darwin-x64/**",
+        "!**/node_modules/@img/sharp-wasm32/**"
+      ]
+    },
+    "dmg": {
+      "artifactName": "JARVIS-${version}-Mac-${arch}.${ext}",
+      "title": "JARVIS ${version}"
+    }
   },
   "dependencies": {
     "@huggingface/transformers": "^4.3.2",

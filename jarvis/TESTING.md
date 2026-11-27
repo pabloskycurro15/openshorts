@@ -8,7 +8,7 @@
 
 ## Resultados reales (2026-11-25, Linux x64, Node 22.23)
 
-`npm run check` → typecheck OK (núcleo, web y escritorio), lint OK (0 avisos), **249/249 pruebas superadas**.
+`npm run check` → typecheck OK (núcleo, web y escritorio), lint OK (0 avisos), **253/253 pruebas superadas**.
 
 | Archivo | Pruebas | Cubre |
 |---|---|---|
@@ -39,6 +39,7 @@
 | `spotify.test.ts` | 1 | PKCE sin secreto, token rotado, poner lista por búsqueda, errores de Premium y sin dispositivo |
 | `connectors-extra.test.ts` | 2 | Vinted (cookie, bandeja, conversación, respuesta con CSRF y confirmación, sesión caducada); Adobe (ticket en localhost, CSP con nonce, solo tipos permitidos en la carpeta elegida) |
 | `phone.test.ts` | 4 | Voz española y escapado; solo al número del propietario y límite diario; alerta crítica → llamada (una cada 30 min); buenos días a las 7:15 con el tiempo y llamada sin confirmación diaria |
+| `mac.test.ts` | 4 | macOS simulado: AppleScript con datos como argumentos (sin inyección), ventanas y permiso de Accesibilidad, abrir con `open -a` y cerrar de forma ordenada, programas con Homebrew y FFmpeg en /opt/homebrew |
 | `apps/web/test/web.test.tsx` | 17 | 15 secciones con ids únicos y plan para las futuras; 8 estados del núcleo visual; utilidades; almacenamiento tolerante a fallos; App con núcleo simulado: pantalla de vinculación, panel con 15 secciones, reacción a eventos (estado y emergencia), secciones futuras honestas, token caducado |
 
 ### Conectores con servicios reales (Fase 8A)

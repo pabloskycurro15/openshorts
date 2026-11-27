@@ -33,6 +33,36 @@ export function parseWindows(out: string): WindowInfo[] {
     .map((p) => ({ handle: p[0]!, pid: Number(p[1]), title: p.slice(2).join('\t') }));
 }
 
+/**
+ * macOS: AppleScript (System Events) con los datos como argumentos (argv), nunca dentro del
+ * texto del script, así no hay inyección. Requiere el permiso de Accesibilidad para JARVIS.
+ */
+export const MAC_LIST_WINDOWS = [
+  'set out to ""',
+  'tell application "System Events"',
+  'repeat with p in (every process whose background only is false)',
+  'try',
+  'set pid to unix id of p',
+  'set pname to name of p',
+  'repeat with w in (every window of p)',
+  'set out to out & pid & tab & pid & tab & pname & " — " & (name of w as text) & linefeed',
+  'end repeat',
+  'end try',
+  'end repeat',
+  'end tell',
+  'return out',
+];
+export const MAC_FOCUS = ['on run argv', 'tell application "System Events" to set frontmost of (first process whose unix id is ((item 1 of argv) as integer)) to true', 'end run'];
+export const MAC_MINIMIZE = ['on run argv', 'tell application "System Events" to tell (first process whose unix id is ((item 1 of argv) as integer)) to set value of attribute "AXMinimized" of window 1 to true', 'end run'];
+export const MAC_QUIT = ['on run argv', 'tell application (item 1 of argv) to quit', 'end run'];
+export const osascriptArgs = (lines: string[], argv: string[] = []) => [...lines.flatMap((l) => ['-e', l]), ...argv];
+
+/** En macOS una app tiene una entrada por ventana: nos quedamos con una por aplicación (el identificador es su PID). */
+export function parseMacWindows(out: string): WindowInfo[] {
+  const seen = new Set<string>();
+  return parseWindows(out).filter((w) => !seen.has(w.handle) && seen.add(w.handle));
+}
+
 const USER32 = `
 $sig = @"
 using System; using System.Text; using System.Runtime.InteropServices; using System.Collections.Generic;
@@ -125,7 +155,7 @@ export function createOsTools(getConfig: () => ControlConfig, platform: Platform
 
   const closeApp = defineTool({
     name: 'app.close',
-    description: 'Cierra una aplicación autorizada (las que abrió JARVIS o, en Windows, por su nombre de proceso). Puede perder trabajo sin guardar.',
+    description: 'Cierra una aplicación autorizada (las que abrió JARVIS o por su nombre de proceso; en macOS, por el nombre de la app). Puede perder trabajo sin guardar.',
     parameters: z.object({ appId: z.string() }).strict(),
     permissions: (a) => [`app.close:${app(a.appId).id}`],
     risk: 'high', sideEffects: true,
@@ -138,6 +168,12 @@ export function createOsTools(getConfig: () => ControlConfig, platform: Platform
         l.kill();
         opened.delete(a.id);
         return { closed: a.name, method: 'proceso abierto por JARVIS' };
+      }
+      if (platform.os === 'darwin' && a.processName) {
+        // Cierre ordenado (como Cmd+Q): la app puede preguntar si guardar.
+        const r = await platform.run('osascript', osascriptArgs(MAC_QUIT, [a.processName.replace(/\.app$/i, '')]), { timeoutMs: 15_000, maxBytes: 2000 });
+        if (r.exitCode !== 0) throw new Error(`No se pudo cerrar ${a.name}: ${(r.stderr || r.stdout).trim()}`);
+        return { closed: a.name, method: 'cierre ordenado (macOS)' };
       }
       if (isWin && a.processName) {
         const r = await platform.run('taskkill', ['/IM', a.processName], { timeoutMs: 10_000, maxBytes: 2000 });
@@ -215,10 +251,21 @@ export function createOsTools(getConfig: () => ControlConfig, platform: Platform
     },
   });
 
-  const winOnly = () => { if (!isWin) throw new Error('El control de ventanas solo está disponible en Windows'); };
+  const isMac = platform.os === 'darwin';
+  const winOnly = () => { if (!isWin && !isMac) throw new Error('El control de ventanas está disponible en Windows y macOS'); };
+  const macRun = async (lines: string[], argv: string[] = [], maxBytes = 10_000) => {
+    const r = await platform.run('osascript', osascriptArgs(lines, argv), { timeoutMs: 20_000, maxBytes });
+    if (r.exitCode !== 0) {
+      const msg = (r.stderr || '').trim();
+      throw new Error(/-1719|-25211|not allowed assistive|no está permitido/i.test(msg)
+        ? 'macOS necesita que des a JARVIS permiso de Accesibilidad: Ajustes del Sistema → Privacidad y seguridad → Accesibilidad → activa JARVIS.'
+        : msg || 'La operación sobre la ventana falló');
+    }
+    return r.stdout;
+  };
   const listWindows = defineTool({
     name: 'window.list',
-    description: 'Lista las ventanas visibles (Windows).',
+    description: 'Lista las ventanas visibles (Windows y macOS; en macOS, una por aplicación).',
     parameters: z.object({}).strict(),
     permissions: ['window.list'],
     risk: 'low', sideEffects: false,
@@ -226,6 +273,7 @@ export function createOsTools(getConfig: () => ControlConfig, platform: Platform
     returns: 'Ventanas (identificador, PID, título).',
     execute: async () => {
       winOnly();
+      if (isMac) return parseMacWindows(await macRun(MAC_LIST_WINDOWS, [], 200_000));
       const r = await platform.run('powershell.exe', powershellArgs(windowScript('list')), { timeoutMs: 20_000, maxBytes: 200_000 });
       if (r.exitCode !== 0) throw new Error(r.stderr || 'No se pudieron leer las ventanas');
       return parseWindows(r.stdout);
@@ -233,7 +281,7 @@ export function createOsTools(getConfig: () => ControlConfig, platform: Platform
   });
   const windowAction = (action: 'focus' | 'minimize', label: string) => defineTool({
     name: `window.${action}`,
-    description: `${label} una ventana por su identificador (obtenido con window.list). Solo Windows.`,
+    description: `${label} una ventana por su identificador (obtenido con window.list). Windows y macOS.`,
     parameters: z.object({ handle: z.string().regex(/^\d{1,20}$/) }).strict(),
     permissions: [`window.${action}`],
     risk: 'medium', sideEffects: true,
@@ -241,6 +289,10 @@ export function createOsTools(getConfig: () => ControlConfig, platform: Platform
     returns: 'Confirmación.',
     execute: async ({ handle }) => {
       winOnly();
+      if (isMac) {
+        await macRun(action === 'focus' ? MAC_FOCUS : MAC_MINIMIZE, [handle]);
+        return { ok: true, handle };
+      }
       const r = await platform.run('powershell.exe', powershellArgs(windowScript(action, handle)), { timeoutMs: 20_000, maxBytes: 10_000 });
       if (r.exitCode !== 0) throw new Error(r.stderr || 'La operación sobre la ventana falló');
       return { ok: true, handle };

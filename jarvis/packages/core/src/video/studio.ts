@@ -11,11 +11,14 @@ import type { Platform } from '../control/platform';
 
 /** Programas que JARVIS sabe instalar (con winget en Windows) y usar. Lista cerrada: nada de instalar «cualquier cosa». */
 export const PROGRAMS = {
-  ffmpeg: { name: 'FFmpeg', winget: 'Gyan.FFmpeg', purpose: 'Crear y editar vídeos (recortar, unir, presentaciones, miniaturas)', exe: 'ffmpeg', url: 'https://ffmpeg.org/download.html' },
-  vlc: { name: 'VLC', winget: 'VideoLAN.VLC', purpose: 'Reproducir y revisar vídeos y audio', exe: 'vlc', url: 'https://www.videolan.org/vlc/' },
-  obs: { name: 'OBS Studio', winget: 'OBSProject.OBSStudio', purpose: 'Grabar la pantalla o la cámara para tus vídeos', exe: 'obs64', url: 'https://obsproject.com/' },
-  handbrake: { name: 'HandBrake', winget: 'HandBrake.HandBrake', purpose: 'Comprimir vídeos grandes antes de subirlos', exe: 'HandBrakeCLI', url: 'https://handbrake.fr/' },
+  ffmpeg: { name: 'FFmpeg', winget: 'Gyan.FFmpeg', brew: 'ffmpeg', macApp: null, purpose: 'Crear y editar vídeos (recortar, unir, presentaciones, miniaturas)', exe: 'ffmpeg', url: 'https://ffmpeg.org/download.html' },
+  vlc: { name: 'VLC', winget: 'VideoLAN.VLC', brew: '--cask vlc', macApp: 'VLC.app', purpose: 'Reproducir y revisar vídeos y audio', exe: 'vlc', url: 'https://www.videolan.org/vlc/' },
+  obs: { name: 'OBS Studio', winget: 'OBSProject.OBSStudio', brew: '--cask obs', macApp: 'OBS.app', purpose: 'Grabar la pantalla o la cámara para tus vídeos', exe: 'obs64', url: 'https://obsproject.com/' },
+  handbrake: { name: 'HandBrake', winget: 'HandBrake.HandBrake', brew: '--cask handbrake-app', macApp: 'HandBrake.app', purpose: 'Comprimir vídeos grandes antes de subirlos', exe: 'HandBrakeCLI', url: 'https://handbrake.fr/' },
 } as const;
+
+/** Homebrew en Mac (Apple Silicon: /opt/homebrew; Intel: /usr/local). Las apps abiertas desde el Finder no heredan su PATH. */
+export const BREW_PATHS = ['/opt/homebrew/bin/brew', '/usr/local/bin/brew'];
 export type ProgramId = keyof typeof PROGRAMS;
 
 const FORMATS = { vertical: [1080, 1920], horizontal: [1920, 1080], square: [1080, 1080] } as const;
@@ -39,6 +42,7 @@ export class VideoStudio {
     const custom = getSetting(this.db, 'programs.ffmpeg');
     if (custom) candidates.push(custom);
     candidates.push('ffmpeg');
+    if (this.platform.os === 'darwin') candidates.push('/opt/homebrew/bin/ffmpeg', '/usr/local/bin/ffmpeg');
     if (this.platform.os === 'win32') {
       const local = process.env.LOCALAPPDATA ?? path.join(os.homedir(), 'AppData', 'Local');
       candidates.push(path.join(local, 'Microsoft', 'WinGet', 'Links', 'ffmpeg.exe'));
@@ -188,6 +192,12 @@ export function createProgramTools(studio: VideoStudio, platform: Platform): Too
     const out: { id: ProgramId; name: string; purpose: string; installed: boolean | null; detail: string }[] = [];
     for (const [id, p] of Object.entries(PROGRAMS) as [ProgramId, (typeof PROGRAMS)[ProgramId]][]) {
       if (id === 'ffmpeg') { out.push({ id, name: p.name, purpose: p.purpose, installed: !!ff.ffmpeg, detail: ff.ffmpeg ?? 'No encontrado' }); continue; }
+      if (platform.os === 'darwin' && p.macApp) {
+        const home = process.env.HOME ?? '';
+        const found = [`/Applications/${p.macApp}`, `${home}/Applications/${p.macApp}`].find((x) => fs.existsSync(x));
+        out.push({ id, name: p.name, purpose: p.purpose, installed: !!found, detail: found ?? '' });
+        continue;
+      }
       if (platform.os !== 'win32') { out.push({ id, name: p.name, purpose: p.purpose, installed: null, detail: 'Comprobación disponible en Windows' }); continue; }
       const r = await platform.run('winget', ['list', '--id', p.winget, '-e', '--accept-source-agreements', '--disable-interactivity'], { timeoutMs: 60_000, maxBytes: 20_000 });
       out.push({ id, name: p.name, purpose: p.purpose, installed: r.exitCode === 0 && r.stdout.includes(p.winget), detail: r.exitCode === null ? r.stderr : '' });
@@ -202,14 +212,26 @@ export function createProgramTools(studio: VideoStudio, platform: Platform): Too
     }),
     defineTool({
       name: 'programs.install',
-      description: 'Instala uno de los programas del catálogo con winget (solo Windows). Pide confirmación SIEMPRE.',
+      description: 'Instala uno de los programas del catálogo (winget en Windows, Homebrew en Mac). Pide confirmación SIEMPRE.',
       parameters: z.object({ id: z.enum(Object.keys(PROGRAMS) as [ProgramId, ...ProgramId[]]) }),
       permissions: (a) => [`programs.install:${a.id}`], risk: 'critical', sideEffects: true,
-      risks: ['Instala software en tu equipo desde el repositorio oficial de winget (Microsoft)', 'Puede pedir permisos de administrador'],
+      risks: ['Instala software en tu equipo desde el repositorio oficial (winget de Microsoft u Homebrew en Mac)', 'Puede pedir permisos de administrador'],
       returns: 'Resultado de la instalación.',
       async execute({ id }) {
         const p = PROGRAMS[id];
-        if (platform.os !== 'win32') throw new Error(`Instalación automática solo en Windows. Descárgalo de ${p.url}`);
+        if (platform.os === 'darwin') {
+          let brew: string | null = null;
+          for (const b of BREW_PATHS) {
+            const v = await platform.run(b, ['--version'], { timeoutMs: 15_000, maxBytes: 2000 });
+            if (v.exitCode === 0) { brew = b; break; }
+          }
+          if (!brew) throw new Error(`Para instalar programas en Mac hace falta Homebrew (gratis): abre Terminal y sigue las instrucciones de brew.sh. O descarga ${p.name} de ${p.url}`);
+          const r = await platform.run(brew, ['install', ...p.brew.split(' ')], { timeoutMs: 20 * 60_000, maxBytes: 40_000 });
+          if (r.exitCode !== 0) throw new Error(`Homebrew terminó con código ${r.exitCode}: ${(r.stdout + r.stderr).trim().split('\n').slice(-3).join(' ').slice(0, 300)}`);
+          if (id === 'ffmpeg') await studio.locate(true);
+          return { installed: true, program: p.name, note: id === 'ffmpeg' ? 'FFmpeg listo para crear vídeos' : 'Instalado' };
+        }
+        if (platform.os !== 'win32') throw new Error(`Instalación automática en Windows y Mac. Descárgalo de ${p.url}`);
         const r = await platform.run('winget', ['install', '--id', p.winget, '-e', '--silent', '--accept-package-agreements', '--accept-source-agreements', '--disable-interactivity'], { timeoutMs: 15 * 60_000, maxBytes: 40_000 });
         if (r.exitCode === null && /no encontrado/i.test(r.stderr)) throw new Error('winget no está disponible en este Windows. Instala «Instalador de aplicación» desde Microsoft Store.');
         if (r.exitCode !== 0) throw new Error(`winget terminó con código ${r.exitCode}: ${(r.stdout + r.stderr).trim().split('\n').slice(-3).join(' ').slice(0, 300)}`);

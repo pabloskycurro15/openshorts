@@ -5,12 +5,34 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import { app, BrowserWindow, Menu, Tray, globalShortcut, ipcMain, nativeImage, safeStorage, session, shell, Notification } from 'electron';
+import { app, BrowserWindow, Menu, Tray, globalShortcut, ipcMain, nativeImage, powerSaveBlocker, safeStorage, session, shell, systemPreferences, Notification } from 'electron';
 import { loadConfig, startJarvis, type RunningJarvis } from '@jarvis/core';
 import { SafeStorageMasterKey } from './master-key';
 
 const USER = { kind: 'user', id: 'owner' } as const;
 const SHORTCUT = 'CommandOrControl+Alt+J';
+const IS_MAC = process.platform === 'darwin';
+const SHORTCUT_LABEL = IS_MAC ? '⌘⌥J' : 'Ctrl+Alt+J';
+
+/** Preferencias del escritorio (fuera de la base de datos del núcleo). */
+const prefsFile = () => path.join(app.getPath('userData'), 'desktop-prefs.json');
+function readPrefs(): { keepAwake?: boolean } {
+  try { return JSON.parse(fs.readFileSync(prefsFile(), 'utf8')) as { keepAwake?: boolean }; } catch { return {}; }
+}
+function writePrefs(p: { keepAwake?: boolean }) {
+  try { fs.writeFileSync(prefsFile(), JSON.stringify({ ...readPrefs(), ...p })); } catch { /* sin preferencias */ }
+}
+/**
+ * Mantener el equipo despierto: evita que el sistema se duerma por inactividad (la pantalla sí puede
+ * apagarse), para que las automatizaciones (p. ej. los buenos días a las 7:15) y los mensajes funcionen.
+ * En Mac viene activado por defecto; cerrar la tapa del portátil lo duerme igualmente.
+ */
+let awakeId: number | null = null;
+function setKeepAwake(on: boolean) {
+  if (on && awakeId === null) awakeId = powerSaveBlocker.start('prevent-app-suspension');
+  if (!on && awakeId !== null) { powerSaveBlocker.stop(awakeId); awakeId = null; }
+}
+const keepAwakeWanted = () => readPrefs().keepAwake ?? IS_MAC;
 
 function secureStorageAvailable(): boolean {
   if (!safeStorage.isEncryptionAvailable()) return false;
@@ -84,7 +106,7 @@ function createWindow() {
     win?.hide();
     if (Notification.isSupported() && !trayNoticeShown) {
       trayNoticeShown = true;
-      new Notification({ title: 'JARVIS sigue activo', body: `Está en la bandeja del sistema. ${SHORTCUT.replace('CommandOrControl', 'Ctrl')} lo muestra.` }).show();
+      new Notification({ title: 'JARVIS sigue activo', body: `Está en la ${IS_MAC ? 'barra de menús' : 'bandeja del sistema'}. ${SHORTCUT_LABEL} lo muestra.` }).show();
     }
   });
   void win.loadURL(running.url);
@@ -101,7 +123,7 @@ function showWindow() {
 }
 
 function buildTray() {
-  const image = nativeImage.createFromPath(iconPath()).resize({ width: 16, height: 16 });
+  const image = nativeImage.createFromPath(iconPath()).resize({ width: IS_MAC ? 18 : 16, height: IS_MAC ? 18 : 16 });
   tray = new Tray(image);
   tray.setToolTip('JARVIS');
   const refresh = () => {
@@ -118,10 +140,16 @@ function buildTray() {
         },
       },
       {
-        label: 'Iniciar con Windows',
+        label: IS_MAC ? 'Abrir al iniciar sesión' : 'Iniciar con Windows',
         type: 'checkbox',
         checked: app.getLoginItemSettings().openAtLogin,
-        click: (item) => app.setLoginItemSettings({ openAtLogin: item.checked, args: ['--hidden'] }),
+        click: (item) => app.setLoginItemSettings(IS_MAC ? { openAtLogin: item.checked } : { openAtLogin: item.checked, args: ['--hidden'] }),
+      },
+      {
+        label: 'Mantener el equipo despierto',
+        type: 'checkbox',
+        checked: keepAwakeWanted(),
+        click: (item) => { writePrefs({ keepAwake: item.checked }); setKeepAwake(item.checked); },
       },
       { type: 'separator' },
       { label: 'Salir', click: () => { quitting = true; app.quit(); } },
@@ -166,12 +194,20 @@ if (!app.requestSingleInstanceLock()) {
     session.defaultSession.setPermissionRequestHandler((_wc, permission, cb, details) => cb(permission === 'media' && sameOrigin(details.requestingUrl)));
     session.defaultSession.setPermissionCheckHandler((_wc, permission, origin) => permission === 'media' && sameOrigin(origin + '/'));
 
+    // macOS pide permiso para el micrófono la primera vez (la palabra «Jarvis» y hablarle).
+    if (IS_MAC && systemPreferences.getMediaAccessStatus('microphone') === 'not-determined') {
+      await systemPreferences.askForMediaAccess('microphone').catch(() => false);
+    }
+    setKeepAwake(keepAwakeWanted());
     buildTray();
     globalShortcut.register(SHORTCUT, () => (win?.isVisible() && win.isFocused() ? win.hide() : showWindow()));
-    if (!process.argv.includes('--hidden')) createWindow();
+    const startHidden = process.argv.includes('--hidden') || (IS_MAC && app.getLoginItemSettings().wasOpenedAtLogin);
+    if (!startHidden) createWindow();
   });
 
-  app.on('window-all-closed', () => { /* sigue en la bandeja */ });
+  app.on('window-all-closed', () => { /* sigue en la bandeja / barra de menús */ });
+  // macOS: clic en el icono del Dock → mostrar la ventana.
+  app.on('activate', () => { if (running) showWindow(); });
   app.on('before-quit', (e) => {
     quitting = true;
     if (!running) return;

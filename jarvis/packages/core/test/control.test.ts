@@ -205,7 +205,7 @@ describe('Procesos, ventanas y CPU', () => {
 
   it('el control de ventanas informa de que solo funciona en Windows', async () => {
     const { invoke } = await setup(new FakePlatform('linux'));
-    expect(await invoke('window.list', {})).toMatchObject({ status: 'error', error: expect.stringMatching(/solo está disponible en Windows/) });
+    expect(await invoke('window.list', {})).toMatchObject({ status: 'error', error: expect.stringMatching(/disponible en Windows y macOS/) });
   });
 
   it('mide el uso real de CPU', async () => {

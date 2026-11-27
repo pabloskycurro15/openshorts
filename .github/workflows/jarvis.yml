@@ -28,7 +28,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -62,5 +62,30 @@ jobs:
         with:
           name: JARVIS-Setup-windows
           path: jarvis/apps/desktop/release/JARVIS-Setup-*.exe
+          if-no-files-found: error
+          retention-days: 30
+
+  mac:
+    name: App para Mac (Apple Silicon)
+    needs: test
+    runs-on: macos-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: jarvis/package-lock.json
+      - run: npm ci
+      # Firma ad-hoc (sin cuenta de desarrollador de Apple): la primera vez hay que abrirla con clic derecho → Abrir.
+      - run: npm run dist:mac
+      - uses: actions/upload-artifact@v4
+        with:
+          name: JARVIS-Mac
+          path: |
+            jarvis/apps/desktop/release/*.dmg
+            jarvis/apps/desktop/release/*-mac.zip
+            jarvis/apps/desktop/release/*-arm64-mac.zip
           if-no-files-found: error
           retention-days: 30

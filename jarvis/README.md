@@ -8,7 +8,7 @@ escritorio (Windows 11), iOS y PWA.
 > cerebros con repartidor, voz local con «Jarvis», control del equipo, app de escritorio, memoria, multiagente,
 > conectores (Google con YouTube, Spotify, WhatsApp, Telegram, GitHub, Netlify, OpenShorts, Vinted, Adobe Express),
 > estudio de vídeo, automatizaciones, iPhone/PWA, copias cifradas y vigilancia. Qué está verificado y qué falta
-> por conectar con tus cuentas: [VALIDATION.md](VALIDATION.md). Uso: [MANUAL.md](MANUAL.md).
+> por conectar con tus cuentas: [VALIDATION.md](VALIDATION.md). Uso: [MANUAL.md](MANUAL.md). Mac: [MAC.md](MAC.md).
 > Este documento solo describe lo que existe y está probado.
 
 ## Qué funciona hoy
